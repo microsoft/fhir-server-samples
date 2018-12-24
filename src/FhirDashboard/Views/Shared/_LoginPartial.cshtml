@@ -1,10 +1,11 @@
-@using System.Security.Principal
+@using Microsoft.AspNetCore.Authentication;
 
 <ul class="navbar-nav">
+
 @if (User.Identity.IsAuthenticated)
 {
         <li class="nav-item">
-            <span class="nav-text text-dark">Hello @User.Identity.Name!</span>
+            <span class="nav-text text-dark">Hello @User.GetDisplayName()!</span>
         </li>
         <li class="nav-item">
             <a class="nav-link text-dark" asp-area="AzureAD" asp-controller="Account" asp-action="SignOut">Sign out</a>
