@@ -10,7 +10,7 @@ variables:
 steps:
 - task: DotNetCoreInstaller@0
   inputs:
-    version: '2.2.201'
+    version: '2.2.101'
 
 - script: |
     dotnet build --configuration $(buildConfiguration)
