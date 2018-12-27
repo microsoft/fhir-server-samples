@@ -87,6 +87,13 @@
                 "description": "Path within source code repository for FHIR Dashboard application"
             }
         },
+        "deploySourceCode": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Deploy source code (if repo and branch are not blank)"
+            }
+        },
         "deployApplicationInsights": {
             "type": "bool",
             "defaultValue": true,
@@ -111,7 +118,7 @@
         "siteName": "[toLower(parameters('siteName'))]",
         "appServicePlanResourceGroup": "[if(empty(parameters('appServicePlanResourceGroup')), resourceGroup().name, parameters('appServicePlanResourceGroup'))]",
         "appServicePlanName": "[if(empty(parameters('appServicePlanName')),concat(variables('siteName'),'-asp'),parameters('appServicePlanName'))]",
-        "deploySourceCode": "[and(not(empty(parameters('repositoryUrl'))),not(empty(parameters('repositoryBranch'))))]",
+        "deploySourceCode": "[and(parameters('deploySourceCode'),and(not(empty(parameters('repositoryUrl'))),not(empty(parameters('repositoryBranch')))))]",
         "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
         "deployAppInsights": "[and(parameters('deployApplicationInsights'),not(variables('isMAG')))]",
         "appInsightsName": "[concat('AppInsights-', variables('siteName'))]",
