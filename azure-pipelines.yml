@@ -13,10 +13,23 @@ steps:
     version: '2.2.101'
 
 - script: |
-    dotnet build --configuration $(buildConfiguration)
-    dotnet publish --configuration $(buildConfiguration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
+    dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
+    displayName: 'dotnet build $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish web'
+  inputs:
+    command: publish
+    projects: '**/FhirDashboard.csproj'
+    arguments: '--output $(build.artifactStagingDirectory)/dashboard --configuration $(buildConfiguration) --no-build'
+    publishWebProjects: false
 
 - task: PublishBuildArtifacts@1
+  displayName: 'publish Dashboard artifacts'
+  inputs:
+    pathToPublish: '$(build.artifactStagingDirectory)/dashboard'
+    artifactName: 'deploy'
+    artifactType: 'container'
 
 - task: PublishBuildArtifacts@1
   displayName: 'publish samples'
