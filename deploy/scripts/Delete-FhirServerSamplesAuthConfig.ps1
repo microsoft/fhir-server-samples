@@ -38,7 +38,7 @@ if (Get-Module -Name FhirServer) {
 } else {
     Write-Host "Cloning FHIR Server repo to get access to FhirServer PS module."
     if (!(Test-Path -Path ".\fhir-server")) {
-        git clone https://github.com/Microsoft/fhir-server
+        git clone --quiet https://github.com/Microsoft/fhir-server | Out-Null
     }
     Import-Module .\fhir-server\samples\scripts\PowerShell\FhirServer\FhirServer.psd1
 }
