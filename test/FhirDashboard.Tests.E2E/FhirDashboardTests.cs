@@ -35,7 +35,7 @@ namespace FhirDashboard.Tests.E2E
             var options = new ChromeOptions();
             var dashboardUrl = _config["DashboardUrl"];
 
-            options.AddArgument("--headless");
+            //options.AddArgument("--headless");
             options.AddArgument("--disable-gpu");
             options.AddArgument("--incognito");
 
@@ -84,6 +84,7 @@ namespace FhirDashboard.Tests.E2E
 
                 driver.Navigate().GoToUrl($"{dashboardUrl}/Home/AboutMe");
 
+                int waitCount = 0;
                 while (!driver.Url.StartsWith($"{dashboardUrl}/Home/AboutMe"))
                 {
 
@@ -92,8 +93,8 @@ namespace FhirDashboard.Tests.E2E
                     if (button.Enabled)
                     {
                         button.Click();
-                        return;
                     }
+                    Assert.InRange(waitCount++, 0, 10);
                 }
 
                 var element = driver.FindElement(By.Id("tokenfield"));
