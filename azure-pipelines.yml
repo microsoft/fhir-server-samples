@@ -23,6 +23,16 @@ steps:
     arguments: '--output $(build.artifactStagingDirectory)/dashboard --configuration $(buildConfiguration) --no-build'
     publishWebProjects: false
 
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish Integration Tests'
+  inputs:
+    command: publish
+    projects: 'test/**/*.csproj'
+    arguments: '--version-suffix $(build.buildnumber) -o "$(build.binariesdirectory)/IntegrationTests" --configuration $(buildConfiguration) --no-build'
+    publishWebProjects: false
+    zipAfterPublish: false
+
+
 - task: PublishBuildArtifacts@1
   displayName: 'publish Dashboard artifacts'
   inputs:
@@ -35,4 +45,11 @@ steps:
   inputs:
     pathToPublish: './deploy/'
     artifactName: 'deploy'
+    artifactType: 'container'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'publish Integration Tests'
+  inputs:
+    pathToPublish: '$(build.binariesdirectory)/IntegrationTests'
+    artifactName: 'IntegrationTests'
     artifactType: 'container'
