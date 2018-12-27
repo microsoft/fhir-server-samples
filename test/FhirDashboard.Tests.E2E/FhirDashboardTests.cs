@@ -35,7 +35,7 @@ namespace FhirDashboard.Tests.E2E
             var options = new ChromeOptions();
             var dashboardUrl = _config["DashboardUrl"];
 
-            //options.AddArgument("--headless");
+            options.AddArgument("--headless");
             options.AddArgument("--disable-gpu");
             options.AddArgument("--incognito");
 
