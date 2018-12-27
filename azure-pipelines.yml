@@ -12,9 +12,8 @@ steps:
   inputs:
     version: '2.2.101'
 
-- script: |
-    dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
-    displayName: 'dotnet build $(buildConfiguration)'
+- script: dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
+  displayName: 'dotnet build $(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet publish web'
