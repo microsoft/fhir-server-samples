@@ -135,7 +135,6 @@ if (!$confidentialClient) {
     $newPassword = New-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId
     $secretSecureString = ConvertTo-SecureString $newPassword.Value -AsPlainText -Force
 }
-$secret = Get-AzureKeyVaultSecret -VaultName 'Contoso' -Name 'ITSecret'
 $secretConfidentialClientId = ConvertTo-SecureString $confidentialClient.AppId -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-id" -SecretValue $secretConfidentialClientId| Out-Null
 Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-secret" -SecretValue $secretSecureString | Out-Null
