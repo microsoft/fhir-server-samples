@@ -17,3 +17,10 @@ steps:
     dotnet publish --configuration $(buildConfiguration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
 
 - task: PublishBuildArtifacts@1
+
+- task: PublishBuildArtifacts@1
+  displayName: 'publish samples'
+  inputs:
+    pathToPublish: './deploy/'
+    artifactName: 'deploy'
+    artifactType: 'container'
