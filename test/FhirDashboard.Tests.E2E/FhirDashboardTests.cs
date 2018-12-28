@@ -37,6 +37,7 @@ namespace FhirDashboard.Tests.E2E
             var dashboardUrl = _config["DashboardUrl"];
 
             // We have to make sure the website is up
+            // On a fresh deployment it can take time before site is deployed
             var client = new HttpClient();
             var result =  await client.GetAsync(dashboardUrl);
             int waitCount = 0;
