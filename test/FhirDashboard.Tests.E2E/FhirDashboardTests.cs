@@ -92,6 +92,17 @@ namespace FhirDashboard.Tests.E2E
                 driver.FindElementByName("passwd").SendKeys(_config["DashboardUserPassword"]);
                 Advance();
 
+                // Consent, should only be done if we can find the button
+                try
+                {
+                    var button = driver.FindElementById("idSIButton9");
+                    Advance();
+                }
+                catch (NoSuchElementException)
+                {
+                    // Nothing to do
+                }
+
                 driver.Navigate().GoToUrl($"{dashboardUrl}/Home/AboutMe");
 
                 waitCount = 0;
@@ -99,11 +110,18 @@ namespace FhirDashboard.Tests.E2E
                 {
 
                     Thread.Sleep(TimeSpan.FromMilliseconds(5000));
-                    var button = driver.FindElementById("idSIButton9");
-                    if (button.Enabled)
+
+                    // We may have to consent a second time since we are asking for a new audience
+                    try
                     {
-                        button.Click();
+                        var button = driver.FindElementById("idSIButton9");
+                        Advance();
                     }
+                    catch (NoSuchElementException)
+                    {
+                        // Nothing to do
+                    }
+
                     Assert.InRange(waitCount++, 0, 10);
                 }
 
