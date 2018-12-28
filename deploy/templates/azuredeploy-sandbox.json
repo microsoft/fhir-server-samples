@@ -52,6 +52,20 @@
                 "description": "URL for FHIR dashboard template"
             }
         },
+        "fhirDashboardRepositoryUrl": {
+            "type": "string",
+            "defaultValue": "https://github.com/Microsoft/fhir-server-samples",
+            "metadata": {
+                "description": "URL for FHIR dashboard repository"
+            }
+        },
+        "fhirDashboardRepositoryBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Repository branch for FHIR Dashboard"
+            }
+        },
         "deployDashboardSourceCode": {
             "type": "bool",
             "defaultValue": true,
@@ -115,6 +129,12 @@
                     },
                     "fhirServerUrl": {
                         "value": "[variables('fhirServiceUrl')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "[parameters('fhirDashboardRepositoryUrl')]"
+                    },
+                    "repositoryBranch": {
+                        "value": "[parameters('fhirDashboardRepositoryBranch')]"
                     },
                     "deploySourceCode": {
                         "value": "[parameters('deployDashboardSourceCode')]"

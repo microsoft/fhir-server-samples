@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Adds the required application registrations and user profiles to an AAD tenant
+Deletes application registrations and user profiles from an AAD tenant
 .DESCRIPTION
 #>
 param
