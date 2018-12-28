@@ -88,7 +88,7 @@ namespace FhirDashboard.Tests.E2E
                 while (!driver.Url.StartsWith($"{dashboardUrl}/Home/AboutMe"))
                 {
 
-                    Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                    Thread.Sleep(TimeSpan.FromMilliseconds(5000));
                     var button = driver.FindElementById("idSIButton9");
                     if (button.Enabled)
                     {
