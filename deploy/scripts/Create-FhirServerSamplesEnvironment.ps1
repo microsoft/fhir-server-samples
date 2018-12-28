@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Adds the required application registrations and user profiles to an AAD tenant
+Creates a new FHIR Server Samples environment.
 .DESCRIPTION
 #>
 param
@@ -19,7 +19,7 @@ param
     [string]$SourceRevision = "master",
 
     [Parameter(Mandatory = $false)]
-    [bool]$DeploySource = $true,
+    [bool]$DeploySource = $true
 )
 
 Set-StrictMode -Version Latest
@@ -60,7 +60,7 @@ $dashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts"
 $dashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password").SecretValueText
 
 # Deploy the template
-New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $environmentName -ResourceGroupName $environmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource
+New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource
 
 @{
     dashboardUrl              = $dashboardUrl
