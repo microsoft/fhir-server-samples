@@ -5,6 +5,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace FhirDashboard.Tests.E2E
         }
 
         [Fact]
-        public void DashboardLoginSuccessFull_and_TokenValidForFhirServer()
+        public async Task DashboardLoginSuccessFull_and_TokenValidForFhirServer()
         {
             Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
             Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
@@ -35,12 +36,21 @@ namespace FhirDashboard.Tests.E2E
             var options = new ChromeOptions();
             var dashboardUrl = _config["DashboardUrl"];
 
+            // We have to make sure the website is up
+            var client = new HttpClient();
+            var result =  await client.GetAsync(dashboardUrl);
+            int waitCount = 0;
+            while ((waitCount++ < 10) && !result.IsSuccessStatusCode)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(30));
+                result =  await client.GetAsync(dashboardUrl);
+            }
+
+            Assert.True(result.IsSuccessStatusCode);
+
             options.AddArgument("--headless");
             options.AddArgument("--disable-gpu");
             options.AddArgument("--incognito");
-
-            // TODO: We are accepting insecure certs to make it practical to run on build systems. A valid cert should be on the build system.
-            options.AcceptInsecureCertificates = true;
 
             // VSTS Hosted agents set the ChromeWebDriver Env, locally that is not the case
             // https://docs.microsoft.com/en-us/azure/devops/pipelines/test/continuous-test-selenium?view=vsts#decide-how-you-will-deploy-and-test-your-app
@@ -53,7 +63,7 @@ namespace FhirDashboard.Tests.E2E
             {
                 // TODO: This parameter has been set (too) conservatively to ensure that content
                 //       loads on build machines. Investigate if one could be less sensitive to that.
-                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(30);
+                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
 
                 void Advance()
                 {
@@ -84,7 +94,7 @@ namespace FhirDashboard.Tests.E2E
 
                 driver.Navigate().GoToUrl($"{dashboardUrl}/Home/AboutMe");
 
-                int waitCount = 0;
+                waitCount = 0;
                 while (!driver.Url.StartsWith($"{dashboardUrl}/Home/AboutMe"))
                 {
 
