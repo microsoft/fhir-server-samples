@@ -1,0 +1,142 @@
+<#
+.SYNOPSIS
+Adds the required application registrations and user profiles to an AAD tenant
+.DESCRIPTION
+#>
+param
+(
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$EnvironmentName,
+
+    [Parameter(Mandatory = $false)]
+    [string]$EnvironmentLocation = "West US",
+
+    [Parameter(Mandatory = $false )]
+    [String]$WebAppSuffix = "azurewebsites.net",
+
+    [Parameter(Mandatory = $false)]
+    [string]$ResourceGroupName = $EnvironmentName,
+
+    [parameter(Mandatory = $false)]
+    [string]$KeyVaultName = "$EnvironmentName-ts"
+)
+
+Set-StrictMode -Version Latest
+
+# Get current AzureAd context
+try {
+    $tenantInfo = Get-AzureADCurrentSessionInfo -ErrorAction Stop
+} 
+catch {
+    throw "Please log in to Azure AD with Connect-AzureAD cmdlet before proceeding"
+}
+
+# Get current AzureRm context
+try {
+    $azureRmContext = Get-AzureRmContext
+} 
+catch {
+    throw "Please log in to Azure RM with Login-AzureRmAccount cmdlet before proceeding"
+}
+
+# Ensure that we have the FhirServer PS Module loaded
+if (Get-Module -Name FhirServer) {
+    Write-Host "FhirServer PS module is loaded"
+} else {
+    Write-Host "Cloning FHIR Server repo to get access to FhirServer PS module."
+    if (!(Test-Path -Path ".\fhir-server")) {
+        git clone --quiet https://github.com/Microsoft/fhir-server | Out-Null
+    }
+    Import-Module .\fhir-server\samples\scripts\PowerShell\FhirServer\FhirServer.psd1
+}
+
+$keyVault = Get-AzureRmKeyVault -VaultName $KeyVaultName
+
+if (!$keyVault) {
+    Write-Host "Creating keyvault with the name $KeyVaultName"
+    $resourceGroup = Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
+    if (!$resourceGroup) {
+        New-AzureRmResourceGroup -Name $ResourceGroupName -Location $EnvironmentLocation | Out-Null
+    }
+    New-AzureRmKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroupName -Location $EnvironmentLocation | Out-Null
+}
+
+if ($azureRmContext.Account.Type -eq "User") {
+    Write-Host "Current context is user: $($azureRmContext.Account.Id)"
+    $currentObjectId = (Get-AzureRmADUser -UserPrincipalName $azureRmContext.Account.Id).Id
+}
+elseif ($azureRmContext.Account.Type -eq "ServicePrincipal") {
+    Write-Host "Current context is service principal: $($azureRmContext.Account.Id)"
+    $currentObjectId = (Get-AzureRmADServicePrincipal -ServicePrincipalName $azureRmContext.Account.Id).Id
+}
+else {
+    Write-Host "Current context is account of type '$($azureRmContext.Account.Type)' with id of '$($azureRmContext.Account.Id)"
+    throw "Running as an unsupported account type. Please use either a 'User' or 'Service Principal' to run this command"
+}
+
+if ($currentObjectId) {
+    Write-Host "Adding permission to keyvault for $currentObjectId"
+    Set-AzureRmKeyVaultAccessPolicy -VaultName $KeyVaultName -ObjectId $currentObjectId -PermissionsToSecrets Get, Set, List
+}
+
+Write-Host "Ensuring API application exists"
+
+$fhirServiceName = "${EnvironmentName}srvr"
+$fhirServiceUrl = "https://${fhirServiceName}.${WebAppSuffix}"
+
+$application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirServiceUrl')"
+
+if (!$application) {
+    $newApplication = New-FhirServerApiApplicationRegistration -FhirServiceAudience $fhirServiceUrl -AppRoles "admin"
+    
+    # Change to use applicationId returned
+    $application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirServiceUrl')"
+}
+
+$UserNamePrefix = "${EnvironmentName}-"
+$userId = "${UserNamePrefix}admin"
+$domain = $tenantInfo.TenantDomain
+$userUpn = "${userId}@${domain}"
+
+# See if the user exists
+$aadUser = Get-AzureADUser -searchstring $userId
+
+Add-Type -AssemblyName System.Web
+$password = [System.Web.Security.Membership]::GeneratePassword(16, 5)
+$passwordSecureString = ConvertTo-SecureString $password -AsPlainText -Force
+
+if ($aadUser) {
+    Set-AzureADUserPassword -ObjectId $aadUser.ObjectId -Password $passwordSecureString -EnforceChangePasswordPolicy $false -ForceChangePasswordNextLogin $false
+}
+else {
+    $PasswordProfile = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
+    $PasswordProfile.Password = $password
+    $PasswordProfile.EnforceChangePasswordPolicy = $false
+    $PasswordProfile.ForceChangePasswordNextLogin = $false
+
+    $aadUser = New-AzureADUser -DisplayName $userId -PasswordProfile $PasswordProfile -UserPrincipalName $userUpn -AccountEnabled $true -MailNickName $userId
+}
+
+$upnSecureString = ConvertTo-SecureString $userUpn -AsPlainText -Force
+Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-upn" -SecretValue $upnSecureString | Out-Null   
+Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-password" -SecretValue $passwordSecureString | Out-Null   
+Set-FhirServerUserAppRoleAssignments -ApiAppId $application.AppId -UserPrincipalName $userUpn -AppRoles "admin"
+
+$dashboardName = "${EnvironmentName}dash"
+$dashboardUrl = "https://${dashboardName}.${WebAppSuffix}"
+$dashboardReplyUrl = "${dashboardUrl}/signin-oidc"
+
+$confidentialClientAppName = "${EnvironmentName}-confidential-client"
+$confidentialClient = Get-AzureAdApplication -Filter "DisplayName eq '$confidentialClientAppName'"
+if (!$confidentialClient) {
+    $confidentialClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $confidentialClientAppName -ReplyUrl $dashboardReplyUrl
+    $secretSecureString = ConvertTo-SecureString $confidentialClient.AppSecret -AsPlainText -Force
+} else {
+    $existingPassword = Get-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId | Remove-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId
+    $newPassword = New-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId
+    $secretSecureString = ConvertTo-SecureString $newPassword.Value -AsPlainText -Force
+}
+$secretConfidentialClientId = ConvertTo-SecureString $confidentialClient.AppId -AsPlainText -Force
+Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-id" -SecretValue $secretConfidentialClientId| Out-Null
+Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-secret" -SecretValue $secretSecureString | Out-Null

@@ -1,0 +1,147 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the demo environment. Will be used as prefix for resources."
+            },
+            "maxLength": 12
+        },
+        "aadAuthority": {
+            "type": "string",
+            "defaultValue": "https://login.microsoftonline.com/common",
+            "metadata": {
+                "description": "OAuth Authority for FHIR server"
+            }
+        },
+        "aadFhirServerAudience": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Audience (resource) of the FHIR API app registration"
+            }
+        },
+        "aadDashboardClientId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "AAD client application id for accessing FHIR server"
+            }
+        },
+        "aadDashboardClientSecret": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "AAD client secret"
+            }
+        },
+        "fhirServerTemplateUrl": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server/master/samples/templates/default-azuredeploy.json",
+            "metadata": {
+                "description": "URL for FHIR Server template"
+            }
+        },
+        "fhirDashboardTemplateUrl": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard.json",
+            "metadata": {
+                "description": "URL for FHIR dashboard template"
+            }
+        },
+        "fhirDashboardRepositoryUrl": {
+            "type": "string",
+            "defaultValue": "https://github.com/Microsoft/fhir-server-samples",
+            "metadata": {
+                "description": "URL for FHIR dashboard repository"
+            }
+        },
+        "fhirDashboardRepositoryBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Repository branch for FHIR Dashboard"
+            }
+        },
+        "deployDashboardSourceCode": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "If true, dashboard source code will be deployed from repo"
+            }
+        }
+    },
+    "variables": {
+        "environmentName": "[if(empty(parameters('environmentName')), concat('fhirdemo', uniqueString(resourceGroup().id)), parameters('environmentName'))]",
+        "fhirServiceName": "[concat(variables('environmentName'),'srvr')]",
+        "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurewebsites.net')]",
+        "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
+        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]"
+    },
+    "resources": [
+        {
+            "name": "[concat(variables('fhirServiceName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[parameters('fhirServerTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "serviceName": {
+                        "value": "[variables('fhirServiceName')]"
+                    },
+                    "securityAuthenticationAuthority": {
+                        "value": "[parameters('aadAuthority')]"
+                    },
+                    "securityAuthenticationAudience": {
+                        "value": "[variables('aadFhirServerAudience')]"
+                    }
+                },
+                "mode": "incremental"
+            }
+        },
+        {
+            "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[parameters('fhirDashboardTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('fhirDashboardName')]"
+                    },
+                    "aadAuthority": {
+                        "value": "[parameters('aadAuthority')]"
+                    },
+                    "aadClientId": {
+                        "value": "[parameters('aadDashboardClientId')]"
+                    },
+                    "aadClientSecret": {
+                        "value": "[parameters('aadDashboardClientSecret')]"
+                    },
+                    "fhirServerUrl": {
+                        "value": "[variables('fhirServiceUrl')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "[parameters('fhirDashboardRepositoryUrl')]"
+                    },
+                    "repositoryBranch": {
+                        "value": "[parameters('fhirDashboardRepositoryBranch')]"
+                    },
+                    "deploySourceCode": {
+                        "value": "[parameters('deployDashboardSourceCode')]"
+                    }
+                },
+                "mode": "incremental"
+            }
+        }
+    ]
+}

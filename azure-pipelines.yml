@@ -12,8 +12,44 @@ steps:
   inputs:
     version: '2.2.101'
 
-- script: |
-    dotnet build --configuration $(buildConfiguration)
-    dotnet publish --configuration $(buildConfiguration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
+- script: dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
+  displayName: 'dotnet build $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish web'
+  inputs:
+    command: publish
+    projects: '**/FhirDashboard.csproj'
+    arguments: '--output $(build.artifactStagingDirectory)/dashboard --configuration $(buildConfiguration) --no-build'
+    publishWebProjects: false
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish Integration Tests'
+  inputs:
+    command: publish
+    projects: 'test/**/*.csproj'
+    arguments: '--version-suffix $(build.buildnumber) -o "$(build.binariesdirectory)/IntegrationTests" --configuration $(buildConfiguration) --no-build'
+    publishWebProjects: false
+    zipAfterPublish: false
+
 
 - task: PublishBuildArtifacts@1
+  displayName: 'publish Dashboard artifacts'
+  inputs:
+    pathToPublish: '$(build.artifactStagingDirectory)/dashboard'
+    artifactName: 'deploy'
+    artifactType: 'container'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'publish samples'
+  inputs:
+    pathToPublish: './deploy/'
+    artifactName: 'deploy'
+    artifactType: 'container'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'publish Integration Tests'
+  inputs:
+    pathToPublish: '$(build.binariesdirectory)/IntegrationTests'
+    artifactName: 'IntegrationTests'
+    artifactType: 'container'
