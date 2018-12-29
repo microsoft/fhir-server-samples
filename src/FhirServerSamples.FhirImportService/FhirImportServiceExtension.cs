@@ -1,4 +1,5 @@
 ﻿using System;
+using EnsureThat;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,8 @@ namespace FhirServerSamples.FhirImportService
         public static IServiceCollection AddFhirImportService(
             this IServiceCollection services)
         {
+            EnsureArg.IsNotNull(services, nameof(services));
+
             services.AddHostedService<FhirImportService>();
             return services;
         }
