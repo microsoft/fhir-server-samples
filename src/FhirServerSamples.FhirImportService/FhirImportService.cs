@@ -1,12 +1,17 @@
 using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using EnsureThat;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Newtonsoft.Json.Linq;
+using System.Text;
+using System.Linq;
 
 namespace FhirServerSamples.FhirImportService
 {
@@ -17,10 +22,12 @@ namespace FhirServerSamples.FhirImportService
         private IConfiguration _config;
         private FhirImportServiceConfiguration _options;
         private CloudStorageAccount _storageAccount;
-        private CloudBlobClient _cloudBlobClient;
         private CloudBlobContainer _importCloudBlobContainer;
         private CloudBlobContainer _rejectCloudBlobContainer;
         private CancellationToken _cancellationToken;
+        private AuthenticationContext _authContext;
+        private ClientCredential _clientCredential;
+        private HttpClient _httpClient;
 
         public FhirImportService(ILogger<FhirImportService> logger,
                                  IConfiguration configuration)
@@ -51,6 +58,22 @@ namespace FhirServerSamples.FhirImportService
             {
                 _logger.LogCritical($"Invalid storage connection string: {_options.StorageConnectionString}");
                 throw new StorageException("Invalid connection string");
+            }
+
+            // We will attempt to secure a token during setup
+            try
+            {
+                _authContext = new AuthenticationContext(_options.Authority);
+                _clientCredential = new ClientCredential(_options.ClientId, _options.ClientSecret);
+                _httpClient = new HttpClient();
+                _httpClient.BaseAddress = new Uri(_options.FhirServerUrl);
+                var authResult = _authContext.AcquireTokenAsync(_options.Audience, _clientCredential).Result;
+            }
+            catch (Exception ee)
+            {
+                _logger.LogCritical(String.Format("Unable to obtain token to access FHIR server in FhirImportService {0}",
+                    ee.ToString()));
+                throw;
             }
 
         }
@@ -87,7 +110,102 @@ namespace FhirServerSamples.FhirImportService
                 blobContinuationToken = results.ContinuationToken;
                 foreach (IListBlobItem item in results.Results)
                 {
-                    _logger.LogInformation($"Found item {item.ToString()}");
+                    var blob = item as CloudBlockBlob;
+                    if (blob != null)
+                    {
+                        var fhirString = await blob.DownloadTextAsync();
+
+                        JObject o = JObject.Parse(fhirString);
+                        JArray entries = (JArray)o["entry"];
+                        _logger.LogInformation("Number of entries: " + entries.Count);
+
+
+                        try {
+                            for (int i = 0; i < entries.Count; i++)
+                            {
+                                string entry_json = (((JObject)entries[i])["resource"]).ToString();
+                                string resource_type = (string)(((JObject)entries[i])["resource"]["resourceType"]);
+                                string id = (string)(((JObject)entries[i])["resource"]["id"]);
+
+                                //Rewrite subject reference
+                                if (((JObject)entries[i])["resource"]["subject"] != null)
+                                {
+                                    string subject_reference = (string)(((JObject)entries[i])["resource"]["subject"]["reference"]);
+                                    if (!String.IsNullOrEmpty(subject_reference))
+                                    {
+                                        for (int j = 0; j < entries.Count; j++)
+                                        {
+                                            if ((string)(((JObject)entries[j])["fullUrl"]) == subject_reference)
+                                            {
+                                                subject_reference = (string)(((JObject)entries[j])["resource"]["resourceType"]) + "/" + (string)(((JObject)entries[j])["resource"]["id"]);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    ((JObject)entries[i])["resource"]["subject"]["reference"] = subject_reference;
+                                    entry_json = (((JObject)entries[i])["resource"]).ToString();
+                                }
+
+                                if (((JObject)entries[i])["resource"]["context"] != null)
+                                {
+                                    string context_reference = (string)(((JObject)entries[i])["resource"]["context"]["reference"]);
+                                    if (!String.IsNullOrEmpty(context_reference))
+                                    {
+                                        for (int j = 0; j < entries.Count; j++)
+                                        {
+                                            if ((string)(((JObject)entries[j])["fullUrl"]) == context_reference)
+                                            {
+                                                context_reference = (string)(((JObject)entries[j])["resource"]["resourceType"]) + "/" + (string)(((JObject)entries[j])["resource"]["id"]);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    ((JObject)entries[i])["resource"]["context"]["reference"] = context_reference;
+                                    entry_json = (((JObject)entries[i])["resource"]).ToString();
+                                }
+
+                                //If we already have a token, we should get the cached one, otherwise, refresh
+                                var authResult = _authContext.AcquireTokenAsync(_options.Audience, _clientCredential).Result;
+                                _httpClient.DefaultRequestHeaders.Clear();
+                                _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + authResult.AccessToken);
+                                StringContent content = new StringContent(entry_json, Encoding.UTF8, "application/json");
+
+                                HttpResponseMessage uploadResult = null;
+
+                                if (String.IsNullOrEmpty(id))
+                                {
+                                    uploadResult = await _httpClient.PostAsync($"/{resource_type}", content);
+                                }
+                                else
+                                {
+                                    uploadResult = await _httpClient.PutAsync($"/{resource_type}/{id}", content);
+                                }
+
+                                if (!uploadResult.IsSuccessStatusCode)
+                                {
+                                    string resultContent = await uploadResult.Content.ReadAsStringAsync();
+                                    _logger.LogCritical(resultContent);
+                                    throw new FhirImportException("Unable to upload resources to FHIR server");
+                                }
+                            }
+
+                            // We are done with this blob, upload was successful, it will be delete
+                            await blob.DeleteAsync();
+                        }
+                        catch (FhirImportException)
+                        {
+                            // Something went wrong. Move the blob to the "rejected" container
+                            CloudBlockBlob destBlob;
+
+                            //Copy source blob to destination container
+                            string name = blob.Uri.Segments.Last();
+                            destBlob = _rejectCloudBlobContainer.GetBlockBlobReference(name);
+                            await destBlob.StartCopyAsync(blob);
+ 
+                            //remove source blob after copy is done.
+                            await blob.DeleteAsync();
+                        }
+                    }
                 }
 
             } while (!_cancellationToken.IsCancellationRequested && blobContinuationToken != null); // Loop while the continuation token is not null.

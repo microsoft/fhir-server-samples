@@ -32,16 +32,21 @@ $dashboardUrl = "https://${EnvironmentName}dash.azurewebsites.net"
 $fhirServerUrl = "https://${EnvironmentName}srvr.azurewebsites.net"
 $dashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-upn").SecretValueText
 $dashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password").SecretValueText
+$serviceClientId  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-id").SecretValueText
+$serviceClientSecret  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-secret").SecretValueText
 
 $env:FhirServerUrl = $fhirServerUrl
 $env:DashboardUrl = $dashboardUrl
 $env:DashboardUserUpn = $dashboardUserUpn
 $env:DashboardUserPassword = $dashboardUserPassword
+$env:ServiceClientId = $serviceClientId
+$env:ServiceClientSecret = $serviceClientSecret
 
 @{
     dashboardUrl              = $dashboardUrl
     fhirServerUrl             = $fhirServerUrl
     dashboardUserUpn          = $dashboardUserUpn
     dashboardUserPassword     = $dashboardUserPassword
+    serviceClientId           = $serviceClientId
+    serviceClientSecret       = $serviceClientSecret
 }
-
