@@ -135,7 +135,7 @@
         "deployAppInsights": "[and(parameters('deployApplicationInsights'),not(variables('isMAG')))]",
         "appInsightsName": "[concat('AppInsights-', variables('siteName'))]",
         "aadTenant": "[last(split(parameters('aadAuthority'),'/'))]",
-        "fhirImportStorageAccountName": "[concat(variables('siteName'),'sa')]"
+        "fhirImportStorageAccountName": "[replace(concat(variables('siteName'),'sa'),'-','')]"
     },
     "resources": [
         {
