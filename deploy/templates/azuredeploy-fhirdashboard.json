@@ -219,8 +219,8 @@
                         "FhirImportService:FhirServerUrl": "[parameters('fhirServerUrl')]",
                         "FhirImportService:Authority": "[concat('https://login.microsoftonline.com/', variables('aadTenant'))]",
                         "FhirImportService:Audience": "[parameters('fhirServerUrl')]",
-                        "FhirImportService:ClientId": "[variables('aadServiceClientId')]",
-                        "FhirImportService:ClientSecret": "[variables('aadServiceClientSecret')]"
+                        "FhirImportService:ClientId": "[parameters('aadServiceClientId')]",
+                        "FhirImportService:ClientSecret": "[parameters('aadServiceClientSecret')]"
                       }
                 },        
                 {
