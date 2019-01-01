@@ -12,6 +12,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace FhirServerSamples.FhirImportService
 {
@@ -114,18 +115,40 @@ namespace FhirServerSamples.FhirImportService
                     if (blob != null)
                     {
                         var fhirString = await blob.DownloadTextAsync();
+                        
+                        JObject o;
+                        try 
+                        {
+                            o = JObject.Parse(fhirString);
+                        }
+                        catch (JsonReaderException)
+                        {
+                            _logger.LogError("Input file is not a valid JSON document");
+                            await MoveBlobToRejected(blob);
+                            continue; //Process the next blob
+                        }
 
-                        JObject o = JObject.Parse(fhirString);
                         JArray entries = (JArray)o["entry"];
-                        _logger.LogInformation("Number of entries: " + entries.Count);
-
+                        _logger.LogInformation(string.Format("Processing file '{0}' Number of entries: {1}", item.Uri.ToString(), entries.Count));
 
                         try {
                             for (int i = 0; i < entries.Count; i++)
                             {
                                 string entry_json = (((JObject)entries[i])["resource"]).ToString();
+                                if (string.IsNullOrEmpty(entry_json))
+                                {
+                                    _logger.LogError("No 'resource' section found in JSON document");
+                                    throw new FhirImportException("'resource' not found or empty");
+                                }
+
                                 string resource_type = (string)(((JObject)entries[i])["resource"]["resourceType"]);
                                 string id = (string)(((JObject)entries[i])["resource"]["id"]);
+
+                                if (string.IsNullOrEmpty(resource_type))
+                                {
+                                    _logger.LogError("No resource_type found.");
+                                    throw new FhirImportException("No resource_type in resource.");
+                                }
 
                                 //Rewrite subject reference
                                 if (((JObject)entries[i])["resource"]["subject"] != null)
@@ -184,7 +207,7 @@ namespace FhirServerSamples.FhirImportService
                                 if (!uploadResult.IsSuccessStatusCode)
                                 {
                                     string resultContent = await uploadResult.Content.ReadAsStringAsync();
-                                    _logger.LogCritical(resultContent);
+                                    _logger.LogError(resultContent);
                                     throw new FhirImportException("Unable to upload resources to FHIR server");
                                 }
                             }
@@ -194,16 +217,7 @@ namespace FhirServerSamples.FhirImportService
                         }
                         catch (FhirImportException)
                         {
-                            // Something went wrong. Move the blob to the "rejected" container
-                            CloudBlockBlob destBlob;
-
-                            //Copy source blob to destination container
-                            string name = blob.Uri.Segments.Last();
-                            destBlob = _rejectCloudBlobContainer.GetBlockBlobReference(name);
-                            await destBlob.StartCopyAsync(blob);
- 
-                            //remove source blob after copy is done.
-                            await blob.DeleteAsync();
+                            await MoveBlobToRejected(blob);
                         }
                     }
                 }
@@ -224,10 +238,22 @@ namespace FhirServerSamples.FhirImportService
 
             return Task.CompletedTask;
         }
-
         public void Dispose()
         {
             _timer?.Dispose();
+        }
+
+        private async Task MoveBlobToRejected(CloudBlockBlob blob)
+        {
+            CloudBlockBlob destBlob;
+
+            //Copy source blob to destination container
+            string name = blob.Uri.Segments.Last();
+            destBlob = _rejectCloudBlobContainer.GetBlockBlobReference(name);
+            await destBlob.StartCopyAsync(blob);
+
+            //remove source blob after copy is done.
+            await blob.DeleteAsync();
         }
     }
 }

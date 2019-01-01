@@ -56,11 +56,13 @@ $fhirServerUrl = "https://${EnvironmentName}srvr.azurewebsites.net"
 
 $confidentialClientId = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-id").SecretValueText
 $confidentialClientSecret = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-secret").SecretValueText
+$serviceClientId = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-id").SecretValueText
+$serviceClientSecret = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-secret").SecretValueText
 $dashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-upn").SecretValueText
 $dashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password").SecretValueText
 
 # Deploy the template
-New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource
+New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource
 
 @{
     dashboardUrl              = $dashboardUrl
