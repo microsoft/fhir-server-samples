@@ -129,7 +129,17 @@ namespace FhirServerSamples.FhirImportService
                         }
 
                         JArray entries = (JArray)o["entry"];
-                        _logger.LogInformation(string.Format("Processing file '{0}' Number of entries: {1}", item.Uri.ToString(), entries.Count));
+                        if (entries != null)
+                        {
+                            _logger.LogInformation(string.Format("Processing file '{0}' Number of entries: {1}", item.Uri.ToString(), entries.Count));
+                        }
+                        else
+                        {
+                            _logger.LogError("JSON file does is not a bundle with 'entry' field");
+                            await MoveBlobToRejected(blob);
+                            continue; //Process the next blob
+                        }
+
 
                         try {
                             for (int i = 0; i < entries.Count; i++)
@@ -222,7 +232,8 @@ namespace FhirServerSamples.FhirImportService
                     }
                 }
 
-            } while (!_cancellationToken.IsCancellationRequested && blobContinuationToken != null); // Loop while the continuation token is not null.
+            } 
+            while (!_cancellationToken.IsCancellationRequested && blobContinuationToken != null); // Loop while the continuation token is not null.
 
             // Start timer again
             _timer.Change(TimeSpan.FromSeconds(_options.PollingIntervalSeconds), TimeSpan.FromSeconds(_options.PollingIntervalSeconds));

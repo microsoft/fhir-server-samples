@@ -29,6 +29,11 @@ $confidentialClientSecret  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentN
 $serviceClientId  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-id").SecretValueText
 $serviceClientSecret  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-secret").SecretValueText
 
+$storageAccountName = ("${EnvironmentName}dashsa").Replace('-','');
+$storageAccountKey = (Get-AzureRmStorageAccountKey -Name $storageAccountName -ResourceGroupName $EnvironmentName)[0].Value
+$storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}"
+
+$env:StorageAccountConnectionString = $storageAccountConnectionString
 $env:FhirServerUrl = $fhirServerUrl
 $env:DashboardUrl = $dashboardUrl
 $env:DashboardUserUpn = $dashboardUserUpn
@@ -39,12 +44,13 @@ $env:ServiceClientId = $serviceClientId
 $env:ServiceClientSecret = $serviceClientSecret
 
 @{
-    dashboardUrl              = $dashboardUrl
-    fhirServerUrl             = $fhirServerUrl
-    dashboardUserUpn          = $dashboardUserUpn
-    dashboardUserPassword     = $dashboardUserPassword
-    confidentialClientId      = $serviceClientId
-    confidentialClientSecret  = $serviceClientSecret
-    serviceClientId           = $serviceClientId
-    serviceClientSecret       = $serviceClientSecret
+    dashboardUrl                   = $dashboardUrl
+    fhirServerUrl                  = $fhirServerUrl
+    dashboardUserUpn               = $dashboardUserUpn
+    dashboardUserPassword          = $dashboardUserPassword
+    confidentialClientId           = $serviceClientId
+    confidentialClientSecret       = $serviceClientSecret
+    serviceClientId                = $serviceClientId
+    serviceClientSecret            = $serviceClientSecret
+    storageAccountConnectionString = $storageAccountConnectionString
 }
