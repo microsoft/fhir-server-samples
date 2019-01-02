@@ -4,7 +4,14 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <IsPackable>false</IsPackable>
     <UserSecretsId>FhirDashboard.Tests.E2E.17fb4333-0e87-493a-91a1-5f2358019e34</UserSecretsId>
+      <CodeAnalysisRuleSet>..\..\CustomAnalysisRules.Test.ruleset</CodeAnalysisRuleSet>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\..\stylecop.json" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="TestFiles\Patient.json" />
@@ -29,6 +36,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     <PackageReference Include="selenium.chrome.webdriver" Version="2.43" />
     <PackageReference Include="selenium.webdriver" Version="3.141.0" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61" />
   </ItemGroup>
 
 </Project>

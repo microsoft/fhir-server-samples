@@ -1,6 +1,8 @@
-using Microsoft.Extensions.Configuration;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
+// -------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
+// -------------------------------------------------------------------------------------------------
+
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
@@ -9,6 +11,9 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using Xunit;
 
 namespace FhirDashboard.Tests.E2E
@@ -39,12 +44,12 @@ namespace FhirDashboard.Tests.E2E
             // We have to make sure the website is up
             // On a fresh deployment it can take time before site is deployed
             var client = new HttpClient();
-            var result =  await client.GetAsync(dashboardUrl);
+            var result = await client.GetAsync(dashboardUrl);
             int waitCount = 0;
             while ((waitCount++ < 10) && !result.IsSuccessStatusCode)
             {
                 Thread.Sleep(TimeSpan.FromSeconds(30));
-                result =  await client.GetAsync(dashboardUrl);
+                result = await client.GetAsync(dashboardUrl);
             }
 
             Assert.True(result.IsSuccessStatusCode);
@@ -109,7 +114,6 @@ namespace FhirDashboard.Tests.E2E
                 waitCount = 0;
                 while (!driver.Url.StartsWith($"{dashboardUrl}/Home/AboutMe"))
                 {
-
                     Thread.Sleep(TimeSpan.FromMilliseconds(5000));
 
                     // We may have to consent a second time since we are asking for a new audience
@@ -127,7 +131,7 @@ namespace FhirDashboard.Tests.E2E
                 }
 
                 var element = driver.FindElement(By.Id("tokenfield"));
-                String elementval = element.GetAttribute("value");
+                string elementval = element.GetAttribute("value");
 
                 var jwtHandler = new JwtSecurityTokenHandler();
 
@@ -140,7 +144,7 @@ namespace FhirDashboard.Tests.E2E
 
                 var tokenAudience = aud.First().Value;
 
-                Assert.Equal(_config["FhirServerUrl"], tokenAudience); 
+                Assert.Equal(_config["FhirServerUrl"], tokenAudience);
             }
         }
     }

@@ -1,6 +1,7 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
+// -------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
+// -------------------------------------------------------------------------------------------------
 using System;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,9 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Xunit;
 
 namespace FhirDashboard.Tests.E2E
@@ -17,6 +21,7 @@ namespace FhirDashboard.Tests.E2E
         private const string ImportContainerName = "fhirimport";
         private const string RejectContainerName = "fhirrejected";
         private IConfiguration _config;
+
         public FhirImportServiceTests()
         {
             _config = new ConfigurationBuilder()
@@ -49,16 +54,17 @@ namespace FhirDashboard.Tests.E2E
             // We have to make sure the website is up
             // On a fresh deployment it can take time before site is deployed
             var client = new HttpClient();
-            var result =  await client.GetAsync(siteUri);
+            var result = await client.GetAsync(siteUri);
             int waitCount = 0;
             while ((waitCount++ < maxSecondsToWait) && !result.IsSuccessStatusCode)
             {
                 Thread.Sleep(TimeSpan.FromSeconds(1));
-                result =  await client.GetAsync(siteUri);
+                result = await client.GetAsync(siteUri);
             }
 
             return result.IsSuccessStatusCode;
         }
+
         private static string GetEmbeddedStringContent(string embeddedResourceSubNamespace, string fileName)
         {
             string resourceName = $"{typeof(FhirImportServiceTests).Namespace}.{embeddedResourceSubNamespace}.{fileName}";
@@ -84,7 +90,6 @@ namespace FhirDashboard.Tests.E2E
 
         private async Task<bool> WaitForImportToBeEmpty(int maxSecondsToWait)
         {
-
             Assert.True(!string.IsNullOrWhiteSpace(_config["StorageAccountConnectionString"]));
 
             CloudStorageAccount storageAccount;
@@ -99,9 +104,11 @@ namespace FhirDashboard.Tests.E2E
                 {
                     return true;
                 }
+
                 Thread.Sleep(TimeSpan.FromMilliseconds(1000));
                 secondsWaited++;
             }
+
             return false;
         }
 
@@ -129,8 +136,8 @@ namespace FhirDashboard.Tests.E2E
                         await blob.DeleteAsync();
                     }
                 }
-            } 
-            while (blobContinuationToken != null); 
+            }
+            while (blobContinuationToken != null);
         }
 
         private async Task<bool> IsFileInRejectContainer(string fileName)
@@ -157,11 +164,10 @@ namespace FhirDashboard.Tests.E2E
                         return true;
                     }
                 }
-            } 
+            }
             while (blobContinuationToken != null);
 
             return false;
         }
-
     }
 }
