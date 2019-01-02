@@ -25,8 +25,11 @@ namespace FhirDashboard.Tests.E2E
                 .Build();
         }
 
-        [Fact]
-        public async Task UploadedTxtFileIsRejected()
+        [Theory]
+        [InlineData("TextFileForRejection.txt", false)]
+        [InlineData("Patient.json", false)]
+        [InlineData("Patient-Synthea.json", true)]
+        public async Task WhenUploadingFileToStorageItIsAcceptedOrRejected(string testFileName, bool acceptFile)
         {
             Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
             Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
@@ -34,45 +37,10 @@ namespace FhirDashboard.Tests.E2E
             Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
             Assert.True(await CheckForSiteSuccess(new Uri(_config["FhirServerUrl"].TrimEnd('/') + "/metadata")));
 
-            const string testFileName = "TextFileForRejection.txt";
             await DeleteFileFromRejectContainer(testFileName);
             await UploadTestFileToImport(testFileName);
             Assert.True(await WaitForImportToBeEmpty(30));
-            Assert.True(await IsFileInRejectContainer(testFileName));
-            await DeleteFileFromRejectContainer(testFileName);
-        }
-
-        [Fact]
-        public async Task UploadedSingleResourceIsRejected()
-        {
-            Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
-            Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
-
-            Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
-            Assert.True(await CheckForSiteSuccess(new Uri(_config["FhirServerUrl"].TrimEnd('/') + "/metadata")));
-
-            const string testFileName = "Patient.json";
-            await DeleteFileFromRejectContainer(testFileName);
-            await UploadTestFileToImport(testFileName);
-            Assert.True(await WaitForImportToBeEmpty(30));
-            Assert.True(await IsFileInRejectContainer(testFileName));
-            await DeleteFileFromRejectContainer(testFileName);
-        }
-
-        [Fact]
-        public async Task UploadedSyntheaIsNotRejected()
-        {
-            Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
-            Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
-
-            Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
-            Assert.True(await CheckForSiteSuccess(new Uri(_config["FhirServerUrl"].TrimEnd('/') + "/metadata")));
-
-            const string testFileName = "Patient-Synthea.json";
-            await DeleteFileFromRejectContainer(testFileName);
-            await UploadTestFileToImport(testFileName);
-            Assert.True(await WaitForImportToBeEmpty(30));
-            Assert.False(await IsFileInRejectContainer(testFileName));
+            Assert.True(await IsFileInRejectContainer(testFileName) != acceptFile);
             await DeleteFileFromRejectContainer(testFileName);
         }
 
