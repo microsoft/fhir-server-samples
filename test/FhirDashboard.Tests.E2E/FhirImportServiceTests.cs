@@ -39,8 +39,8 @@ namespace FhirDashboard.Tests.E2E
 
             await DeleteFileFromRejectContainer(testFileName);
             await UploadTestFileToImport(testFileName);
-            Assert.True(await WaitForImportToBeEmpty(30));
-            Assert.True(await IsFileInRejectContainer(testFileName) != acceptFile);
+            Assert.True(await WaitForImportToBeEmpty(300));
+            Assert.Equal(!acceptFile, await IsFileInRejectContainer(testFileName));
             await DeleteFileFromRejectContainer(testFileName);
         }
 
