@@ -15,4 +15,9 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="2.6.2" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <ProjectReference Include="..\FhirServerSamples.FhirImportService\FhirServerSamples.FhirImportService.csproj" />
+  </ItemGroup>
+
 </Project>

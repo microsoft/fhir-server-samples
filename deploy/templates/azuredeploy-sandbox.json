@@ -26,16 +26,26 @@
         },
         "aadDashboardClientId": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "AAD client application id for accessing FHIR server"
             }
         },
         "aadDashboardClientSecret": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "AAD client secret"
+            }
+        },
+        "aadServiceClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "AAD service client application id for accessing FHIR server"
+            }
+        },
+        "aadServiceClientSecret": {
+            "type": "string",
+            "metadata": {
+                "description": "AAD service client secret"
             }
         },
         "fhirServerTemplateUrl": {
@@ -126,6 +136,12 @@
                     },
                     "aadClientSecret": {
                         "value": "[parameters('aadDashboardClientSecret')]"
+                    },
+                    "aadServiceClientId": {
+                        "value": "[parameters('aadServiceClientId')]"
+                    },
+                    "aadServiceClientSecret": {
+                        "value": "[parameters('aadServiceClientSecret')]"
                     },
                     "fhirServerUrl": {
                         "value": "[variables('fhirServiceUrl')]"
