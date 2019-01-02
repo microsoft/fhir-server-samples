@@ -1,18 +1,23 @@
+// -------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
+// -------------------------------------------------------------------------------------------------
+
 using System;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnsureThat;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
-using Newtonsoft.Json.Linq;
-using System.Text;
-using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FhirServerSamples.FhirImportService
 {
@@ -30,8 +35,9 @@ namespace FhirServerSamples.FhirImportService
         private ClientCredential _clientCredential;
         private HttpClient _httpClient;
 
-        public FhirImportService(ILogger<FhirImportService> logger,
-                                 IConfiguration configuration)
+        public FhirImportService(
+            ILogger<FhirImportService> logger,
+            IConfiguration configuration)
         {
             _logger = logger;
             _config = configuration;
@@ -45,9 +51,9 @@ namespace FhirServerSamples.FhirImportService
             {
                 try
                 {
-                    CloudBlobClient _cloudBlobClient = _storageAccount.CreateCloudBlobClient();
-                    _importCloudBlobContainer = _cloudBlobClient.GetContainerReference(_options.ImportContainerName);
-                    _rejectCloudBlobContainer = _cloudBlobClient.GetContainerReference(_options.RejectedContainerName);
+                    CloudBlobClient cloudBlobClient = _storageAccount.CreateCloudBlobClient();
+                    _importCloudBlobContainer = cloudBlobClient.GetContainerReference(_options.ImportContainerName);
+                    _rejectCloudBlobContainer = cloudBlobClient.GetContainerReference(_options.RejectedContainerName);
                 }
                 catch (StorageException)
                 {
@@ -72,11 +78,9 @@ namespace FhirServerSamples.FhirImportService
             }
             catch (Exception ee)
             {
-                _logger.LogCritical(String.Format("Unable to obtain token to access FHIR server in FhirImportService {0}",
-                    ee.ToString()));
+                _logger.LogCritical(string.Format("Unable to obtain token to access FHIR server in FhirImportService {0}", ee.ToString()));
                 throw;
             }
-
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -94,8 +98,7 @@ namespace FhirServerSamples.FhirImportService
                 throw;
             }
 
-            _timer = new Timer(ProcessInput, null, TimeSpan.Zero,
-                TimeSpan.FromSeconds(_options.PollingIntervalSeconds));
+            _timer = new Timer(ProcessInput, null, TimeSpan.Zero, TimeSpan.FromSeconds(_options.PollingIntervalSeconds));
         }
 
         private async void ProcessInput(object state)
@@ -107,6 +110,7 @@ namespace FhirServerSamples.FhirImportService
             do
             {
                 var results = await _importCloudBlobContainer.ListBlobsSegmentedAsync(null, blobContinuationToken);
+
                 // Get the value of the continuation token returned by the listing call.
                 blobContinuationToken = results.ContinuationToken;
                 foreach (IListBlobItem item in results.Results)
@@ -115,9 +119,9 @@ namespace FhirServerSamples.FhirImportService
                     if (blob != null)
                     {
                         var fhirString = await blob.DownloadTextAsync();
-                        
+
                         JObject o;
-                        try 
+                        try
                         {
                             o = JObject.Parse(fhirString);
                         }
@@ -125,7 +129,7 @@ namespace FhirServerSamples.FhirImportService
                         {
                             _logger.LogError("Input file is not a valid JSON document");
                             await MoveBlobToRejected(blob);
-                            continue; //Process the next blob
+                            continue; // Process the next blob
                         }
 
                         JArray entries = (JArray)o["entry"];
@@ -137,22 +141,22 @@ namespace FhirServerSamples.FhirImportService
                         {
                             _logger.LogError("JSON file does is not a bundle with 'entry' field");
                             await MoveBlobToRejected(blob);
-                            continue; //Process the next blob
+                            continue; // Process the next blob
                         }
 
-
-                        try {
+                        try
+                        {
                             for (int i = 0; i < entries.Count; i++)
                             {
-                                string entry_json = (((JObject)entries[i])["resource"]).ToString();
+                                string entry_json = ((JObject)entries[i])["resource"].ToString();
                                 if (string.IsNullOrEmpty(entry_json))
                                 {
                                     _logger.LogError("No 'resource' section found in JSON document");
                                     throw new FhirImportException("'resource' not found or empty");
                                 }
 
-                                string resource_type = (string)(((JObject)entries[i])["resource"]["resourceType"]);
-                                string id = (string)(((JObject)entries[i])["resource"]["id"]);
+                                string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
+                                string id = (string)((JObject)entries[i])["resource"]["id"];
 
                                 if (string.IsNullOrEmpty(resource_type))
                                 {
@@ -160,52 +164,53 @@ namespace FhirServerSamples.FhirImportService
                                     throw new FhirImportException("No resource_type in resource.");
                                 }
 
-                                //Rewrite subject reference
+                                // Rewrite subject reference
                                 if (((JObject)entries[i])["resource"]["subject"] != null)
                                 {
-                                    string subject_reference = (string)(((JObject)entries[i])["resource"]["subject"]["reference"]);
-                                    if (!String.IsNullOrEmpty(subject_reference))
+                                    string subject_reference = (string)((JObject)entries[i])["resource"]["subject"]["reference"];
+                                    if (!string.IsNullOrEmpty(subject_reference))
                                     {
                                         for (int j = 0; j < entries.Count; j++)
                                         {
-                                            if ((string)(((JObject)entries[j])["fullUrl"]) == subject_reference)
+                                            if ((string)((JObject)entries[j])["fullUrl"] == subject_reference)
                                             {
-                                                subject_reference = (string)(((JObject)entries[j])["resource"]["resourceType"]) + "/" + (string)(((JObject)entries[j])["resource"]["id"]);
+                                                subject_reference = (string)((JObject)entries[j])["resource"]["resourceType"] + "/" + (string)((JObject)entries[j])["resource"]["id"];
                                                 break;
                                             }
                                         }
                                     }
+
                                     ((JObject)entries[i])["resource"]["subject"]["reference"] = subject_reference;
-                                    entry_json = (((JObject)entries[i])["resource"]).ToString();
+                                    entry_json = ((JObject)entries[i])["resource"].ToString();
                                 }
 
                                 if (((JObject)entries[i])["resource"]["context"] != null)
                                 {
-                                    string context_reference = (string)(((JObject)entries[i])["resource"]["context"]["reference"]);
-                                    if (!String.IsNullOrEmpty(context_reference))
+                                    string context_reference = (string)((JObject)entries[i])["resource"]["context"]["reference"];
+                                    if (!string.IsNullOrEmpty(context_reference))
                                     {
                                         for (int j = 0; j < entries.Count; j++)
                                         {
-                                            if ((string)(((JObject)entries[j])["fullUrl"]) == context_reference)
+                                            if ((string)((JObject)entries[j])["fullUrl"] == context_reference)
                                             {
-                                                context_reference = (string)(((JObject)entries[j])["resource"]["resourceType"]) + "/" + (string)(((JObject)entries[j])["resource"]["id"]);
+                                                context_reference = (string)((JObject)entries[j])["resource"]["resourceType"] + "/" + (string)((JObject)entries[j])["resource"]["id"];
                                                 break;
                                             }
                                         }
                                     }
+
                                     ((JObject)entries[i])["resource"]["context"]["reference"] = context_reference;
-                                    entry_json = (((JObject)entries[i])["resource"]).ToString();
+                                    entry_json = ((JObject)entries[i])["resource"].ToString();
                                 }
 
-                                //If we already have a token, we should get the cached one, otherwise, refresh
+                                // If we already have a token, we should get the cached one, otherwise, refresh
                                 var authResult = _authContext.AcquireTokenAsync(_options.Audience, _clientCredential).Result;
                                 _httpClient.DefaultRequestHeaders.Clear();
                                 _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + authResult.AccessToken);
                                 StringContent content = new StringContent(entry_json, Encoding.UTF8, "application/json");
 
-                                HttpResponseMessage uploadResult = null;
-
-                                if (String.IsNullOrEmpty(id))
+                                HttpResponseMessage uploadResult;
+                                if (string.IsNullOrEmpty(id))
                                 {
                                     uploadResult = await _httpClient.PostAsync($"/{resource_type}", content);
                                 }
@@ -231,8 +236,7 @@ namespace FhirServerSamples.FhirImportService
                         }
                     }
                 }
-
-            } 
+            }
             while (!_cancellationToken.IsCancellationRequested && blobContinuationToken != null); // Loop while the continuation token is not null.
 
             // Start timer again
@@ -249,6 +253,7 @@ namespace FhirServerSamples.FhirImportService
 
             return Task.CompletedTask;
         }
+
         public void Dispose()
         {
             _timer?.Dispose();
@@ -258,12 +263,12 @@ namespace FhirServerSamples.FhirImportService
         {
             CloudBlockBlob destBlob;
 
-            //Copy source blob to destination container
+            // Copy source blob to destination container
             string name = blob.Uri.Segments.Last();
             destBlob = _rejectCloudBlobContainer.GetBlockBlobReference(name);
             await destBlob.StartCopyAsync(blob);
 
-            //remove source blob after copy is done.
+            // Remove source blob after copy is done.
             await blob.DeleteAsync();
         }
     }
