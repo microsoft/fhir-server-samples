@@ -28,6 +28,12 @@ namespace FhirDashboard.Tests.E2E
         [Fact]
         public async Task UploadedTxtFileIsRejected()
         {
+            Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
+            Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
+
+            Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
+            Assert.True(await CheckForSiteSuccess(new Uri(_config["FhirServerUrl"].TrimEnd('/') + "/metadata")));
+
             const string testFileName = "TextFileForRejection.txt";
             await DeleteFileFromRejectContainer(testFileName);
             await UploadTestFileToImport(testFileName);
@@ -39,6 +45,12 @@ namespace FhirDashboard.Tests.E2E
         [Fact]
         public async Task UploadedSingleResourceIsRejected()
         {
+            Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
+            Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
+
+            Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
+            Assert.True(await CheckForSiteSuccess(new Uri(_config["FhirServerUrl"].TrimEnd('/') + "/metadata")));
+
             const string testFileName = "Patient.json";
             await DeleteFileFromRejectContainer(testFileName);
             await UploadTestFileToImport(testFileName);
@@ -50,6 +62,12 @@ namespace FhirDashboard.Tests.E2E
         [Fact]
         public async Task UploadedSyntheaIsNotRejected()
         {
+            Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
+            Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
+
+            Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
+            Assert.True(await CheckForSiteSuccess(new Uri(_config["FhirServerUrl"].TrimEnd('/') + "/metadata")));
+
             const string testFileName = "Patient-Synthea.json";
             await DeleteFileFromRejectContainer(testFileName);
             await UploadTestFileToImport(testFileName);
@@ -58,6 +76,21 @@ namespace FhirDashboard.Tests.E2E
             await DeleteFileFromRejectContainer(testFileName);
         }
 
+        private static async Task<bool> CheckForSiteSuccess(Uri siteUri, int maxSecondsToWait = 30)
+        {
+            // We have to make sure the website is up
+            // On a fresh deployment it can take time before site is deployed
+            var client = new HttpClient();
+            var result =  await client.GetAsync(siteUri);
+            int waitCount = 0;
+            while ((waitCount++ < maxSecondsToWait) && !result.IsSuccessStatusCode)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+                result =  await client.GetAsync(siteUri);
+            }
+
+            return result.IsSuccessStatusCode;
+        }
         private static string GetEmbeddedStringContent(string embeddedResourceSubNamespace, string fileName)
         {
             string resourceName = $"{typeof(FhirImportServiceTests).Namespace}.{embeddedResourceSubNamespace}.{fileName}";
