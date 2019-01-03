@@ -1,0 +1,84 @@
+@model FhirDashboard.Models.PatientRecord
+@{
+    ViewData["Title"] = "Patient Details";
+}
+
+@if (!String.IsNullOrEmpty((string)ViewData["ErrorMessage"]))
+{
+    <b>ERROR:</b> @ViewData["ErrorMessage"]
+}
+
+<h2>@ViewData["Title"] - @Html.DisplayFor(model => model.Patient.Name[0].Family) </h2>
+
+<h3>Encounters</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    Date
+                </th>
+                <th>
+                    Type
+                </th>
+                <th>
+                    Id
+                </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var encounter in Model.Encounters) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => encounter.Period.Start)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => encounter.Type[0].Text)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => encounter.Id)
+            </td>
+            <td>
+                <a href="/Resource/Encounter/@encounter.Id">FHIR</a> 
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<h3>Observations</h3>
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    Date
+                </th>
+                <th>
+                    Title
+                </th>
+                <th>
+                    Id
+                </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var observation in Model.Observations) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => observation.Issued)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => observation.Code.Text)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => observation.Id)
+            </td>
+            <td>
+                <a href="/Resource/Observation/@observation.Id">FHIR</a> 
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

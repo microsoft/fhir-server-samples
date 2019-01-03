@@ -7,7 +7,10 @@ param
 (
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string]$EnvironmentName
+    [string]$EnvironmentName,
+
+    [Parameter(Mandatory = $false)]
+    [bool]$SetUserSecrets = $false
 )
 
 Set-StrictMode -Version Latest
@@ -43,14 +46,28 @@ $env:ConfidentialClientSecret = $confidentialClientSecret
 $env:ServiceClientId = $serviceClientId
 $env:ServiceClientSecret = $serviceClientSecret
 
+if ($SetUserSecrets)
+{
+    dotnet user-secrets set "FhirImportService:StorageConnectionString" $storageAccountConnectionString
+    dotnet user-secrets set "FhirServerUrl" $fhirServerUrl
+    dotnet user-secrets set "FhirImportService:FhirServerUrl" $fhirServerUrl
+    dotnet user-secrets set "FhirImportService:ClientSecret" $serviceClientSecret
+    dotnet user-secrets set "FhirImportService:ClientId" $serviceClientId
+    dotnet user-secrets set "FhirImportService:Audience" $fhirServerUrl
+    dotnet user-secrets set "AzureAd:ClientSecret" $confidentialClientSecret
+    dotnet user-secrets set "AzureAd:ClientId" $confidentialClientId
+}
+
 @{
     dashboardUrl                   = $dashboardUrl
     fhirServerUrl                  = $fhirServerUrl
     dashboardUserUpn               = $dashboardUserUpn
     dashboardUserPassword          = $dashboardUserPassword
-    confidentialClientId           = $serviceClientId
-    confidentialClientSecret       = $serviceClientSecret
+    confidentialClientId           = $confidentialClientId
+    confidentialClientSecret       = $confidentialClientSecret
     serviceClientId                = $serviceClientId
     serviceClientSecret            = $serviceClientSecret
     storageAccountConnectionString = $storageAccountConnectionString
 }
+
+
