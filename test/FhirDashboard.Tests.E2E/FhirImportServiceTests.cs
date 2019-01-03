@@ -49,7 +49,7 @@ namespace FhirDashboard.Tests.E2E
             await DeleteFileFromRejectContainer(testFileName);
         }
 
-        private static async Task<bool> CheckForSiteSuccess(Uri siteUri, int maxSecondsToWait = 30)
+        private static async Task<bool> CheckForSiteSuccess(Uri siteUri, int maxSecondsToWait = 300)
         {
             // We have to make sure the website is up
             // On a fresh deployment it can take time before site is deployed
