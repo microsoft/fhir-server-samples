@@ -1,4 +1,9 @@
-﻿using System;
+﻿// -------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
+// -------------------------------------------------------------------------------------------------
+
+using System;
 using System.Security.Claims;
 
 namespace Microsoft.AspNetCore.Authentication
@@ -15,11 +20,16 @@ namespace Microsoft.AspNetCore.Authentication
             string userObjectId = GetObjectId(claimsPrincipal);
             string tenantId = GetTenantId(claimsPrincipal);
 
-            if (string.IsNullOrWhiteSpace(userObjectId)) // TODO: find a better typed exception
+            if (string.IsNullOrWhiteSpace(userObjectId))
+            {
+                // TODO: find a better typed exception
                 throw new ArgumentOutOfRangeException("Missing claim 'http://schemas.microsoft.com/identity/claims/objectidentifier' or 'oid' ");
+            }
 
             if (string.IsNullOrWhiteSpace(tenantId))
+            {
                 throw new ArgumentOutOfRangeException("Missing claim 'http://schemas.microsoft.com/identity/claims/tenantid' or 'tid' ");
+            }
 
             string accountId = userObjectId + "." + tenantId;
             return accountId;
@@ -95,9 +105,9 @@ namespace Microsoft.AspNetCore.Authentication
             {
                 domainHint = null;
             }
+
             return domainHint;
         }
-
 
         /// <summary>
         /// Get the display name for the signed-in user, based on their claims principal
@@ -122,6 +132,7 @@ namespace Microsoft.AspNetCore.Authentication
             {
                 displayName = claimsPrincipal.FindFirstValue("name");
             }
+
             return displayName;
         }
     }

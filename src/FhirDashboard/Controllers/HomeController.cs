@@ -1,17 +1,22 @@
-﻿using System;
+﻿// -------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
+// -------------------------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using FhirDashboard.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using FhirDashboard.Models;
 using Microsoft.Extensions.Configuration;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 
 namespace FhirDashboard.Controllers
 {
@@ -26,6 +31,7 @@ namespace FhirDashboard.Controllers
             _configuration = config;
             _tokenAcquisition = tokenAcquisition;
         }
+
         public IActionResult Index()
         {
             return View();
@@ -33,7 +39,6 @@ namespace FhirDashboard.Controllers
 
         public async Task<IActionResult> AboutMe()
         {
-
             var identity = User.Identity as ClaimsIdentity; // Azure AD V2 endpoint specific
             string preferred_username = identity.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
             ViewData["FhirServerUrl"] = _configuration["FhirServerUrl"];
@@ -104,12 +109,11 @@ namespace FhirDashboard.Controllers
             return properties;
         }
 
-        
         private static bool CanbeSolvedByReSignInUser(MsalUiRequiredException ex)
         {
             bool canbeSolvedByReSignInUser = true;
 
-            // ex.ErrorCode != MsalUiRequiredException.UserNullError indicates a cache problem 
+            // ex.ErrorCode != MsalUiRequiredException.UserNullError indicates a cache problem
             // as when calling Contact we should have an
             // authenticate user (see the [Authenticate] attribute on the controller, but
             // and therefore its account should be in the cache
@@ -118,6 +122,5 @@ namespace FhirDashboard.Controllers
 
             return canbeSolvedByReSignInUser;
         }
-
     }
 }
