@@ -48,6 +48,13 @@
                 "description": "AAD service client secret"
             }
         },
+        "smartAppClientId": {
+            "type": "string",
+            "defaultValue": "my_web_app",
+            "metadata": {
+                "description": "The client id for SMART on FHIR Apps"
+            }
+        },
         "fhirServerTemplateUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server/master/samples/templates/default-azuredeploy.json",
@@ -60,6 +67,13 @@
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard.json",
             "metadata": {
                 "description": "URL for FHIR dashboard template"
+            }
+        },
+        "smartAppTemplateUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "URL for SMART on FHIR app template"
             }
         },
         "fhirDashboardRepositoryUrl": {
@@ -89,7 +103,10 @@
         "fhirServiceName": "[concat(variables('environmentName'),'srvr')]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurewebsites.net')]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
-        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]"
+        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
+        "growthChartName": "[concat(variables('environmentName'),'growth')]",
+        "baseUri": "[deployment().properties.templateLink.uri]",
+        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]"
     },
     "resources": [
         {
@@ -110,6 +127,9 @@
                     },
                     "securityAuthenticationAudience": {
                         "value": "[variables('aadFhirServerAudience')]"
+                    },
+                    "enableAadSmartOnFhirProxy": {
+                        "value": true
                     }
                 },
                 "mode": "incremental"
@@ -154,6 +174,32 @@
                     },
                     "deploySourceCode": {
                         "value": "[parameters('deployDashboardSourceCode')]"
+                    }
+                },
+                "mode": "incremental"
+            }
+        },
+        {
+            "name": "[concat(variables('growthChartName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[variables('smartAppTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('growthChartName')]"
+                    },
+                    "clientId": {
+                        "value": "[parameters('smartAppClientId')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "https://github.com/smart-on-fhir/growth-chart-app"
+                    },
+                    "repositoryProjectPath": {
+                        "value": "."
                     }
                 },
                 "mode": "incremental"
