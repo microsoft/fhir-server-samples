@@ -124,6 +124,20 @@
                 "southcentralus",
                 "westus2"
             ]
+        },
+        "growthChartAppLaunchUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Launch URL for Growth Chart SMART on FHIR App"
+            }
+        },
+        "medicationsAppLaunchUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Launch URL for medications SMART on FHIR App"
+            }
         }
     },
     "variables": {
@@ -220,7 +234,11 @@
                         "FhirImportService:Authority": "[concat('https://login.microsoftonline.com/', variables('aadTenant'))]",
                         "FhirImportService:Audience": "[parameters('fhirServerUrl')]",
                         "FhirImportService:ClientId": "[parameters('aadServiceClientId')]",
-                        "FhirImportService:ClientSecret": "[parameters('aadServiceClientSecret')]"
+                        "FhirImportService:ClientSecret": "[parameters('aadServiceClientSecret')]",
+                        "SmartOnFhirApps:0:DisplayName": "Growth Chart",
+                        "SmartOnFhirApps:0:LaunchUrl": "[parameters('growthChartAppLaunchUrl']",
+                        "SmartOnFhirApps:1:DisplayName": "Medications",
+                        "SmartOnFhirApps:1:LaunchUrl": "[parameters('medicationsAppLaunchUrl']"
                       }
                 },        
                 {

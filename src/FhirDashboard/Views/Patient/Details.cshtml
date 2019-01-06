@@ -12,8 +12,10 @@
 <h2>@ViewData["Title"] - @Html.DisplayFor(model => model.Patient.Name[0].Family) </h2>
 
 @foreach (var app in Model.SmartApps) {
-    var appUrl = app.LaunchUrl + "?launch=" + ViewData["launchContext"] + "&iss=" + ViewData["FhirServerUrl"];
-    <a target="_blank" href="@appUrl">[@app.DisplayName]</a>
+    @if (!string.IsNullOrEmpty(app.LaunchUrl)) {
+        var appUrl = app.LaunchUrl + "?launch=" + ViewData["launchContext"] + "&iss=" + ViewData["FhirServerUrl"];
+        <a target="_blank" href="@appUrl">[@app.DisplayName]</a>
+    }
 }
 
 <h3>Encounters</h3>

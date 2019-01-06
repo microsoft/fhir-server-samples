@@ -128,6 +128,8 @@ $dashboardUrl = "https://${dashboardName}.${WebAppSuffix}"
 $dashboardReplyUrl = "${dashboardUrl}/signin-oidc"
 $growthChartName = "${EnvironmentName}growth"
 $growthChartUrl = "https://${growthChartName}.${WebAppSuffix}"
+$medicationsName = "${EnvironmentName}meds"
+$medicationsUrl = "https://${medicationsName}.${WebAppSuffix}"
 
 $confidentialClientAppName = "${EnvironmentName}-confidential-client"
 $confidentialClient = Get-AzureAdApplication -Filter "DisplayName eq '$confidentialClientAppName'"
@@ -175,4 +177,7 @@ Set-FhirServerClientAppRoleAssignments -AppId $publicClient.AppId -ApiAppId $app
 New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl $growthChartUrl
 New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${growthChartUrl}/"
 New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${growthChartUrl}/index.html"
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl $medicationsUrl
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${medicationsUrl}/"
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${medicationsUrl}/index.html"
 

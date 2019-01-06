@@ -105,12 +105,14 @@
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
         "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
+        "medicationsAppName": "[concat(variables('environmentName'),'meds')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
         "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
         "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
         "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
         "allowedOrigins": [
             "[concat('https://', variables('growthChartName'), variables('webAppSuffix'))]",
+            "[concat('https://', variables('medicationsName'), variables('webAppSuffix'))]",
             "http://localhost:9090"
         ]
     },
@@ -183,6 +185,12 @@
                     },
                     "deploySourceCode": {
                         "value": "[parameters('deployDashboardSourceCode')]"
+                    },
+                    "growthChartAppLaunchUrl": {
+                        "value": "[concat('https://', variables('growthChartName'), variables('webAppSuffix'), '/launch.html')]"
+                    },
+                    "medicationsAppLaunchUrl": {
+                        "value": "[concat('https://', variables('medicationsName'), variables('webAppSuffix'), '/launch.html')]"
                     }
                 },
                 "mode": "incremental"
@@ -209,6 +217,32 @@
                     },
                     "repositoryProjectPath": {
                         "value": "."
+                    }
+                },
+                "mode": "incremental"
+            }
+        },
+        {
+            "name": "[concat(variables('medicationsName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[variables('smartAppTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('medicationsName')]"
+                    },
+                    "clientId": {
+                        "value": "[parameters('smartAppClientId')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "https://github.com/smart-on-fhir/sample-apps-stu3"
+                    },
+                    "repositoryProjectPath": {
+                        "value": "medications"
                     }
                 },
                 "mode": "incremental"
