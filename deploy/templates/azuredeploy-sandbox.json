@@ -105,7 +105,7 @@
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
         "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
-        "medicationsAppName": "[concat(variables('environmentName'),'meds')]",
+        "medicationsName": "[concat(variables('environmentName'),'meds')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
         "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
         "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
