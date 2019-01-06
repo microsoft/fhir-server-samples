@@ -236,9 +236,9 @@
                         "FhirImportService:ClientId": "[parameters('aadServiceClientId')]",
                         "FhirImportService:ClientSecret": "[parameters('aadServiceClientSecret')]",
                         "SmartOnFhirApps:0:DisplayName": "Growth Chart",
-                        "SmartOnFhirApps:0:LaunchUrl": "[parameters('growthChartAppLaunchUrl']",
+                        "SmartOnFhirApps:0:LaunchUrl": "[parameters('growthChartAppLaunchUrl')]",
                         "SmartOnFhirApps:1:DisplayName": "Medications",
-                        "SmartOnFhirApps:1:LaunchUrl": "[parameters('medicationsAppLaunchUrl']"
+                        "SmartOnFhirApps:1:LaunchUrl": "[parameters('medicationsAppLaunchUrl')]"
                       }
                 },        
                 {
