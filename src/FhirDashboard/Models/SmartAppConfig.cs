@@ -4,18 +4,13 @@
 // -------------------------------------------------------------------------------------------------
 
 using System.Collections.Generic;
-using Hl7.Fhir.Model;
 
 namespace FhirDashboard.Models
 {
-    public class PatientRecord
+    public class SmartAppConfig
     {
-        public Hl7.Fhir.Model.Patient Patient { get; set; }
+        public string DisplayName { get; set; }
 
-        public List<Hl7.Fhir.Model.Observation> Observations { get; set; }
-
-        public List<Hl7.Fhir.Model.Encounter> Encounters { get; set; }
-
-        public List<SmartAppConfig> SmartApps { get; set; }
+        public string LaunchUrl { get; set; }
     }
 }

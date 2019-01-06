@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using EnsureThat;
 using FhirDashboard.Models;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
@@ -146,6 +147,12 @@ namespace FhirDashboard.Controllers
             var launchContext = Convert.ToBase64String(plainTextBytes);
             ViewData["launchContext"] = HttpUtility.UrlEncode(launchContext);
             ViewData["fhirServerUrl"] = _configuration["FhirServerUrl"];
+
+            // Configure available Smart Apps for this patient
+            // TODO: Add logic to figure out if app is relevant for patient
+            patientRecord.SmartApps = new List<SmartAppConfig>();
+            _configuration.Bind("SmartOnFhirApps", patientRecord.SmartApps);
+
             return View(patientRecord);
         }
 
