@@ -106,7 +106,13 @@
         "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
-        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]"
+        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
+        "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
+        "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
+        "allowedOrigins": [
+            "[concat('https://', variables('growthChartName'), variables('webAppSuffix'))]",
+            "http://localhost:9090"
+        ]
     },
     "resources": [
         {
@@ -130,6 +136,9 @@
                     },
                     "enableAadSmartOnFhirProxy": {
                         "value": true
+                    },
+                    "allowedOrigins": {
+                        "value": "[variables('allowedOrigins')]"
                     }
                 },
                 "mode": "incremental"

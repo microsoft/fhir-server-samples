@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using FhirDashboard.Models;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 
 namespace FhirDashboard.Controllers
 {
@@ -140,6 +142,10 @@ namespace FhirDashboard.Controllers
                 ViewData["ErrorMessage"] = e.Message;
             }
 
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { patient = id }));
+            var launchContext = Convert.ToBase64String(plainTextBytes);
+            ViewData["launchContext"] = HttpUtility.UrlEncode(launchContext);
+            ViewData["fhirServerUrl"] = _configuration["FhirServerUrl"];
             return View(patientRecord);
         }
 

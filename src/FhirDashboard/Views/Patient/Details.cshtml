@@ -1,12 +1,15 @@
 @model FhirDashboard.Models.PatientRecord
 @{
     ViewData["Title"] = "Patient Details";
+    var growthUrl = "https://fhirsamp6growth.azurewebsites.net/launch.html?launch=" + ViewData["launchContext"] + "&iss=" + ViewData["FhirServerUrl"];
 }
 
 @if (!String.IsNullOrEmpty((string)ViewData["ErrorMessage"]))
 {
     <b>ERROR:</b> @ViewData["ErrorMessage"]
 }
+
+<a href="@growthUrl">GC</a>
 
 <h2>@ViewData["Title"] - @Html.DisplayFor(model => model.Patient.Name[0].Family) </h2>
 
