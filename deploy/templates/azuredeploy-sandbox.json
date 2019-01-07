@@ -10,6 +10,27 @@
             },
             "maxLength": 12
         },
+        "appServicePlanSku": {
+            "type": "string",
+            "allowedValues": [
+                "F1",
+                "D1",
+                "B1",
+                "B2",
+                "B3",
+                "S1",
+                "S2",
+                "S3",
+                "P1",
+                "P2",
+                "P3",
+                "P4"
+            ],
+            "defaultValue": "S1",
+            "metadata": {
+                "description": "Shared App Service Plan for Dashboard and SMART on FHIR apps"
+            }
+        },
         "aadAuthority": {
             "type": "string",
             "defaultValue": "https://login.microsoftonline.com/common",
@@ -99,6 +120,7 @@
         }
     },
     "variables": {
+        "appServicePlanName": "[concat(variables('environmentName'),'-asp')]",
         "environmentName": "[if(empty(parameters('environmentName')), concat('fhirdemo', uniqueString(resourceGroup().id)), parameters('environmentName'))]",
         "fhirServiceName": "[concat(variables('environmentName'),'srvr')]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurewebsites.net')]",
@@ -117,6 +139,18 @@
         ]
     },
     "resources": [
+        {
+            "apiVersion": "2015-08-01",
+            "name": "[variables('appServicePlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('appServicePlanSku')]"
+            },
+            "properties": {
+                "name": "[variables('appServicePlanName')]"
+            }
+        },
         {
             "name": "[concat(variables('fhirServiceName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
@@ -158,6 +192,12 @@
                 "parameters": {
                     "siteName": {
                         "value": "[variables('fhirDashboardName')]"
+                    },
+                    "appServicePlanName": {
+                        "value": "[variables('appServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[resourceGroup().name]"
                     },
                     "aadAuthority": {
                         "value": "[parameters('aadAuthority')]"
@@ -209,6 +249,12 @@
                     "siteName": {
                         "value": "[variables('growthChartName')]"
                     },
+                    "appServicePlanName": {
+                        "value": "[variables('appServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[resourceGroup().name]"
+                    },
                     "clientId": {
                         "value": "[parameters('smartAppClientId')]"
                     },
@@ -235,14 +281,23 @@
                     "siteName": {
                         "value": "[variables('medicationsName')]"
                     },
+                    "appServicePlanName": {
+                        "value": "[variables('appServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[resourceGroup().name]"
+                    },
                     "clientId": {
                         "value": "[parameters('smartAppClientId')]"
                     },
                     "repositoryUrl": {
-                        "value": "https://github.com/smart-on-fhir/sample-apps-stu3"
+                        "value": "https://github.com/hansenms/sample-apps-stu3"
+                    },
+                    "repositoryBranch": {
+                        "value": "medications-bug-fix"
                     },
                     "repositoryProjectPath": {
-                        "value": "population"
+                        "value": "medications"
                     }
                 },
                 "mode": "incremental"
