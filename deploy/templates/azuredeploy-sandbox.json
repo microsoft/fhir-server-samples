@@ -242,7 +242,7 @@
                         "value": "https://github.com/smart-on-fhir/sample-apps-stu3"
                     },
                     "repositoryProjectPath": {
-                        "value": "medications"
+                        "value": "population"
                     }
                 },
                 "mode": "incremental"
