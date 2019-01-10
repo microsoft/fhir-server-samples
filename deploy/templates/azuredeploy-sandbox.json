@@ -133,9 +133,7 @@
         "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
         "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
         "allowedOrigins": [
-            "[concat('https://', variables('growthChartName'), variables('webAppSuffix'))]",
-            "[concat('https://', variables('medicationsName'), variables('webAppSuffix'))]",
-            "http://localhost:9090"
+            "*"
         ]
     },
     "resources": [
