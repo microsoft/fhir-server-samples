@@ -120,10 +120,10 @@ namespace FhirServerSamples.FhirImportService
                     {
                         var fhirString = await blob.DownloadTextAsync();
 
-                        JObject o;
+                        JObject bundle;
                         try
                         {
-                            o = JObject.Parse(fhirString);
+                            bundle = JObject.Parse(fhirString);
                         }
                         catch (JsonReaderException)
                         {
@@ -132,75 +132,27 @@ namespace FhirServerSamples.FhirImportService
                             continue; // Process the next blob
                         }
 
-                        JArray entries = (JArray)o["entry"];
-                        if (entries != null)
-                        {
-                            _logger.LogInformation(string.Format("Processing file '{0}' Number of entries: {1}", item.Uri.ToString(), entries.Count));
-                        }
-                        else
-                        {
-                            _logger.LogError("JSON file does is not a bundle with 'entry' field");
-                            await MoveBlobToRejected(blob);
-                            continue; // Process the next blob
-                        }
+                        bundle = (JObject)FhirImportReferenceConverter.ConvertUUIDs(bundle);
+                        JArray entries = (JArray)bundle["entry"];
 
                         try
                         {
                             for (int i = 0; i < entries.Count; i++)
                             {
-                                string entry_json = ((JObject)entries[i])["resource"].ToString();
+                                var entry_json = ((JObject)entries[i])["resource"].ToString();
+                                string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
+                                string id = (string)((JObject)entries[i])["resource"]["id"];
+
                                 if (string.IsNullOrEmpty(entry_json))
                                 {
                                     _logger.LogError("No 'resource' section found in JSON document");
                                     throw new FhirImportException("'resource' not found or empty");
                                 }
 
-                                string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
-                                string id = (string)((JObject)entries[i])["resource"]["id"];
-
                                 if (string.IsNullOrEmpty(resource_type))
                                 {
                                     _logger.LogError("No resource_type found.");
                                     throw new FhirImportException("No resource_type in resource.");
-                                }
-
-                                // Rewrite subject reference
-                                if (((JObject)entries[i])["resource"]["subject"] != null)
-                                {
-                                    string subject_reference = (string)((JObject)entries[i])["resource"]["subject"]["reference"];
-                                    if (!string.IsNullOrEmpty(subject_reference))
-                                    {
-                                        for (int j = 0; j < entries.Count; j++)
-                                        {
-                                            if ((string)((JObject)entries[j])["fullUrl"] == subject_reference)
-                                            {
-                                                subject_reference = (string)((JObject)entries[j])["resource"]["resourceType"] + "/" + (string)((JObject)entries[j])["resource"]["id"];
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    ((JObject)entries[i])["resource"]["subject"]["reference"] = subject_reference;
-                                    entry_json = ((JObject)entries[i])["resource"].ToString();
-                                }
-
-                                if (((JObject)entries[i])["resource"]["context"] != null)
-                                {
-                                    string context_reference = (string)((JObject)entries[i])["resource"]["context"]["reference"];
-                                    if (!string.IsNullOrEmpty(context_reference))
-                                    {
-                                        for (int j = 0; j < entries.Count; j++)
-                                        {
-                                            if ((string)((JObject)entries[j])["fullUrl"] == context_reference)
-                                            {
-                                                context_reference = (string)((JObject)entries[j])["resource"]["resourceType"] + "/" + (string)((JObject)entries[j])["resource"]["id"];
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    ((JObject)entries[i])["resource"]["context"]["reference"] = context_reference;
-                                    entry_json = ((JObject)entries[i])["resource"].ToString();
                                 }
 
                                 // If we already have a token, we should get the cached one, otherwise, refresh
