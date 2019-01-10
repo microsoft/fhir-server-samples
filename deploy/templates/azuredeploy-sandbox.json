@@ -10,6 +10,27 @@
             },
             "maxLength": 12
         },
+        "appServicePlanSku": {
+            "type": "string",
+            "allowedValues": [
+                "F1",
+                "D1",
+                "B1",
+                "B2",
+                "B3",
+                "S1",
+                "S2",
+                "S3",
+                "P1",
+                "P2",
+                "P3",
+                "P4"
+            ],
+            "defaultValue": "S1",
+            "metadata": {
+                "description": "Shared App Service Plan for Dashboard and SMART on FHIR apps"
+            }
+        },
         "aadAuthority": {
             "type": "string",
             "defaultValue": "https://login.microsoftonline.com/common",
@@ -48,6 +69,13 @@
                 "description": "AAD service client secret"
             }
         },
+        "smartAppClientId": {
+            "type": "string",
+            "defaultValue": "my_web_app",
+            "metadata": {
+                "description": "The client id for SMART on FHIR Apps"
+            }
+        },
         "fhirServerTemplateUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server/master/samples/templates/default-azuredeploy.json",
@@ -60,6 +88,13 @@
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard.json",
             "metadata": {
                 "description": "URL for FHIR dashboard template"
+            }
+        },
+        "smartAppTemplateUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "URL for SMART on FHIR app template"
             }
         },
         "fhirDashboardRepositoryUrl": {
@@ -85,13 +120,35 @@
         }
     },
     "variables": {
+        "appServicePlanName": "[concat(variables('environmentName'),'-asp')]",
         "environmentName": "[if(empty(parameters('environmentName')), concat('fhirdemo', uniqueString(resourceGroup().id)), parameters('environmentName'))]",
         "fhirServiceName": "[concat(variables('environmentName'),'srvr')]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurewebsites.net')]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
-        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]"
+        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
+        "growthChartName": "[concat(variables('environmentName'),'growth')]",
+        "medicationsName": "[concat(variables('environmentName'),'meds')]",
+        "baseUri": "[deployment().properties.templateLink.uri]",
+        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
+        "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
+        "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
+        "allowedOrigins": [
+            "*"
+        ]
     },
     "resources": [
+        {
+            "apiVersion": "2015-08-01",
+            "name": "[variables('appServicePlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('appServicePlanSku')]"
+            },
+            "properties": {
+                "name": "[variables('appServicePlanName')]"
+            }
+        },
         {
             "name": "[concat(variables('fhirServiceName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
@@ -110,6 +167,12 @@
                     },
                     "securityAuthenticationAudience": {
                         "value": "[variables('aadFhirServerAudience')]"
+                    },
+                    "enableAadSmartOnFhirProxy": {
+                        "value": true
+                    },
+                    "allowedOrigins": {
+                        "value": "[variables('allowedOrigins')]"
                     }
                 },
                 "mode": "incremental"
@@ -127,6 +190,12 @@
                 "parameters": {
                     "siteName": {
                         "value": "[variables('fhirDashboardName')]"
+                    },
+                    "appServicePlanName": {
+                        "value": "[variables('appServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[resourceGroup().name]"
                     },
                     "aadAuthority": {
                         "value": "[parameters('aadAuthority')]"
@@ -154,6 +223,79 @@
                     },
                     "deploySourceCode": {
                         "value": "[parameters('deployDashboardSourceCode')]"
+                    },
+                    "growthChartAppLaunchUrl": {
+                        "value": "[concat('https://', variables('growthChartName'), variables('webAppSuffix'), '/launch.html')]"
+                    },
+                    "medicationsAppLaunchUrl": {
+                        "value": "[concat('https://', variables('medicationsName'), variables('webAppSuffix'), '/launch.html')]"
+                    }
+                },
+                "mode": "incremental"
+            }
+        },
+        {
+            "name": "[concat(variables('growthChartName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[variables('smartAppTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('growthChartName')]"
+                    },
+                    "appServicePlanName": {
+                        "value": "[variables('appServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[resourceGroup().name]"
+                    },
+                    "clientId": {
+                        "value": "[parameters('smartAppClientId')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "https://github.com/smart-on-fhir/growth-chart-app"
+                    },
+                    "repositoryProjectPath": {
+                        "value": "."
+                    }
+                },
+                "mode": "incremental"
+            }
+        },
+        {
+            "name": "[concat(variables('medicationsName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[variables('smartAppTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('medicationsName')]"
+                    },
+                    "appServicePlanName": {
+                        "value": "[variables('appServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[resourceGroup().name]"
+                    },
+                    "clientId": {
+                        "value": "[parameters('smartAppClientId')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "https://github.com/hansenms/sample-apps-stu3"
+                    },
+                    "repositoryBranch": {
+                        "value": "medications-bug-fix"
+                    },
+                    "repositoryProjectPath": {
+                        "value": "medications"
                     }
                 },
                 "mode": "incremental"

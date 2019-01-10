@@ -24,6 +24,8 @@ catch {
 }
 
 $dashboardUrl = "https://${EnvironmentName}dash.azurewebsites.net"
+$growthChartAppLaunchUrl = "https://${EnvironmentName}growth.azurewebsites.net/launch.html"
+$medicationsAppLaunchUrl = "https://${EnvironmentName}meds.azurewebsites.net/launch.html"
 $fhirServerUrl = "https://${EnvironmentName}srvr.azurewebsites.net"
 $dashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-upn").SecretValueText
 $dashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password").SecretValueText
@@ -56,6 +58,10 @@ if ($SetUserSecrets)
     dotnet user-secrets set "FhirImportService:Audience" $fhirServerUrl
     dotnet user-secrets set "AzureAd:ClientSecret" $confidentialClientSecret
     dotnet user-secrets set "AzureAd:ClientId" $confidentialClientId
+    dotnet user-secrets set "SmartOnFhirApps:0:DisplayName" "Growth Chart"
+    dotnet user-secrets set "SmartOnFhirApps:0:LaunchUrl" $growthChartAppLaunchUrl
+    dotnet user-secrets set "SmartOnFhirApps:1:DisplayName" "Medications"
+    dotnet user-secrets set "SmartOnFhirApps:1:LaunchUrl" $medicationsAppLaunchUrl
 }
 
 @{

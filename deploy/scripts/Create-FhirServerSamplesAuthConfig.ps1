@@ -126,6 +126,10 @@ Set-FhirServerUserAppRoleAssignments -ApiAppId $application.AppId -UserPrincipal
 $dashboardName = "${EnvironmentName}dash"
 $dashboardUrl = "https://${dashboardName}.${WebAppSuffix}"
 $dashboardReplyUrl = "${dashboardUrl}/signin-oidc"
+$growthChartName = "${EnvironmentName}growth"
+$growthChartUrl = "https://${growthChartName}.${WebAppSuffix}"
+$medicationsName = "${EnvironmentName}meds"
+$medicationsUrl = "https://${medicationsName}.${WebAppSuffix}"
 
 $confidentialClientAppName = "${EnvironmentName}-confidential-client"
 $confidentialClient = Get-AzureAdApplication -Filter "DisplayName eq '$confidentialClientAppName'"
@@ -158,4 +162,22 @@ Set-FhirServerClientAppRoleAssignments -AppId $serviceClient.AppId -ApiAppId $ap
 $secretServiceClientId = ConvertTo-SecureString $serviceClient.AppId -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-id" -SecretValue $secretServiceClientId| Out-Null
 Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-secret" -SecretValue $secretSecureString | Out-Null
+
+
+# Create public (SMART on FHIR) client
+$publicClientAppName = "${EnvironmentName}-public-client"
+$publicClient = Get-AzureAdApplication -Filter "DisplayName eq '$publicClientAppName'"
+if (!$publicClient) {
+    $publicClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $publicClientAppName -PublicClient:$true
+    $secretPublicClientId = ConvertTo-SecureString $publicClient.AppId -AsPlainText -Force
+    Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$publicClientAppName-id" -SecretValue $secretPublicClientId| Out-Null
+} 
+
+Set-FhirServerClientAppRoleAssignments -AppId $publicClient.AppId -ApiAppId $application.AppId -AppRoles admin
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl $growthChartUrl
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${growthChartUrl}/"
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${growthChartUrl}/index.html"
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl $medicationsUrl
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${medicationsUrl}/"
+New-FhirServerSmartClientReplyUrl -AppId $publicClient.AppId -FhirServerUrl $fhirServiceUrl -ReplyUrl "${medicationsUrl}/index.html"
 
