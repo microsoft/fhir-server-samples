@@ -125,8 +125,6 @@ namespace FhirServerSamples.FhirImportService
                         try
                         {
                             bundle = JObject.Parse(fhirString);
-                            bundle = (JObject)FhirImportReferenceConverter.ConvertUUIDs(bundle);
-                            entries = (JArray)bundle["entry"];
                         }
                         catch (JsonReaderException)
                         {
@@ -135,8 +133,28 @@ namespace FhirServerSamples.FhirImportService
                             continue; // Process the next blob
                         }
 
+                        _logger.LogInformation("File read");
+
                         try
                         {
+                            bundle = (JObject)FhirImportReferenceConverter.ConvertUUIDs(bundle);
+                        }
+                        catch
+                        {
+                            _logger.LogError("Failed to resolve references in doc");
+                            await MoveBlobToRejected(blob);
+                            continue; // Process the next blob
+                        }
+
+                        try
+                        {
+                            entries = (JArray)bundle["entry"];
+                            if (entries == null)
+                            {
+                                _logger.LogError("No entries found in bundle");
+                                throw new FhirImportException("No entries found in bundle");
+                            }
+
                             for (int i = 0; i < entries.Count; i++)
                             {
                                 var entry_json = ((JObject)entries[i])["resource"].ToString();
