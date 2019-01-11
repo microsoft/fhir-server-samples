@@ -135,7 +135,6 @@ namespace FhirServerSamples.FhirImportService
                             continue; // Process the next blob
                         }
 
-
                         try
                         {
                             for (int i = 0; i < entries.Count; i++)
