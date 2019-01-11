@@ -121,9 +121,12 @@ namespace FhirServerSamples.FhirImportService
                         var fhirString = await blob.DownloadTextAsync();
 
                         JObject bundle;
+                        JArray entries;
                         try
                         {
                             bundle = JObject.Parse(fhirString);
+                            bundle = (JObject)FhirImportReferenceConverter.ConvertUUIDs(bundle);
+                            entries = (JArray)bundle["entry"];
                         }
                         catch (JsonReaderException)
                         {
@@ -132,8 +135,6 @@ namespace FhirServerSamples.FhirImportService
                             continue; // Process the next blob
                         }
 
-                        bundle = (JObject)FhirImportReferenceConverter.ConvertUUIDs(bundle);
-                        JArray entries = (JArray)bundle["entry"];
 
                         try
                         {
