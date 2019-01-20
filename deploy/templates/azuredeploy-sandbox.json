@@ -289,10 +289,10 @@
                         "value": "[parameters('smartAppClientId')]"
                     },
                     "repositoryUrl": {
-                        "value": "https://github.com/hansenms/sample-apps-stu3"
+                        "value": "https://github.com/smart-on-fhir/sample-apps-stu3"
                     },
                     "repositoryBranch": {
-                        "value": "medications-bug-fix"
+                        "value": "master"
                     },
                     "repositoryProjectPath": {
                         "value": "medications"
