@@ -73,3 +73,9 @@ $serviceClient = Get-AzureAdApplication -Filter "DisplayName eq '$serviceClientA
 if ($confidentialClient) {
     Remove-FhirServerApplicationRegistration -AppId $serviceClient.AppId
 }
+
+$publicClientAppName = "${EnvironmentName}-public-client"
+$publicClient = Get-AzureAdApplication -Filter "DisplayName eq '$publicClientAppName'"
+if ($publicClient) {
+    Remove-FhirServerApplicationRegistration -AppId $publicClient.AppId
+}
