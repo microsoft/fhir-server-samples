@@ -136,6 +136,19 @@ namespace FhirDashboard.Controllers
 
                         encounterResult = client.Continue(encounterResult);
                     }
+
+                    patientRecord.Conditions = new List<Condition>();
+                    var conditionResult = client.Search<Condition>(new string[] { $"subject=Patient/{patientRecord.Patient.Id}" });
+
+                    while (conditionResult != null)
+                    {
+                        foreach (var e in conditionResult.Entry)
+                        {
+                            patientRecord.Conditions.Add((Condition)e.Resource);
+                        }
+
+                        conditionResult = client.Continue(conditionResult);
+                    }
                 }
             }
             catch (Exception e)

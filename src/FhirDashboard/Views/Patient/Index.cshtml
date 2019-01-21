@@ -25,13 +25,14 @@
                     Given Name
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Id)
+                    Age
                 </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
+        var ageYears = DateTime.Parse(item.BirthDate).AgeYears();
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name[0].Family)
@@ -40,7 +41,7 @@
                 @Html.DisplayFor(modelItem => item.Name[0].Given)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Id)
+                @ageYears
             </td>
             <td>
                 <a href="/Patient/@item.Id">[Details]</a> 
