@@ -16,6 +16,8 @@ namespace FhirDashboard.Models
 
         public List<Hl7.Fhir.Model.Encounter> Encounters { get; set; }
 
+        public List<Hl7.Fhir.Model.Condition> Conditions { get; set; }
+
         public List<SmartAppConfig> SmartApps { get; set; }
     }
 }
