@@ -19,7 +19,10 @@ param
     [string]$SourceRevision = "master",
 
     [Parameter(Mandatory = $false)]
-    [bool]$DeploySource = $true
+    [bool]$DeploySource = $true,
+
+    [parameter(Mandatory = $false)]
+    [SecureString]$AdminPassword
 )
 
 Set-StrictMode -Version Latest
@@ -41,7 +44,7 @@ catch {
 }
 
 # Set up Auth Configuration and Resource Group
-./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $EnvironmentName -EnvironmentLocation $EnvironmentLocation
+./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $EnvironmentName -EnvironmentLocation $EnvironmentLocation -AdminPassword $AdminPassword
 
 #Template URLs
 $githubRawBaseUrl = $SourceRepository.Replace("github.com","raw.githubusercontent.com").TrimEnd('/')

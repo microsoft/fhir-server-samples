@@ -19,7 +19,10 @@ param
     [string]$ResourceGroupName = $EnvironmentName,
 
     [parameter(Mandatory = $false)]
-    [string]$KeyVaultName = "$EnvironmentName-ts"
+    [string]$KeyVaultName = "$EnvironmentName-ts",
+
+    [parameter(Mandatory = $false)]
+    [SecureString]$AdminPassword
 )
 
 Set-StrictMode -Version Latest
@@ -102,9 +105,18 @@ $userUpn = "${userId}@${domain}"
 # See if the user exists
 $aadUser = Get-AzureADUser -searchstring $userId
 
-Add-Type -AssemblyName System.Web
-$password = [System.Web.Security.Membership]::GeneratePassword(16, 5)
-$passwordSecureString = ConvertTo-SecureString $password -AsPlainText -Force
+
+if ($AdminPassword)
+{
+    $passwordSecureString = $AdminPassword
+    $password = (New-Object PSCredential "user",$passwordSecureString).GetNetworkCredential().Password
+}
+else
+{
+    Add-Type -AssemblyName System.Web
+    $password = [System.Web.Security.Membership]::GeneratePassword(16, 5)
+    $passwordSecureString = ConvertTo-SecureString $password -AsPlainText -Force
+}
 
 if ($aadUser) {
     Set-AzureADUserPassword -ObjectId $aadUser.ObjectId -Password $passwordSecureString -EnforceChangePasswordPolicy $false -ForceChangePasswordNextLogin $false
