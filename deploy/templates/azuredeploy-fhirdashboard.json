@@ -47,6 +47,13 @@
                 "description": "OAuth Authority"
             }
         },
+        "aadAudience": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "OAuth Audience, if blank, will be set to fhirServerUrl"
+            }
+        },
         "aadClientId": {
             "type": "string",
             "metadata": {
@@ -142,12 +149,14 @@
     },
     "variables": {
         "siteName": "[toLower(parameters('siteName'))]",
+        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]",
         "appServicePlanResourceGroup": "[if(empty(parameters('appServicePlanResourceGroup')), resourceGroup().name, parameters('appServicePlanResourceGroup'))]",
         "appServicePlanName": "[if(empty(parameters('appServicePlanName')),concat(variables('siteName'),'-asp'),parameters('appServicePlanName'))]",
         "deploySourceCode": "[and(parameters('deploySourceCode'),and(not(empty(parameters('repositoryUrl'))),not(empty(parameters('repositoryBranch')))))]",
         "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
         "deployAppInsights": "[and(parameters('deployApplicationInsights'),not(variables('isMAG')))]",
         "appInsightsName": "[concat('AppInsights-', variables('siteName'))]",
+        "aadInstance": "[concat('https://', split(parameters('aadAuthority'),'/')[sub(length(split(parameters('aadAuthority'),'/')),2)],'/')]",
         "aadTenant": "[last(split(parameters('aadAuthority'),'/'))]",
         "fhirImportStorageAccountName": "[replace(concat(variables('siteName'),'sa'),'-','')]"
     },
@@ -227,12 +236,13 @@
                         "FhirServerUrl": "[parameters('fhirServerUrl')]",
                         "AzureAd:TenantId": "[variables('aadTenant')]",
                         "AzureAd:Domain": "[variables('aadTenant')]",
+                        "AzureAd:Instance": "[variables('aadInstance')]",
                         "AzureAd:ClientId": "[parameters('aadClientId')]",
                         "AzureAd:ClientSecret": "[parameters('aadClientSecret')]",
                         "FhirImportService:StorageConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('fhirImportStorageAccountName'),';AccountKey=',concat(listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('fhirImportStorageAccountName')),'2015-05-01-preview').key1))]",
                         "FhirImportService:FhirServerUrl": "[parameters('fhirServerUrl')]",
-                        "FhirImportService:Authority": "[concat('https://login.microsoftonline.com/', variables('aadTenant'))]",
-                        "FhirImportService:Audience": "[parameters('fhirServerUrl')]",
+                        "FhirImportService:Authority": "[concat(variables('aadInstance'), variables('aadTenant'))]",
+                        "FhirImportService:Audience": "[variables('aadAudience')]",
                         "FhirImportService:ClientId": "[parameters('aadServiceClientId')]",
                         "FhirImportService:ClientSecret": "[parameters('aadServiceClientSecret')]",
                         "SmartOnFhirApps:0:DisplayName": "Growth Chart",

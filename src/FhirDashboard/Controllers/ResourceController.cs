@@ -30,7 +30,7 @@ namespace FhirDashboard.Controllers
         [HttpGet("/Resource/{resourceType}/{resourceId}")]
         public async Task<IActionResult> GetAction(string resourceType, string resourceId)
         {
-            var scopes = new string[] { $"{_configuration["FhirServerUrl"].TrimEnd('/')}/.default" };
+            var scopes = new string[] { $"{_configuration["FhirImportService:Audience"].TrimEnd('/')}/.default" };
             string accessToken;
             try
             {

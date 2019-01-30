@@ -44,7 +44,7 @@ namespace FhirDashboard.Controllers
             ViewData["FhirServerUrl"] = _configuration["FhirServerUrl"];
             ViewData["UPN"] = preferred_username;
 
-            var scopes = new string[] { $"{_configuration["FhirServerUrl"].TrimEnd('/')}/.default" };
+            var scopes = new string[] { $"{_configuration["FhirImportService:Audience"].TrimEnd('/')}/.default" };
             try
             {
                 var accessToken = await _tokenAcquisition.GetAccessTokenOnBehalfOfUser(HttpContext, scopes);
