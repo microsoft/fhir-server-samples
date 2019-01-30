@@ -34,7 +34,7 @@ namespace FhirDashboard.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var scopes = new string[] { $"{_configuration["FhirServerUrl"].TrimEnd('/')}/.default" };
+            var scopes = new string[] { $"{_configuration["FhirImportService:Audience"].TrimEnd('/')}/.default" };
             string accessToken;
             try
             {
@@ -86,7 +86,7 @@ namespace FhirDashboard.Controllers
         [HttpGet("/Patient/{id}")]
         public async Task<IActionResult> Details(string id)
         {
-            var scopes = new string[] { $"{_configuration["FhirServerUrl"].TrimEnd('/')}/.default" };
+            var scopes = new string[] { $"{_configuration["FhirImportService:Audience"].TrimEnd('/')}/.default" };
             string accessToken;
             try
             {

@@ -20,7 +20,8 @@
     </div>
 </div>
 
-
+@if (Model.SmartApps.Count > 0)
+{
 <div class="card" style="margin-bottom: 10px;">
     <div class="card-header">SMART on FHIR Apps</div>
     <div class="card-body">
@@ -32,6 +33,7 @@
     }
     </div>
 </div>
+}
 
 <div id="accordion">
   <div class="card">
