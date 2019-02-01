@@ -1,0 +1,196 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the demo environment. Will be used as prefix for resources."
+            },
+            "maxLength": 12
+        },
+        "appServicePlanSku": {
+            "type": "string",
+            "allowedValues": [
+                "F1",
+                "D1",
+                "B1",
+                "B2",
+                "B3",
+                "S1",
+                "S2",
+                "S3",
+                "P1",
+                "P2",
+                "P3",
+                "P4"
+            ],
+            "defaultValue": "S1",
+            "metadata": {
+                "description": "Shared App Service Plan for Dashboard"
+            }
+        },
+        "accessPolicies": {
+            "type": "array"
+        },
+        "aadAuthority": {
+            "type": "string",
+            "defaultValue": "https://login.microsoftonline.com/common",
+            "metadata": {
+                "description": "OAuth Authority for FHIR server"
+            }
+        },
+        "aadFhirServerAudience": {
+            "type": "string",
+            "defaultValue": "https://azurehealthcareapis.com",
+            "metadata": {
+                "description": "Audience (resource) of the FHIR API"
+            }
+        },
+        "aadDashboardClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "AAD client application id for accessing FHIR server"
+            }
+        },
+        "aadDashboardClientSecret": {
+            "type": "string",
+            "metadata": {
+                "description": "AAD client secret"
+            }
+        },
+        "aadServiceClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "AAD service client application id for accessing FHIR server"
+            }
+        },
+        "aadServiceClientSecret": {
+            "type": "string",
+            "metadata": {
+                "description": "AAD service client secret"
+            }
+        },
+        "fhirDashboardTemplateUrl": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard.json",
+            "metadata": {
+                "description": "URL for FHIR dashboard template"
+            }
+        },
+        "fhirDashboardRepositoryUrl": {
+            "type": "string",
+            "defaultValue": "https://github.com/Microsoft/fhir-server-samples",
+            "metadata": {
+                "description": "URL for FHIR dashboard repository"
+            }
+        },
+        "fhirDashboardRepositoryBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Repository branch for FHIR Dashboard"
+            }
+        },
+        "deployDashboardSourceCode": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "If true, dashboard source code will be deployed from repo"
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanName": "[concat(variables('environmentName'),'-asp')]",
+        "environmentName": "[if(empty(parameters('environmentName')), concat('fhirdemo', uniqueString(resourceGroup().id)), parameters('environmentName'))]",
+        "fhirServiceName": "[variables('environmentName')]",
+        "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurehealthcareapis.com')]",
+        "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
+        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
+        "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
+        "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
+        "cosmosThroughPut": 1000
+    },
+    "resources": [
+        {
+            "type": "Microsoft.HealthcareApis/services",
+            "kind": "fhir",
+            "name": "[variables('fhirServiceName')]",
+            "apiVersion": "2018-08-20-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "accessPolicies": "[parameters('accessPolicies')]",
+                "cosmosDbConfiguration": {
+                    "offerThroughput": "[variables('cosmosThroughPut')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-08-01",
+            "name": "[variables('appServicePlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('appServicePlanSku')]"
+            },
+            "properties": {
+                "name": "[variables('appServicePlanName')]"
+            }
+        },
+        {
+            "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[parameters('fhirDashboardTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('fhirDashboardName')]"
+                    },
+                    "appServicePlanName": {
+                        "value": "[variables('appServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[resourceGroup().name]"
+                    },
+                    "aadAuthority": {
+                        "value": "[parameters('aadAuthority')]"
+                    },
+                    "aadAudience": {
+                        "value": "[parameters('aadFhirServerAudience')]"
+                    },
+                    "aadClientId": {
+                        "value": "[parameters('aadDashboardClientId')]"
+                    },
+                    "aadClientSecret": {
+                        "value": "[parameters('aadDashboardClientSecret')]"
+                    },
+                    "aadServiceClientId": {
+                        "value": "[parameters('aadServiceClientId')]"
+                    },
+                    "aadServiceClientSecret": {
+                        "value": "[parameters('aadServiceClientSecret')]"
+                    },
+                    "fhirServerUrl": {
+                        "value": "[variables('fhirServiceUrl')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "[parameters('fhirDashboardRepositoryUrl')]"
+                    },
+                    "repositoryBranch": {
+                        "value": "[parameters('fhirDashboardRepositoryBranch')]"
+                    },
+                    "deploySourceCode": {
+                        "value": "[parameters('deployDashboardSourceCode')]"
+                    }
+                },
+                "mode": "incremental"
+            }
+        }
+    ]
+}

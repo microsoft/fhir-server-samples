@@ -51,7 +51,11 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
+<<<<<<< HEAD
                 "description": "OAuth Audience, if blank, will be set to fhirServerUrl"
+=======
+                "description": "OAuth Audience for FHIR server"
+>>>>>>> draft paas sandbox
             }
         },
         "aadClientId": {
@@ -158,6 +162,7 @@
         "appInsightsName": "[concat('AppInsights-', variables('siteName'))]",
         "aadInstance": "[concat('https://', split(parameters('aadAuthority'),'/')[sub(length(split(parameters('aadAuthority'),'/')),2)],'/')]",
         "aadTenant": "[last(split(parameters('aadAuthority'),'/'))]",
+        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]",
         "fhirImportStorageAccountName": "[replace(concat(variables('siteName'),'sa'),'-','')]"
     },
     "resources": [
@@ -241,7 +246,11 @@
                         "AzureAd:ClientSecret": "[parameters('aadClientSecret')]",
                         "FhirImportService:StorageConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('fhirImportStorageAccountName'),';AccountKey=',concat(listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('fhirImportStorageAccountName')),'2015-05-01-preview').key1))]",
                         "FhirImportService:FhirServerUrl": "[parameters('fhirServerUrl')]",
+<<<<<<< HEAD
                         "FhirImportService:Authority": "[concat(variables('aadInstance'), variables('aadTenant'))]",
+=======
+                        "FhirImportService:Authority": "[concat('https://login.microsoftonline.com/', variables('aadTenant'))]",
+>>>>>>> draft paas sandbox
                         "FhirImportService:Audience": "[variables('aadAudience')]",
                         "FhirImportService:ClientId": "[parameters('aadServiceClientId')]",
                         "FhirImportService:ClientSecret": "[parameters('aadServiceClientSecret')]",
