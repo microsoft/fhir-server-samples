@@ -70,7 +70,19 @@ if (!$keyVault) {
 
 if ($azureRmContext.Account.Type -eq "User") {
     Write-Host "Current context is user: $($azureRmContext.Account.Id)"
-    $currentObjectId = (Get-AzureRmADUser -UserPrincipalName $azureRmContext.Account.Id).Id
+
+    $currentUser = Get-AzureRmADUser -UserPrincipalName $azureRmContext.Account.Id
+
+    #If this is guest account, we will try a search instead
+    if (!$currentUser) {
+        $currentUser = Get-AzureRmADUser -SearchString $azureRmContext.Account.Id
+    }
+
+    $currentObjectId = $currentUser.Id
+
+    if (!$currentObjectId) {
+        throw "Failed to find objectId for signed in user"
+    }
 }
 elseif ($azureRmContext.Account.Type -eq "ServicePrincipal") {
     Write-Host "Current context is service principal: $($azureRmContext.Account.Id)"
