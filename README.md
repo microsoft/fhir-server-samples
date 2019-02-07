@@ -1,3 +1,57 @@
+# FHIR Server Samples
+
+This respository contains example applications and scenarios that show use of the [FHIR Server for Azure](https://github.com/Microsoft/fhir-server) and the [Azure API for FHIR](https://docs.microsoft.com/azure/healthcare-apis).
+
+The scenario is meant to illustrate how to connect a web application to the FHIR API. When deployed with the Open Source FHIR server novel features such as the SMART on FHIR Active Directory Proxy are demonstrated:
+
+![Open Source FHIR server samples scenario](images/fhir-server-samples-oss.png)
+
+The scenario using the Azure API for FHIR PaaS server will deploy without the SMART on FHIR apps:
+
+![PaaS FHIR server samples scenario](images/fhir-server-samples-paas.png)
+
+In both cases a storage account will be deploy and in this storage account there is a BLOB container called `fhirimport`, patient bundles generated with [Synthea](https://github.com/synthetichealth/synthea) can dumped in this storage container and they will be ingested into the FHIR server.
+
+# Deployment
+
+To deploy the sample scenario, first clone this git repo and find the deployment scripts folder:
+
+```PowerShell
+git clone https://github.com/Microsoft/fhir-server-samples
+cd fhir-server-samples/deploy/scripts
+```
+
+Log into your Azure subscription:
+
+```PowerShell
+Login-AzureRmAccount -TenantId <AAD Tenant>
+```
+
+Connect to Azure AD with:
+
+```PowerShell
+Connect-AzureAd -TenantDomain <AAD TenantDomain>
+```
+
+*If you are deploying the scenario using the managed Azure API for FHIR, the AAD tenants should be the same when connecting to `AzureAD` and `AzureRm`.*
+
+Then deploy the scenario with the Open Source FHIR Server for Azure:
+
+```PowerShell
+.\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME>
+```
+
+or the managed Azure API for FHIR:
+
+```PowerShell
+.\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true
+```
+
+To delete the senario:
+
+```PowerShell
+.\Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME>
+```
 
 # Contributing
 

@@ -149,7 +149,6 @@
     },
     "variables": {
         "siteName": "[toLower(parameters('siteName'))]",
-        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]",
         "appServicePlanResourceGroup": "[if(empty(parameters('appServicePlanResourceGroup')), resourceGroup().name, parameters('appServicePlanResourceGroup'))]",
         "appServicePlanName": "[if(empty(parameters('appServicePlanName')),concat(variables('siteName'),'-asp'),parameters('appServicePlanName'))]",
         "deploySourceCode": "[and(parameters('deploySourceCode'),and(not(empty(parameters('repositoryUrl'))),not(empty(parameters('repositoryBranch')))))]",
@@ -158,6 +157,7 @@
         "appInsightsName": "[concat('AppInsights-', variables('siteName'))]",
         "aadInstance": "[concat('https://', split(parameters('aadAuthority'),'/')[sub(length(split(parameters('aadAuthority'),'/')),2)],'/')]",
         "aadTenant": "[last(split(parameters('aadAuthority'),'/'))]",
+        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]",
         "fhirImportStorageAccountName": "[replace(concat(variables('siteName'),'sa'),'-','')]"
     },
     "resources": [
