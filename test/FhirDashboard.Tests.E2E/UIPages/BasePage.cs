@@ -20,7 +20,10 @@ namespace FhirDashboard.Tests.E2E.UIPages
 
         public string Title
         {
-            get { return Driver.Title(); }
+            get
+            {
+                return Driver.Title();
+            }
         }
 
         public void OpenPage(string uRL)

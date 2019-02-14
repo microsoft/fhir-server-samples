@@ -15,8 +15,6 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
 
         private void ClickNext()
         {
-            // As next button has same id(idSIButton9) used in multiple popup we need to wait for animation / button state change
-            Thread.Sleep(2000);
             signInPage.ButtonNext.Click();
         }
 
@@ -41,6 +39,9 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
             InputUserName(userName);
             ClickNext();
             InputPassword(password);
+
+            // We need to wait for animation / button state change as next button has same id(idSIButton9)
+            Thread.Sleep(2000);
             ClickNext();
 
             // Consent, should only be done if we can find the button
