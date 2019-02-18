@@ -4,6 +4,7 @@
 // -------------------------------------------------------------------------------------------------
 
 using System.Threading;
+using FhirDashboard.Tests.E2E.Configurations;
 using FhirDashboard.Tests.E2E.UIPages;
 using OpenQA.Selenium;
 
@@ -12,6 +13,15 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
     internal class SignInPageAction
     {
         private SignInPage signInPage = new SignInPage();
+
+        /// <summary>
+        /// Validate the title of the page with the expected title
+        /// </summary>
+        public void ValidateTitle()
+        {
+            var signInPage = new SignInPage();
+            signInPage.ValidateTitle();
+        }
 
         private void ClickNext()
         {
@@ -29,7 +39,7 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
         }
 
         /// <summary>
-        /// Sign in from microsoft sign in page
+        /// Sign in from Microsoft sign in page
         /// </summary>
         /// <param name="userName">Microsoft user name</param>
         /// <param name="password">Password</param>
@@ -59,10 +69,18 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
             }
         }
 
-        public void ValidateTitle()
+        /// <summary>
+        /// Navigates to dashboard and sign in
+        /// </summary>
+        /// <param name="userName">User name</param>
+        /// <param name="password">Password</param>
+        public void SignInandNavigateToDashBoard()
         {
-            var signInPage = new SignInPage();
-            signInPage.ValidateTitle();
+            CommonActions.NavigateToDashBoard();
+            var signInPageAction = new SignInPageAction();
+            signInPageAction.SignIn(Configuration.DashboardUserUpn, Configuration.DashboardUserPassword);
+            var homePageAction = new HomePageAction();
+            homePageAction.ValidateTitle();
         }
     }
 }

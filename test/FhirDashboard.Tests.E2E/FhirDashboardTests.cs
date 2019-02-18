@@ -25,8 +25,9 @@ namespace FhirDashboard.Tests.E2E
             var result = await CommonActions.CheckForSiteSuccess(Configuration.DashboardUrl);
             Assert.True(result.IsSuccessStatusCode);
 
-            // Hit dashboard url and sign in using username password
-            CommonActions.SignInandNavigateToDashBoard();
+            // Hit dashboard URL and sign in using user name and password
+            var signInPageAction = new SignInPageAction();
+            signInPageAction.SignInandNavigateToDashBoard();
 
             // Navigate to about me page and validate token
             CommonActions.NavigateToAboutMe();

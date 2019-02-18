@@ -22,7 +22,7 @@ namespace FhirDashboard.Tests.E2E.UITestHelpers.Driver
                 default:
                     var options = new ChromeOptions();
 
-                    // Config file can be added for driver option, for now we have hardcoded it
+                    // We can add Config file for driver option. For the time being, I have hardcoded it.
                     options.AddArgument("--headless");
                     options.AddArgument("--disable-gpu");
                     options.AddArgument("--incognito");

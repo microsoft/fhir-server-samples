@@ -16,7 +16,7 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
     public static class CommonActions
     {
         /// <summary>
-        /// Click on next button which is common to the concent pages
+        /// Click on next button which is common to the consent pages
         /// </summary>
         public static void ClickNext()
         {
@@ -38,6 +38,8 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
                 // We may have to consent a second time since we are asking for a new audience
                 try
                 {
+                    // Loading takes time, while opening the dashboard for the first time after setting the environment
+                    Thread.Sleep(20000);
                     ClickNext();
                 }
                 catch
@@ -59,22 +61,10 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
         }
 
         /// <summary>
-        /// Navigates to dashboard and sign in
-        /// </summary>
-        /// <param name="userName">username</param>
-        /// <param name="password">password</param>
-        public static void SignInandNavigateToDashBoard()
-        {
-            NavigateToDashBoard();
-            var signInPageAction = new SignInPageAction();
-            signInPageAction.SignIn(Configuration.DashboardUserUpn, Configuration.DashboardUserPassword);
-        }
-
-        /// <summary>
         /// Checks whether the site is up
         /// </summary>
-        /// <param name="url">site to check</param>
-        /// <returns>return result</returns>
+        /// <param name="url">URL of site to check</param>
+        /// <returns>Result</returns>
         public static async Task<HttpResponseMessage> CheckForSiteSuccess(string url)
         {
             var client = new HttpClient();

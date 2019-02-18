@@ -15,9 +15,17 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
         private AboutMePage aboutMePage = new AboutMePage();
 
         /// <summary>
+        /// Validate the title of the page with the expected title
+        /// </summary>
+        public void ValidateTitle()
+        {
+            aboutMePage.ValidateTitle();
+        }
+
+        /// <summary>
         /// Validate token
         /// </summary>
-        /// <param name="serverUrl">pass the server url</param>
+        /// <param name="serverUrl">Pass the server URL</param>
         public void ValidateToken(string serverUrl)
         {
             var element = aboutMePage.TextToken;
@@ -31,14 +39,6 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
 
             var tokenAudience = aud.First().Value;
             Assert.Equal(serverUrl, tokenAudience);
-        }
-
-        /// <summary>
-        /// Validate the title of the page with the expected title
-        /// </summary>
-        public void ValidateTitle()
-        {
-            aboutMePage.ValidateTitle();
         }
     }
 }
