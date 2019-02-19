@@ -13,7 +13,7 @@ namespace FhirDashboard.Tests.E2E
         {
             DriverFactory driverFactory = new ConcreteDriverFactory();
 
-            // We can add Config file to select browser. For the time being, I have hardcoded it.
+            // We can add Config file to select browser. For the time being, I have hard coded it.
             Driver = driverFactory.GetWebDriver("chrome");
         }
 
