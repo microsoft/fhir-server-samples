@@ -35,9 +35,13 @@
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
-    <PackageReference Include="selenium.chrome.webdriver" Version="2.43" />
-    <PackageReference Include="selenium.webdriver" Version="3.141.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="chromedriver.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
