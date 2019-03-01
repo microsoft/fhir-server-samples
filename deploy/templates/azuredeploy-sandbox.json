@@ -171,8 +171,17 @@
                     "enableAadSmartOnFhirProxy": {
                         "value": true
                     },
-                    "allowedOrigins": {
-                        "value": "[variables('allowedOrigins')]"
+                    "additionalFhirServerConfigProperties": {
+                        "value": {
+                            "FhirServer:Security:Authorization:Roles:0:name": "admin",
+                            "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:0": "Read",
+                            "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:1": "Write",
+                            "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:2": "HardDelete",
+                            "FhirServer:Cors:Origins:0" : "*",
+                            "FhirServer:Cors:Methods:0" : "*",
+                            "FhirServer:Cors:Headers:0" : "*",
+                            "FhirServer:Cors:MaxAge"  : "1440"
+                        }
                     }
                 },
                 "mode": "incremental"
