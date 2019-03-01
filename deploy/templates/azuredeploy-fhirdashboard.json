@@ -209,6 +209,7 @@
                         "WEBSITE_NODE_DEFAULT_VERSION": "6.9.4",
                         "PROJECT": "[parameters('repositoryProjectPath')]",
                         "FhirServerUrl": "[parameters('fhirServerUrl')]",
+                        "FhirServerAudience": "[variables('aadAudience')]",
                         "AzureAd:TenantId": "[variables('aadTenant')]",
                         "AzureAd:Domain": "[variables('aadTenant')]",
                         "AzureAd:Instance": "[variables('aadInstance')]",
