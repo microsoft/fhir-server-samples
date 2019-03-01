@@ -66,18 +66,6 @@
                 "description": "AAD client secret"
             }
         },
-        "aadServiceClientId": {
-            "type": "string",
-            "metadata": {
-                "description": "AAD service client application id"
-            }
-        },
-        "aadServiceClientSecret": {
-            "type": "string",
-            "metadata": {
-                "description": "AAD service client secret"
-            }
-        },
         "fhirServerUrl": {
             "type": "string",
             "metadata": {
@@ -157,21 +145,9 @@
         "appInsightsName": "[concat('AppInsights-', variables('siteName'))]",
         "aadInstance": "[concat('https://', split(parameters('aadAuthority'),'/')[sub(length(split(parameters('aadAuthority'),'/')),2)],'/')]",
         "aadTenant": "[last(split(parameters('aadAuthority'),'/'))]",
-        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]",
-        "fhirImportStorageAccountName": "[replace(concat(variables('siteName'),'sa'),'-','')]"
+        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]"
     },
     "resources": [
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[variables('fhirImportStorageAccountName')]",
-            "apiVersion": "2017-10-01",
-            "location": "[resourceGroup().location]",
-            "sku": {
-                "name": "Standard_LRS"
-            },
-            "kind": "Storage",
-            "properties": {}
-        },
         {
             "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
             "apiVersion": "2017-05-10",
@@ -222,7 +198,6 @@
                     "name": "appsettings",
                     "type": "config",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Storage/storageAccounts', variables('fhirImportStorageAccountName'))]",
                         "[concat('Microsoft.Web/Sites/', variables('siteName'))]",
                         "[if(variables('deployAppInsights'),concat('Microsoft.Insights/components/', variables('appInsightsName')),'nestedTemplate')]"
                     ],
@@ -234,17 +209,12 @@
                         "WEBSITE_NODE_DEFAULT_VERSION": "6.9.4",
                         "PROJECT": "[parameters('repositoryProjectPath')]",
                         "FhirServerUrl": "[parameters('fhirServerUrl')]",
+                        "FhirServerAudience": "[variables('aadAudience')]",
                         "AzureAd:TenantId": "[variables('aadTenant')]",
                         "AzureAd:Domain": "[variables('aadTenant')]",
                         "AzureAd:Instance": "[variables('aadInstance')]",
                         "AzureAd:ClientId": "[parameters('aadClientId')]",
                         "AzureAd:ClientSecret": "[parameters('aadClientSecret')]",
-                        "FhirImportService:StorageConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('fhirImportStorageAccountName'),';AccountKey=',concat(listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('fhirImportStorageAccountName')),'2015-05-01-preview').key1))]",
-                        "FhirImportService:FhirServerUrl": "[parameters('fhirServerUrl')]",
-                        "FhirImportService:Authority": "[concat(variables('aadInstance'), variables('aadTenant'))]",
-                        "FhirImportService:Audience": "[variables('aadAudience')]",
-                        "FhirImportService:ClientId": "[parameters('aadServiceClientId')]",
-                        "FhirImportService:ClientSecret": "[parameters('aadServiceClientSecret')]",
                         "SmartOnFhirApps:0:DisplayName": "Growth Chart",
                         "SmartOnFhirApps:0:LaunchUrl": "[parameters('growthChartAppLaunchUrl')]",
                         "SmartOnFhirApps:1:DisplayName": "Medications",

@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
-using EnsureThat;
 using FhirDashboard.Models;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
@@ -34,7 +33,7 @@ namespace FhirDashboard.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var scopes = new string[] { $"{_configuration["FhirImportService:Audience"].TrimEnd('/')}/.default" };
+            var scopes = new string[] { $"{_configuration["FhirServerAudience"].TrimEnd('/')}/.default" };
             string accessToken;
             try
             {
@@ -86,7 +85,7 @@ namespace FhirDashboard.Controllers
         [HttpGet("/Patient/{id}")]
         public async Task<IActionResult> Details(string id)
         {
-            var scopes = new string[] { $"{_configuration["FhirImportService:Audience"].TrimEnd('/')}/.default" };
+            var scopes = new string[] { $"{_configuration["FhirServerAudience"].TrimEnd('/')}/.default" };
             string accessToken;
             try
             {

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace FhirServerSamples.FhirImportService
+namespace Microsoft.Health
 {
     public class FhirImportReferenceConverter
     {

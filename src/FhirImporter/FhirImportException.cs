@@ -5,7 +5,7 @@
 
 using System;
 
-namespace FhirServerSamples.FhirImportService
+namespace Microsoft.Health
 {
     public class FhirImportException : Exception
     {

@@ -55,7 +55,7 @@ if ($SetUserSecrets)
     dotnet user-secrets set "FhirImportService:FhirServerUrl" $fhirServerUrl
     dotnet user-secrets set "FhirImportService:ClientSecret" $serviceClientSecret
     dotnet user-secrets set "FhirImportService:ClientId" $serviceClientId
-    dotnet user-secrets set "FhirImportService:Audience" $fhirServerUrl
+    dotnet user-secrets set "FhirServerAudience" $fhirServerUrl
     dotnet user-secrets set "AzureAd:ClientSecret" $confidentialClientSecret
     dotnet user-secrets set "AzureAd:ClientId" $confidentialClientId
     dotnet user-secrets set "SmartOnFhirApps:0:DisplayName" "Growth Chart"
