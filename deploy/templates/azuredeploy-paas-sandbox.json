@@ -112,6 +112,7 @@
         "appServicePlanName": "[concat(variables('environmentName'),'-asp')]",
         "environmentName": "[if(empty(parameters('environmentName')), concat('fhirdemo', uniqueString(resourceGroup().id)), parameters('environmentName'))]",
         "fhirServiceName": "[variables('environmentName')]",
+        "fhirImporterName": "[concat(variables('environmentName'),'imp')]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurehealthcareapis.com')]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
         "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
@@ -132,6 +133,44 @@
                 "cosmosDbConfiguration": {
                     "offerThroughput": "[variables('cosmosThroughPut')]"
                 }
+            }
+        },
+        {
+            "name": "[concat(variables('fhirImporterName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[parameters('fhirImporterTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "appName": {
+                        "value": "[variables('fhirImporterName')]"
+                    },
+                    "aadAuthority": {
+                        "value": "[parameters('aadAuthority')]"
+                    },
+                    "aadAudience": {
+                        "value": "[variables('aadFhirServerAudience')]"
+                    },
+                    "aadServiceClientId": {
+                        "value": "[parameters('aadServiceClientId')]"
+                    },
+                    "aadServiceClientSecret": {
+                        "value": "[parameters('aadServiceClientsecret')]"
+                    },
+                    "fhirServerUrl": {
+                        "value": "[variables('fhirServiceUrl')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "[parameters('fhirDashboardRepositoryUrl')]"
+                    },
+                    "repositoryBranch": {
+                        "value": "[parameters('fhirDashboardRepositoryBranch')]"
+                    }
+                },
+                "mode": "incremental"
             }
         },
         {
