@@ -188,6 +188,9 @@
         {
             "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
             "apiVersion": "2018-05-01",
             "properties": {
                 "templateLink": {

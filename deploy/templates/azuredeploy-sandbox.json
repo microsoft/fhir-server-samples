@@ -237,6 +237,9 @@
             "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
             "properties": {
                 "templateLink": {
                     "uri": "[parameters('fhirDashboardTemplateUrl')]",
@@ -287,6 +290,9 @@
             "name": "[concat(variables('growthChartName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
             "properties": {
                 "templateLink": {
                     "uri": "[variables('smartAppTemplateUrl')]",
@@ -318,6 +324,9 @@
         {
             "name": "[concat(variables('medicationsName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
             "apiVersion": "2018-05-01",
             "properties": {
                 "templateLink": {
