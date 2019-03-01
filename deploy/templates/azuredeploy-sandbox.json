@@ -90,6 +90,13 @@
                 "description": "URL for FHIR dashboard template"
             }
         },
+        "fhirImporterTemplateUrl": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-importer.json",
+            "metadata": {
+                "description": "URL for FHIR importer template"
+            }
+        },
         "smartAppTemplateUrl": {
             "type": "string",
             "defaultValue": "",
@@ -123,6 +130,7 @@
         "appServicePlanName": "[concat(variables('environmentName'),'-asp')]",
         "environmentName": "[if(empty(parameters('environmentName')), concat('fhirdemo', uniqueString(resourceGroup().id)), parameters('environmentName'))]",
         "fhirServiceName": "[concat(variables('environmentName'),'srvr')]",
+        "fhirImporterName": "[concat(variables('environmentName'),'imp')]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurewebsites.net')]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
         "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
@@ -188,6 +196,44 @@
             }
         },
         {
+            "name": "[concat(variables('fhirImporterName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[parameters('fhirImporterTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "appName": {
+                        "value": "[variables('fhirImporterName')]"
+                    },
+                    "aadAuthority": {
+                        "value": "[parameters('aadAuthority')]"
+                    },
+                    "aadAudience": {
+                        "value": "[variables('aadFhirServerAudience')]"
+                    },
+                    "aadServiceClientId": {
+                        "value": "[parameters('aadServiceClientId')]"
+                    },
+                    "aadServiceClientSecret": {
+                        "value": "[parameters('aadServiceClientsecret')]"
+                    },
+                    "fhirServerUrl": {
+                        "value": "[variables('fhirServiceUrl')]"
+                    },
+                    "repositoryUrl": {
+                        "value": "[parameters('fhirDashboardRepositoryUrl')]"
+                    },
+                    "repositoryBranch": {
+                        "value": "[parameters('fhirDashboardRepositoryBranch')]"
+                    }
+                },
+                "mode": "incremental"
+            }
+        },
+        {
             "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
@@ -214,12 +260,6 @@
                     },
                     "aadClientSecret": {
                         "value": "[parameters('aadDashboardClientSecret')]"
-                    },
-                    "aadServiceClientId": {
-                        "value": "[parameters('aadServiceClientId')]"
-                    },
-                    "aadServiceClientSecret": {
-                        "value": "[parameters('aadServiceClientSecret')]"
                     },
                     "fhirServerUrl": {
                         "value": "[variables('fhirServiceUrl')]"

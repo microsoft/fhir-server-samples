@@ -79,6 +79,13 @@
                 "description": "URL for FHIR dashboard template"
             }
         },
+        "fhirImporterTemplateUrl": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-importer.json",
+            "metadata": {
+                "description": "URL for FHIR importer template"
+            }
+        },
         "fhirDashboardRepositoryUrl": {
             "type": "string",
             "defaultValue": "https://github.com/Microsoft/fhir-server-samples",
@@ -169,12 +176,6 @@
                     },
                     "aadClientSecret": {
                         "value": "[parameters('aadDashboardClientSecret')]"
-                    },
-                    "aadServiceClientId": {
-                        "value": "[parameters('aadServiceClientId')]"
-                    },
-                    "aadServiceClientSecret": {
-                        "value": "[parameters('aadServiceClientSecret')]"
                     },
                     "fhirServerUrl": {
                         "value": "[variables('fhirServiceUrl')]"

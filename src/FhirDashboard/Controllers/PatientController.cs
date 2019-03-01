@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
-using EnsureThat;
 using FhirDashboard.Models;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
