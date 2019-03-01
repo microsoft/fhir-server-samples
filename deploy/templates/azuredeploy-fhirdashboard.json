@@ -198,7 +198,6 @@
                     "name": "appsettings",
                     "type": "config",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Storage/storageAccounts', variables('fhirImportStorageAccountName'))]",
                         "[concat('Microsoft.Web/Sites/', variables('siteName'))]",
                         "[if(variables('deployAppInsights'),concat('Microsoft.Insights/components/', variables('appInsightsName')),'nestedTemplate')]"
                     ],
