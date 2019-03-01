@@ -11,8 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{25A6F929-F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FhirDashboard.Tests.E2E", "test\FhirDashboard.Tests.E2E\FhirDashboard.Tests.E2E.csproj", "{BB9A3C89-8616-4681-9049-C0DBADD5EF12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FhirServerSamples.FhirImportService", "src\FhirServerSamples.FhirImportService\FhirServerSamples.FhirImportService.csproj", "{062FFE06-DEBE-4D8D-9E33-233EB40444D1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
