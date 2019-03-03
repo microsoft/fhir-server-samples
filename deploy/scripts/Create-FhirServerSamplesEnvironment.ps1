@@ -115,6 +115,11 @@ if ($UsePaaS) {
     New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource
 }
 
+Write-Host "Warming up site..."
+Invoke-WebRequest -Uri "${fhirServerUrl}/metadata" | Out-Null
+$functionAppUrl = "https://${EnvironmentName}imp.azurewebsites.net"
+Invoke-WebRequest -Uri $functionAppUrl | Out-Null 
+
 @{
     dashboardUrl              = $dashboardUrl
     fhirServerUrl             = $fhirServerUrl

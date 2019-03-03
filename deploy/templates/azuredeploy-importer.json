@@ -84,6 +84,7 @@
     "variables": {
         "functionAppName": "[parameters('appName')]",
         "hostingPlanName": "[parameters('appName')]",
+        "applicationInsightsName": "[parameters('appName')]",
         "storageAccountName": "[replace(concat(toLower(parameters('appName')), 'sa'),'-','')]",
         "storageAccountid": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
         "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]"
@@ -177,6 +178,22 @@
                             "value": "dotnet"
                         },
                         {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(resourceId('microsoft.insights/components/', variables('applicationInsightsName')), '2015-05-01').InstrumentationKey]"
+                        },
+                        {
+                            "name": "APPINSIGHTS_PORTALINFO",
+                            "value": "ASP.NETCORE"
+                        },
+                        {
+                            "name": "APPINSIGHTS_PROFILERFEATURE_VERSION",
+                            "value": "1.0.0"
+                        },
+                        {
+                            "name": "APPINSIGHTS_SNAPSHOTFEATURE_VERSION",
+                            "value": "1.0.0"
+                        },
+                        {
                             "name": "PROJECT",
                             "value": "[parameters('repositoryProjectPath')]"
                         },
@@ -218,6 +235,19 @@
                     }
                 }
             ]
+        },
+        {   
+        "apiVersion": "2018-05-01-preview",
+        "name": "[variables('applicationInsightsName')]",
+        "type": "microsoft.insights/components",
+        "location": "East US",
+        "tags": {
+            "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('applicationInsightsName'))]": "Resource"
+        },
+        "properties": {
+            "ApplicationId": "[variables('applicationInsightsName')]",
+            "Request_Source": "IbizaWebAppExtensionCreate"
         }
+    }
     ]
 }
