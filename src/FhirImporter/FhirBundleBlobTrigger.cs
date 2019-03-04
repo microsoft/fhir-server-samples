@@ -16,6 +16,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Polly;
 
 namespace Microsoft.Health
 {
@@ -114,18 +115,45 @@ namespace Microsoft.Health
                     HttpResponseMessage uploadResult;
                     if (string.IsNullOrEmpty(id))
                     {
-                        uploadResult = await httpClient.PostAsync($"/{resource_type}", content);
+                        
+                        uploadResult = await Policy
+                            .HandleResult<HttpResponseMessage>(message => !message.IsSuccessStatusCode)
+                            .WaitAndRetryAsync(new[]
+                            {
+                                TimeSpan.FromSeconds(2),
+                                TimeSpan.FromSeconds(3),
+                                TimeSpan.FromSeconds(5),
+                                TimeSpan.FromSeconds(8)
+                            },(result, timeSpan, retryCount, context) =>
+                            {
+                                log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
+                            })
+                            .ExecuteAsync(() => httpClient.PostAsync($"/{resource_type}", content));
                     }
                     else
                     {
-                        uploadResult = await httpClient.PutAsync($"/{resource_type}/{id}", content);
+                        uploadResult = await Policy
+                            .HandleResult<HttpResponseMessage>(message => !message.IsSuccessStatusCode)
+                            .WaitAndRetryAsync(new[]
+                            {
+                                TimeSpan.FromSeconds(2),
+                                TimeSpan.FromSeconds(3),
+                                TimeSpan.FromSeconds(5),
+                                TimeSpan.FromSeconds(8)
+                            }, (result, timeSpan, retryCount, context) =>
+                            {
+                                log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
+                            })
+                            .ExecuteAsync(() => httpClient.PutAsync($"/{resource_type}/{id}", content));
                     }
 
                     if (!uploadResult.IsSuccessStatusCode)
                     {
                         string resultContent = await uploadResult.Content.ReadAsStringAsync();
                         log.LogError(resultContent);
-                        throw new FhirImportException("Unable to upload resources to FHIR server");
+
+                        // Throwing a generic exception here. This will leave the blob in storage and retry.
+                        throw new Exception($"Unable to upload to server. Error code {uploadResult.StatusCode}");
                     }
                 }
 
