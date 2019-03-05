@@ -7,7 +7,9 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
@@ -39,7 +41,7 @@ namespace Microsoft.Health
             catch (JsonReaderException)
             {
                 log.LogError("Input file is not a valid JSON document");
-                await MoveBlobToRejected(name,log);
+                await MoveBlobToRejected(name, log);
                 return;
             }
 
@@ -75,7 +77,13 @@ namespace Microsoft.Health
                 string audience = System.Environment.GetEnvironmentVariable("Audience");
                 string clientId = System.Environment.GetEnvironmentVariable("ClientId");
                 string clientSecret = System.Environment.GetEnvironmentVariable("ClientSecret");
-                string fhirServerUrl = System.Environment.GetEnvironmentVariable("fhirServerUrl");
+                string fhirServerUrl = System.Environment.GetEnvironmentVariable("FhirServerUrl");
+
+                int maxDegreeOfParallelism;
+                if (!int.TryParse(System.Environment.GetEnvironmentVariable("MaxDegreeOfParallelism"), out maxDegreeOfParallelism))
+                {
+                    maxDegreeOfParallelism = 16;
+                }
 
                 try
                 {
@@ -88,16 +96,21 @@ namespace Microsoft.Health
                     log.LogCritical(string.Format("Unable to obtain token to access FHIR server in FhirImportService {0}", ee.ToString()));
                     throw;
                 }
-                
+
                 httpClient.BaseAddress = new Uri(fhirServerUrl);
                 httpClient.DefaultRequestHeaders.Clear();
                 httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + authResult.AccessToken);
 
-                for (int i = 0; i < entries.Count; i++)
+
+                //var entriesNum = Enumerable.Range(0,entries.Count-1);
+                var actionBlock = new ActionBlock<int>(async i =>
                 {
                     var entry_json = ((JObject)entries[i])["resource"].ToString();
                     string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
                     string id = (string)((JObject)entries[i])["resource"]["id"];
+                    var randomGenerator = new Random();
+
+                    Thread.Sleep(TimeSpan.FromMilliseconds(randomGenerator.Next(50)));
 
                     if (string.IsNullOrEmpty(entry_json))
                     {
@@ -113,34 +126,31 @@ namespace Microsoft.Health
 
                     StringContent content = new StringContent(entry_json, Encoding.UTF8, "application/json");
                     HttpResponseMessage uploadResult;
+                    var pollyDelays =
+                            new[]
+                            {
+                                TimeSpan.FromMilliseconds(2000 + randomGenerator.Next(50)),
+                                TimeSpan.FromMilliseconds(3000 + randomGenerator.Next(50)),
+                                TimeSpan.FromMilliseconds(5000 + randomGenerator.Next(50)),
+                                TimeSpan.FromMilliseconds(8000 + randomGenerator.Next(50))
+                            };
+
                     if (string.IsNullOrEmpty(id))
                     {
-                        
+
                         uploadResult = await Policy
                             .HandleResult<HttpResponseMessage>(message => !message.IsSuccessStatusCode)
-                            .WaitAndRetryAsync(new[]
-                            {
-                                TimeSpan.FromSeconds(2),
-                                TimeSpan.FromSeconds(3),
-                                TimeSpan.FromSeconds(5),
-                                TimeSpan.FromSeconds(8)
-                            },(result, timeSpan, retryCount, context) =>
-                            {
-                                log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
-                            })
+                            .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
+                             {
+                                 log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
+                             })
                             .ExecuteAsync(() => httpClient.PostAsync($"/{resource_type}", content));
                     }
                     else
                     {
                         uploadResult = await Policy
                             .HandleResult<HttpResponseMessage>(message => !message.IsSuccessStatusCode)
-                            .WaitAndRetryAsync(new[]
-                            {
-                                TimeSpan.FromSeconds(2),
-                                TimeSpan.FromSeconds(3),
-                                TimeSpan.FromSeconds(5),
-                                TimeSpan.FromSeconds(8)
-                            }, (result, timeSpan, retryCount, context) =>
+                            .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
                             {
                                 log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
                             })
@@ -155,7 +165,23 @@ namespace Microsoft.Health
                         // Throwing a generic exception here. This will leave the blob in storage and retry.
                         throw new Exception($"Unable to upload to server. Error code {uploadResult.StatusCode}");
                     }
+                    else
+                    {
+                        log.LogInformation($"Uploaded /{resource_type}/{id}");
+                    }
+                },
+                    new ExecutionDataflowBlockOptions
+                    {
+                        MaxDegreeOfParallelism = maxDegreeOfParallelism
+                    }
+                );
+
+                for (var i = 0; i < entries.Count; i++)
+                {
+                    actionBlock.Post(i);
                 }
+                actionBlock.Complete();
+                actionBlock.Completion.Wait();
 
                 // We are done with this blob, upload was successful, it will be delete
                 await GetBlobReference("fhirimport", name, log).DeleteIfExistsAsync();
