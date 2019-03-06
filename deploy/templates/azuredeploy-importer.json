@@ -216,6 +216,14 @@
                         {
                             "name": "FhirServerUrl",
                             "value": "[parameters('fhirServerUrl')]"
+                        },
+                        {
+                            "name": "WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT",
+                            "value": "1"
+                        },
+                        {
+                            "name": "MaxDegreeOfParallelism",
+                            "value": "16"
                         }
                     ]
                 }
