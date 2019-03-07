@@ -16,9 +16,11 @@
 
   <ItemGroup>
     <PackageReference Include="Hl7.Fhir.STU3" Version="1.0.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.6.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.9.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.6.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61" />
   </ItemGroup>
