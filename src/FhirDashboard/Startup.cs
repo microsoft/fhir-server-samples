@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace FhirDashboard
@@ -135,7 +137,7 @@ namespace FhirDashboard
             })
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.AddApplicationInsightsTelemetry(Configuration);
+            AddApplicationInsightsTelemetry(services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -165,6 +167,20 @@ namespace FhirDashboard
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+        }
+
+        /// <summary>
+        /// Adds ApplicationInsights for telemetry and logging.
+        /// </summary>
+        private void AddApplicationInsightsTelemetry(IServiceCollection services)
+        {
+            string instrumentationKey = Configuration["ApplicationInsights:InstrumentationKey"];
+
+            if (!string.IsNullOrWhiteSpace(instrumentationKey))
+            {
+                services.AddApplicationInsightsTelemetry(instrumentationKey);
+                services.AddLogging(loggingBuilder => loggingBuilder.AddApplicationInsights(instrumentationKey));
+            }
         }
     }
 }
