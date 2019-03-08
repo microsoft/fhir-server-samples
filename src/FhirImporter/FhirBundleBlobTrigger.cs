@@ -133,7 +133,7 @@ namespace Microsoft.Health
 
                     var message = string.IsNullOrEmpty(id)
                         ? new HttpRequestMessage(HttpMethod.Post, new Uri(fhirServerUrl, $"/{resource_type}"))
-                        : new HttpRequestMessage(HttpMethod.Put, new Uri(fhirServerUrl, $"/{resource_type}"));
+                        : new HttpRequestMessage(HttpMethod.Put, new Uri(fhirServerUrl, $"/{resource_type}/{id}"));
 
                     message.Content = content;
                     message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
