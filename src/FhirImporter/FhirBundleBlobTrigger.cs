@@ -6,6 +6,7 @@
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +25,8 @@ namespace Microsoft.Health
 {
     public static class FhirBundleBlobTrigger
     {
+        private static readonly HttpClient httpClient = new HttpClient();
+
         [FunctionName("FhirBundleBlobTrigger")]
         public static async Task Run([BlobTrigger("fhirimport/{name}", Connection = "AzureWebJobsStorage")]Stream myBlob, string name, ILogger log)
         {
@@ -31,7 +34,7 @@ namespace Microsoft.Health
 
             var streamReader = new StreamReader(myBlob);
             var fhirString = await streamReader.ReadToEndAsync();
-
+            
             JObject bundle;
             JArray entries;
             try
@@ -70,14 +73,13 @@ namespace Microsoft.Health
 
                 AuthenticationContext authContext;
                 ClientCredential clientCredential;
-                HttpClient httpClient = new HttpClient();
                 AuthenticationResult authResult;
 
                 string authority = System.Environment.GetEnvironmentVariable("Authority");
                 string audience = System.Environment.GetEnvironmentVariable("Audience");
                 string clientId = System.Environment.GetEnvironmentVariable("ClientId");
                 string clientSecret = System.Environment.GetEnvironmentVariable("ClientSecret");
-                string fhirServerUrl = System.Environment.GetEnvironmentVariable("FhirServerUrl");
+                Uri fhirServerUrl = new Uri(System.Environment.GetEnvironmentVariable("FhirServerUrl"));
 
                 int maxDegreeOfParallelism;
                 if (!int.TryParse(System.Environment.GetEnvironmentVariable("MaxDegreeOfParallelism"), out maxDegreeOfParallelism))
@@ -96,11 +98,6 @@ namespace Microsoft.Health
                     log.LogCritical(string.Format("Unable to obtain token to access FHIR server in FhirImportService {0}", ee.ToString()));
                     throw;
                 }
-
-                httpClient.BaseAddress = new Uri(fhirServerUrl);
-                httpClient.DefaultRequestHeaders.Clear();
-                httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + authResult.AccessToken);
-
 
                 //var entriesNum = Enumerable.Range(0,entries.Count-1);
                 var actionBlock = new ActionBlock<int>(async i =>
@@ -125,7 +122,6 @@ namespace Microsoft.Health
                     }
 
                     StringContent content = new StringContent(entry_json, Encoding.UTF8, "application/json");
-                    HttpResponseMessage uploadResult;
                     var pollyDelays =
                             new[]
                             {
@@ -135,27 +131,20 @@ namespace Microsoft.Health
                                 TimeSpan.FromMilliseconds(8000 + randomGenerator.Next(50))
                             };
 
-                    if (string.IsNullOrEmpty(id))
-                    {
+                    var message = string.IsNullOrEmpty(id)
+                        ? new HttpRequestMessage(HttpMethod.Post, new Uri(fhirServerUrl, $"/{resource_type}"))
+                        : new HttpRequestMessage(HttpMethod.Put, new Uri(fhirServerUrl, $"/{resource_type}"));
 
-                        uploadResult = await Policy
-                            .HandleResult<HttpResponseMessage>(message => !message.IsSuccessStatusCode)
-                            .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
-                             {
-                                 log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
-                             })
-                            .ExecuteAsync(() => httpClient.PostAsync($"/{resource_type}", content));
-                    }
-                    else
-                    {
-                        uploadResult = await Policy
-                            .HandleResult<HttpResponseMessage>(message => !message.IsSuccessStatusCode)
-                            .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
-                            {
-                                log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
-                            })
-                            .ExecuteAsync(() => httpClient.PutAsync($"/{resource_type}/{id}", content));
-                    }
+                    message.Content = content;
+                    message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+
+                    HttpResponseMessage uploadResult = await Policy
+                        .HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
+                        .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
+                        {
+                            log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
+                        })
+                        .ExecuteAsync(() => httpClient.SendAsync(message));
 
                     if (!uploadResult.IsSuccessStatusCode)
                     {
