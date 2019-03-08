@@ -8,5 +8,12 @@
             "maxDequeueCount": 10,
             "newBatchThreshold": 4
         }
+    },
+    "logging": {
+        "applicationInsights": {
+            "samplingSettings": {
+                "isEnabled": false
+            }
+        }
     }
 }
