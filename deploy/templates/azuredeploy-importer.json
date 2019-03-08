@@ -126,15 +126,14 @@
         },
         {
             "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2015-08-01",
             "name": "[variables('hostingPlanName')]",
             "location": "[parameters('location')]",
             "properties": {
                 "name": "[variables('hostingPlanName')]",
-                "sku": "Standard",
-                "workerSize": "1",
-                "hostingEnvironment": "",
-                "numberOfWorkers": 1
+            },
+            "sku": {
+                "name": "S1"
             }
         },
         {
