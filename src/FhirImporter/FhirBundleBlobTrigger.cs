@@ -131,12 +131,6 @@ namespace Microsoft.Health
                                 TimeSpan.FromMilliseconds(8000 + randomGenerator.Next(50))
                             };
 
-                    var message = string.IsNullOrEmpty(id)
-                        ? new HttpRequestMessage(HttpMethod.Post, new Uri(fhirServerUrl, $"/{resource_type}"))
-                        : new HttpRequestMessage(HttpMethod.Put, new Uri(fhirServerUrl, $"/{resource_type}/{id}"));
-
-                    message.Content = content;
-                    message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
 
                     HttpResponseMessage uploadResult = await Policy
                         .HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
@@ -144,7 +138,15 @@ namespace Microsoft.Health
                         {
                             log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
                         })
-                        .ExecuteAsync(() => httpClient.SendAsync(message));
+                        .ExecuteAsync(() => {                            
+                            var message = string.IsNullOrEmpty(id)
+                                ? new HttpRequestMessage(HttpMethod.Post, new Uri(fhirServerUrl, $"/{resource_type}"))
+                                : new HttpRequestMessage(HttpMethod.Put, new Uri(fhirServerUrl, $"/{resource_type}/{id}"));
+
+                            message.Content = content;
+                            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+                            return httpClient.SendAsync(message);
+                        });
 
                     if (!uploadResult.IsSuccessStatusCode)
                     {
