@@ -126,14 +126,13 @@
         },
         {
             "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2015-04-01",
             "name": "[variables('hostingPlanName')]",
             "location": "[parameters('location')]",
             "properties": {
                 "name": "[variables('hostingPlanName')]",
-            },
-            "sku": {
-                "name": "S1"
+                "computeMode": "Dynamic",
+                "sku": "Dynamic"
             }
         },
         {
@@ -217,6 +216,10 @@
                         {
                             "name": "FhirServerUrl",
                             "value": "[parameters('fhirServerUrl')]"
+                        },
+                        {
+                            "name": "WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT",
+                            "value": "1"
                         },
                         {
                             "name": "MaxDegreeOfParallelism",
