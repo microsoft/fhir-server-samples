@@ -52,7 +52,7 @@ namespace Microsoft.Health
 
             try
             {
-                bundle = (JObject)FhirImportReferenceConverter.ConvertUUIDs(bundle);
+                FhirImportReferenceConverter.ConvertUUIDs(bundle);
             }
             catch
             {

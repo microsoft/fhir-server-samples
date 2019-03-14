@@ -10,24 +10,64 @@ using Newtonsoft.Json.Linq;
 namespace Microsoft.Health
 {
     public class FhirImportReferenceConverter
-    {
-        public static Dictionary<string, IdTypePair> CreateUUIDLookUpTable(JObject bundle)
+    { 
+        public static void ConvertUUIDs(JObject bundle)
+        {
+            ConvertUUIDs(bundle, CreateUUIDLookUpTable(bundle));
+        }
+
+        private static void ConvertUUIDs(JToken tok, Dictionary<string, IdTypePair> idLookupTable)
+        {
+            switch (tok.Type)
+            {
+                case JTokenType.Object:
+                case JTokenType.Array:
+
+                    foreach (var c in tok.Children())
+                    {
+                        ConvertUUIDs(c, idLookupTable);
+                    }
+
+                    return;
+                case JTokenType.Property:
+                    JProperty prop = (JProperty)tok;
+
+                    if (prop.Name == "reference" && idLookupTable.TryGetValue(prop.Value.ToString(), out var idTypePair))
+                    {
+                        prop.Value = idTypePair.ResourceType + "/" + idTypePair.Id;
+                    }
+
+                    return;
+                case JTokenType.String:
+                case JTokenType.Boolean:
+                case JTokenType.Float:
+                case JTokenType.Integer:
+                case JTokenType.Date:
+                    return;
+                default:
+                    throw new NotSupportedException($"Invalid token type {tok.Type} encountered");
+            }
+        }
+
+        private static Dictionary<string, IdTypePair> CreateUUIDLookUpTable(JObject bundle)
         {
             Dictionary<string, IdTypePair> table = new Dictionary<string, IdTypePair>();
             JArray entry = (JArray)bundle["entry"];
 
             if (entry == null)
             {
-                throw new Exception("Unable to find bundle entries for creating lookup table");
+                throw new ArgumentException("Unable to find bundle entries for creating lookup table");
             }
 
             try
             {
-                foreach (var resource in entry)
+                foreach (var resourceWrapper in entry)
                 {
-                    var fullUrl = (string)resource["fullUrl"];
-                    string resourceType = (string)((JObject)resource)["resource"]["resourceType"];
-                    string id = (string)((JObject)resource)["resource"]["id"];
+                    var resource = resourceWrapper["resource"];
+                    var fullUrl = (string)resourceWrapper["fullUrl"];
+                    var resourceType = (string)resource["resourceType"];
+                    var id = (string)resource["id"];
+
                     table.Add(fullUrl, new IdTypePair { ResourceType = resourceType, Id = id });
                 }
             }
@@ -40,62 +80,7 @@ namespace Microsoft.Health
             return table;
         }
 
-        public static JToken ConvertUUIDs(JToken tok, Dictionary<string, IdTypePair> idLookupTable = null)
-        {
-            if (idLookupTable == null)
-            {
-                idLookupTable = CreateUUIDLookUpTable((JObject)tok);
-            }
-
-            switch (tok.Type)
-            {
-                case JTokenType.Object:
-                    JObject retObject = new JObject();
-
-                    foreach (var c in tok.Children())
-                    {
-                        retObject.Add(ConvertUUIDs(c, idLookupTable));
-                    }
-
-                    return retObject;
-                case JTokenType.Array:
-                    JArray retArray = new JArray();
-
-                    foreach (var c in tok.Children())
-                    {
-                        retArray.Add(ConvertUUIDs(c, idLookupTable));
-                    }
-
-                    return retArray;
-                case JTokenType.Property:
-                    JProperty prop = (JProperty)tok;
-
-                    if (prop.Name == "reference")
-                    {
-                        IdTypePair idTypePair;
-                        if (idLookupTable.TryGetValue(prop.Value.ToString(), out idTypePair))
-                        {
-                            prop.Value = idTypePair.ResourceType + "/" + idTypePair.Id;
-                        }
-                    }
-                    else
-                    {
-                        prop.Value = ConvertUUIDs(prop.Value, idLookupTable);
-                    }
-
-                    return prop;
-                case JTokenType.String:
-                case JTokenType.Boolean:
-                case JTokenType.Float:
-                case JTokenType.Integer:
-                case JTokenType.Date:
-                    return tok;
-                default:
-                    throw new Exception($"Invalid token type {tok.Type} encountered");
-            }
-        }
-
-        public class IdTypePair
+        private class IdTypePair
         {
             public string Id { get; set; }
 
