@@ -3,14 +3,14 @@
 // Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
 // -------------------------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Health
 {
     public class FhirImportReferenceConverter
-    { 
+    {
         public static void ConvertUUIDs(JObject bundle)
         {
             ConvertUUIDs(bundle, CreateUUIDLookUpTable(bundle));
@@ -32,9 +32,15 @@ namespace Microsoft.Health
                 case JTokenType.Property:
                     JProperty prop = (JProperty)tok;
 
-                    if (prop.Name == "reference" && idLookupTable.TryGetValue(prop.Value.ToString(), out var idTypePair))
+                    if (prop.Value.Type == JTokenType.String && 
+                        prop.Name == "reference" && 
+                        idLookupTable.TryGetValue(prop.Value.ToString(), out var idTypePair))
                     {
                         prop.Value = idTypePair.ResourceType + "/" + idTypePair.Id;
+                    }
+                    else
+                    {
+                        ConvertUUIDs(prop.Value, idLookupTable);
                     }
 
                     return;
