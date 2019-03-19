@@ -28,5 +28,5 @@ MaxDegreeOfParallelism=<default 16>
 For a single command line deployment of the container instance:
 
 ```
-az container create --resource-group <RESOURCE GROUP NAME. --image reponame/fhirimporter --name fhirimporter1 --cpu 2 --memory 2 --environment-variables APPINSIGHTS_INSTRUMENTATIONKEY='<KEY>' Audience='<e.g. https://azurehealthcareapis.com>' Authority='<<e.g. https://login.microsoftonline.com/TENANT-ID>' AzureWebJobsDashboard='<STORAGE ACCOUNT CONNECTION STRING>' AzureWebJobsStorage='<STORAGE ACCOUNT CONNECTION STRING>' ClientId='<CLIENT ID>' ClientSecret='<CLIENT SECRET>' FhirServerUrl='<e.g. https://myaccount.azurehealthcareapis.com>' MaxDegreeOfParallelism=16
+az container create --resource-group <RESOURCE GROUP NAME> --image reponame/fhirimporter --name fhirimporter1 --cpu 2 --memory 2 --environment-variables APPINSIGHTS_INSTRUMENTATIONKEY='<KEY>' Audience='<e.g. https://azurehealthcareapis.com>' Authority='<<e.g. https://login.microsoftonline.com/TENANT-ID>' AzureWebJobsDashboard='<STORAGE ACCOUNT CONNECTION STRING>' AzureWebJobsStorage='<STORAGE ACCOUNT CONNECTION STRING>' ClientId='<CLIENT ID>' ClientSecret='<CLIENT SECRET>' FhirServerUrl='<e.g. https://myaccount.azurehealthcareapis.com>' MaxDegreeOfParallelism=16
 ```
