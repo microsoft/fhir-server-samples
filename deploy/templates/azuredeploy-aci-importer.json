@@ -48,7 +48,7 @@
             }
         },
         "aadServiceClientSecret": {
-            "type": "string",
+            "type": "securestring",
             "metadata": {
                 "description": "AAD service client secret"
             }
