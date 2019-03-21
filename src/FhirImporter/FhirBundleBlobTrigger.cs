@@ -105,9 +105,6 @@ namespace Microsoft.Health
                     var entry_json = ((JObject)entries[i])["resource"].ToString();
                     string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
                     string id = (string)((JObject)entries[i])["resource"]["id"];
-                    var randomGenerator = new Random();
-
-                    Thread.Sleep(TimeSpan.FromMilliseconds(randomGenerator.Next(50)));
 
                     if (string.IsNullOrEmpty(entry_json))
                     {
@@ -125,10 +122,10 @@ namespace Microsoft.Health
                     var pollyDelays =
                             new[]
                             {
-                                TimeSpan.FromMilliseconds(2000 + randomGenerator.Next(50)),
-                                TimeSpan.FromMilliseconds(3000 + randomGenerator.Next(50)),
-                                TimeSpan.FromMilliseconds(5000 + randomGenerator.Next(50)),
-                                TimeSpan.FromMilliseconds(8000 + randomGenerator.Next(50))
+                                TimeSpan.FromMilliseconds(2000),
+                                TimeSpan.FromMilliseconds(3000),
+                                TimeSpan.FromMilliseconds(5000),
+                                TimeSpan.FromMilliseconds(8000)
                             };
 
 
