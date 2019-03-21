@@ -48,7 +48,7 @@ where `aci-template.parameters.json` is a parameter file with the following cont
            "value": "my-aci-importer-app"
        },
        "aadAuthority": {
-           "value": "https://login.microsoftonline.com/<TENANT-ID>"
+           "value": "e.g https://login.microsoftonline.com/<TENANT-ID> (adjust for sovereign cloud)"
        },
        "aadAudience": {
         "value": "https://azurehealthcareapis.com"
