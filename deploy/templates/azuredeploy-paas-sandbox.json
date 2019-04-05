@@ -43,7 +43,7 @@
         },
         "aadFhirServerAudience": {
             "type": "string",
-            "defaultValue": "https://azurehealthcareapis.com",
+            "defaultValue": "",
             "metadata": {
                 "description": "Audience (resource) of the FHIR API"
             }
@@ -130,6 +130,11 @@
             "tags": {},
             "properties": {
                 "accessPolicies": "[parameters('accessPolicies')]",
+                "authenticationConfiguration": {
+                    "audience": "[variables('aadFhirServerAudience')]",
+                    "authority": "[parameters('aadAuthority')]",
+                    "smartProxyEnabled": true
+                },
                 "cosmosDbConfiguration": {
                     "offerThroughput": "[variables('cosmosThroughPut')]"
                 }
