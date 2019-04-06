@@ -122,7 +122,16 @@ $domain = $tenantInfo.TenantDomain
 $userUpn = "${userId}@${domain}"
 
 # See if the user exists
-$aadUser = Get-AzureADUser -searchstring $userId
+Write-Host "Checking if UserPrincipalName exists"
+$aadUser = Get-AzureADUser -Filter "userPrincipalName '$userUpn'"
+if ($aadUser)
+{
+    Write-Host "User found, will update."
+}
+else 
+{
+    Write-Host "User not, will create."
+}
 
 
 if ($AdminPassword)
