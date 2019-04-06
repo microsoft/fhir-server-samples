@@ -22,7 +22,7 @@ param
     [string]$KeyVaultName = "$EnvironmentName-ts",
 
     [Parameter(Mandatory = $false)]
-    [bool]$UsePaaS = $false,
+    [bool]$UsePaaS = $true,
 
     [parameter(Mandatory = $false)]
     [SecureString]$AdminPassword
@@ -123,7 +123,7 @@ $userUpn = "${userId}@${domain}"
 
 # See if the user exists
 Write-Host "Checking if UserPrincipalName exists"
-$aadUser = Get-AzureADUser -Filter "userPrincipalName '$userUpn'"
+$aadUser = Get-AzureADUser -Filter "userPrincipalName eq '$userUpn'"
 if ($aadUser)
 {
     Write-Host "User found, will update."
