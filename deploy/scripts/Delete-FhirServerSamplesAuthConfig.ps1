@@ -64,7 +64,7 @@ $userId = "${UserNamePrefix}admin"
 $domain = $tenantInfo.TenantDomain
 $userUpn = "${userId}@${domain}"
 
-$aadUser = Get-AzureADUser -searchstring $userId
+$aadUser = Get-AzureADUser -Filter "userPrincipalName eq '$userUpn'"
 if ($aadUser) {
     Remove-AzureADUser -ObjectId $aadUser.ObjectId
 }

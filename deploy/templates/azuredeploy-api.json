@@ -15,6 +15,25 @@
             "metadata": {
                 "description": "CosmosDB throughput"
             }
+        },
+        "audience": {
+            "type": "string",
+            "metadata": {
+                "description": "OAuth Audience"
+            }
+        },
+        "authority": {
+            "type": "string",
+            "metadata": {
+                "description": "OAuth Authority"
+            }
+        },
+        "smartProxyEnabled": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable SMART on FHIR AAD proxy"
+            }
         }
     },
     "resources": [
@@ -27,6 +46,11 @@
             "tags": {},
             "properties": {
                 "accessPolicies": "[parameters('accessPolicies')]",
+                "authenticationConfiguration": {
+                    "audience": "[parameters('audience')]",
+                    "authority": "[parameters('authority')]",
+                    "smartProxyEnabled": "[parameters('smartProxyEnabled')]"
+                },
                 "cosmosDbConfiguration": {
                     "offerThroughput": "[parameters('offerThroughput')]"
                 }

@@ -2,11 +2,11 @@
 
 This respository contains example applications and scenarios that show use of the [FHIR Server for Azure](https://github.com/Microsoft/fhir-server) and the [Azure API for FHIR](https://docs.microsoft.com/azure/healthcare-apis).
 
-The scenario is meant to illustrate how to connect a web application to the FHIR API. When deployed with the Open Source FHIR server novel features, such as the SMART on FHIR Active Directory Proxy, are demonstrated:
+The scenario is meant to illustrate how to connect a web application to the FHIR API. The scenario also illustrates features such as the SMART on FHIR Active Directory Proxy. It can be deployed using the Open Source version of the FHIR server:
 
 <center><img src="images//fhir-server-samples-oss.png" width="320"></center>
 
-The scenario using the Azure API for FHIR PaaS server will deploy without the SMART on FHIR apps:
+Or the Azure API for FHIR PaaS server:
 
 <center>
 <img src="images//fhir-server-samples-paas.png" width="320">
@@ -35,12 +35,10 @@ Connect to Azure AD with:
 Connect-AzureAd -TenantDomain <AAD TenantDomain>
 ```
 
-*If you are deploying the scenario using the managed Azure API for FHIR, the AAD tenants should be the same when connecting to `AzureAD` and `AzureRm`.*
-
 Then deploy the scenario with the Open Source FHIR Server for Azure:
 
 ```PowerShell
-.\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME>
+.\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $false
 ```
 
 or the managed Azure API for FHIR:

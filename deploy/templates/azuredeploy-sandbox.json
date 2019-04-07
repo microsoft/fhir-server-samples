@@ -124,23 +124,38 @@
             "metadata": {
                 "description": "If true, dashboard source code will be deployed from repo"
             }
+        },
+        "usePaaS": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Use Azure API for FHIR (PaaS). If false, OSS server will be deployed"
+            }
+        },
+        "accessPolicies": {
+            "type": "array",
+            "defaultValue": [],
+            "metadata": {
+                "description": "Access policies for Azure API for FHIR PaaS service"
+            }
         }
     },
     "variables": {
+        "cosmosThroughPut": 1000,
+        "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
         "appServicePlanName": "[concat(variables('environmentName'),'-asp')]",
         "environmentName": "[if(empty(parameters('environmentName')), concat('fhirdemo', uniqueString(resourceGroup().id)), parameters('environmentName'))]",
-        "fhirServiceName": "[concat(variables('environmentName'),'srvr')]",
+        "fhirServiceName": "[if(parameters('usePaaS'), variables('environmentName'), concat(variables('environmentName'),'srvr'))]",
         "fhirImporterName": "[concat(variables('environmentName'),'imp')]",
-        "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'),'.azurewebsites.net')]",
+        "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
+        "fhirServerUrlSuffix": "[if(parameters('usePaaS'),'.azurehealthcareapis.com', variables('webAppSuffix'))]",
+        "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'), variables('fhirServerUrlSuffix'))]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
         "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
         "medicationsName": "[concat(variables('environmentName'),'meds')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
-        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
-        "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
-        "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
-        "allowedOrigins": [
+        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",        "allowedOrigins": [
             "*"
         ]
     },
@@ -158,9 +173,37 @@
             }
         },
         {
+            "type": "Microsoft.HealthcareApis/services",
+            "kind": "fhir",
+            "name": "[variables('fhirServiceName')]",
+            "apiVersion": "2018-08-20-preview",
+            "location": "[resourceGroup().location]",
+            "condition": "[parameters('usePaaS')]",
+            "tags": {},
+            "properties": {
+                "accessPolicies": "[parameters('accessPolicies')]",
+                "authenticationConfiguration": {
+                    "audience": "[variables('aadFhirServerAudience')]",
+                    "authority": "[parameters('aadAuthority')]",
+                    "smartProxyEnabled": true
+                },
+                "corsConfiguration": {
+                    "origins": ["*"],
+                    "headers": ["*"],
+                    "methods": ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"],
+                    "maxAge": 1440,
+                    "allowCredentials": false
+                },
+                "cosmosDbConfiguration": {
+                    "offerThroughput": "[variables('cosmosThroughPut')]"
+                }
+            }
+        },
+        {
             "name": "[concat(variables('fhirServiceName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
+            "condition": "[not(parameters('usePaaS'))]",
             "properties": {
                 "templateLink": {
                     "uri": "[parameters('fhirServerTemplateUrl')]",

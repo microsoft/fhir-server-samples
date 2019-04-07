@@ -22,7 +22,7 @@ param
     [string]$KeyVaultName = "$EnvironmentName-ts",
 
     [Parameter(Mandatory = $false)]
-    [bool]$UsePaaS = $false,
+    [bool]$UsePaaS = $true,
 
     [parameter(Mandatory = $false)]
     [SecureString]$AdminPassword
@@ -122,7 +122,16 @@ $domain = $tenantInfo.TenantDomain
 $userUpn = "${userId}@${domain}"
 
 # See if the user exists
-$aadUser = Get-AzureADUser -searchstring $userId
+Write-Host "Checking if UserPrincipalName exists"
+$aadUser = Get-AzureADUser -Filter "userPrincipalName eq '$userUpn'"
+if ($aadUser)
+{
+    Write-Host "User found, will update."
+}
+else 
+{
+    Write-Host "User not, will create."
+}
 
 
 if ($AdminPassword)
@@ -165,12 +174,7 @@ $medicationsUrl = "https://${medicationsName}.${WebAppSuffix}"
 $confidentialClientAppName = "${EnvironmentName}-confidential-client"
 $confidentialClient = Get-AzureAdApplication -Filter "DisplayName eq '$confidentialClientAppName'"
 if (!$confidentialClient) {
-    if ($UsePaaS) {
-        Write-Host "Creating client for PaaS"
-        $confidentialClient = .\Create-AzureApiForFhirClientRegistration.ps1 -DisplayName $confidentialClientAppName -ReplyUrl $dashboardReplyUrl
-    } else {
-        $confidentialClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $confidentialClientAppName -ReplyUrl $dashboardReplyUrl
-    }
+    $confidentialClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $confidentialClientAppName -ReplyUrl $dashboardReplyUrl
     $secretSecureString = ConvertTo-SecureString $confidentialClient.AppSecret -AsPlainText -Force
 } else {
     $existingPassword = Get-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId | Remove-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId
@@ -185,11 +189,7 @@ Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppNa
 $serviceClientAppName = "${EnvironmentName}-service-client"
 $serviceClient = Get-AzureAdApplication -Filter "DisplayName eq '$serviceClientAppName'"
 if (!$serviceClient) {
-    if ($UsePaaS) {
-        $serviceClient = .\Create-AzureApiForFhirClientRegistration.ps1 -DisplayName $serviceClientAppName
-    } else {
-        $serviceClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $serviceClientAppName
-    }
+    $serviceClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $serviceClientAppName
     $secretSecureString = ConvertTo-SecureString $serviceClient.AppSecret -AsPlainText -Force
 } else {
     $existingPassword = Get-AzureADApplicationPasswordCredential -ObjectId $serviceClient.ObjectId | Remove-AzureADApplicationPasswordCredential -ObjectId $serviceClient.ObjectId
