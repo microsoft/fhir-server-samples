@@ -1,0 +1,10 @@
+{
+  "name": "FhirDashboardJS",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "http-server -p 9090 -c-1"
+  },
+  "dependencies": {
+    "http-server": "^0.10.0"
+  }
+}
