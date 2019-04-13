@@ -10,14 +10,22 @@ class AboutMeModule {
         aboutMe.configAuth.getAboutMeInfo(function (userId, fhirServerUrl, accessToken) {
             const markup = `
                 <h2>Information about the signed in user</h2>
-                <div class="row"><p>UPN: ${userId}</p></div>
-                <div class="row"><p>FHIR Server URL: ${fhirServerUrl}</p></div>
-                <div class="row">
-                    Access Token:
-                    <form>
-                        <textarea id="token" style="width: 20cm; height: 5cm;">${accessToken}</textarea>
-                    </form>
-                </div>
+                <table>
+                    <tr>
+                        <td>UPN: ${userId}</td>
+                    </tr>
+                    <tr>
+                        <td>FHIR Server URL: ${fhirServerUrl}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Access Token:<br>
+                            <form>
+                                <textarea id="token" style="width: 20cm; height: 5cm;">${accessToken}</textarea>
+                            </form>
+                        </td>
+                    </tr>
+                </table>
             `;
 
             aboutMe.anchor.html(markup);

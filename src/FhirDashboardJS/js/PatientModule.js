@@ -9,6 +9,17 @@ class PatientModule
     renderPatient(patientId)
     {
         const markup = `
+            <h2 id="patient-details-name"></h2>
+
+            <div style="margin-bottom: 10px;">
+                <div>
+                    <b>DOB:</b> <div style="display: inline;" id="patient-details-dob"></div>
+                </div>
+                <div>
+                    <b>Gender:</b> <div style="display: inline;" id="patient-details-gender"></div>
+                </div>
+            </div>
+
             <div id="accordion">
             <div class="card">
             <div class="card-header">
@@ -105,9 +116,34 @@ class PatientModule
         this.anchor.html(markup);
 
         //Now start loading the patient details
+        this.fetchPatientInfo(patientId);
         this.fetchResources('/Condition?patient=' + patientId, this.addPatientCondition);
         this.fetchResources('/Encounter?patient=' + patientId, this.addPatientEncounter);
         this.fetchResources('/Observation?patient=' + patientId, this.addPatientObservation);
+    }
+
+    fetchPatientInfo(patientId)
+    {
+        this.configAuth.getFhirServerAccessInfo(function (fhirServerUrl, accessToken) {
+            var fullQuery = fhirServerUrl + '/Patient/' + patientId;
+            $.ajax(
+                {
+                    type: 'GET',
+                    url: fullQuery,
+                    beforeSend: function (xhdr) {
+                        xhdr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+                    },
+                    success: function(data, status) {
+                        var patientName = document.getElementById('patient-details-name');
+                        patientName.innerHTML = data.name[0].family + ', ' + data.name[0].given;
+                        var patientDob = document.getElementById('patient-details-dob');
+                        patientDob.innerHTML = data.birthDate;
+                        var patientGender = document.getElementById('patient-details-gender');
+                        patientGender.innerHTML = data.gender;
+                    }
+                }
+            );
+        });
     }
 
     fetchResources(queryUrl, resourceAddCallback)
@@ -186,7 +222,29 @@ class PatientModule
     renderPatientList()
     {
         var anchorElement = this.anchor;
-        anchorElement.html('Loading...');
+
+        var markup = `
+        <table id="patient-list-table" class="table">
+            <thead>
+                <tr>
+                        <th>
+                            Family Name
+                        </th>
+                        <th>
+                            Given Name
+                        </th>
+                        <th>
+                            Age
+                        </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        `;
+
+        anchorElement.html(markup);
 
         this.configAuth.getFhirServerAccessInfo(function (fhirServerUrl, accessToken) {
             //Print the token
@@ -201,17 +259,36 @@ class PatientModule
                         xhdr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
                     },
                     success: function (result, status) {
-                        //Create a list of patients
-                        var patientListHtml = '<ol>';
+                        var table = document.getElementById('patient-list-table');
+
                         $.each(result.entry, function (index, val) {
-                            patientListHtml += '<li>' + val.resource.name[0].family + ', ' + val.resource.name[0].given + ' (' + val.resource.id + ')';
-                            patientListHtml += ' <a onClick="patientsModule.renderPatient(\'' + val.resource.id + '\');" href="#">[Details]</a></li>'
-                        })
-                        patientListHtml += '</ol>';
-                        anchorElement.html(patientListHtml);
+                            var row = table.insertRow(-1);
+                            var familyName = row.insertCell(0);
+                            familyName.innerText = val.resource.name[0].family;
+                            var givenName = row.insertCell(1);
+                            givenName.innerText = val.resource.name[0].given;
+                            var age = row.insertCell(2);
+                            age.innerText = getAgeFromDateString(val.resource.birthDate);
+                            var links = row.insertCell(3);
+                            links.innerHTML = '<a href="#" onClick="patientsModule.renderPatient(\'' + val.resource.id + '\');")>[Details]</a>';
+                        });
                     }
                 }
             );
         });
     }
+}
+
+
+function getAgeFromDateString(dateString) 
+{
+    var today = new Date();
+    var birthDate = new Date(dateString);
+    var age = today.getFullYear() - birthDate.getFullYear();
+    var m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) 
+    {
+        age--;
+    }
+    return age;
 }
