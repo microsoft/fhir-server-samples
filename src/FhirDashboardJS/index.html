@@ -16,19 +16,21 @@
     <script src="js/PatientModule.js"></script>
 
     <script>
-        const configAuth = new ConfigAuth();
+        const configAuthModule = new ConfigAuth();
+        var patientsModule;
+        var aboutMeModule;
 
         $(document).ready(function () {
-            const aboutMe = new AboutMeModule($('#main-content'), configAuth);
+            aboutMeModule = new AboutMeModule($('#main-content'), configAuthModule);
 
             document.getElementById('nav-about-me').addEventListener('click', function() {
-                aboutMe.render();
+                aboutMeModule.render();
             });
 
-            const patients = new PatientModule($('#main-content'), configAuth);
+            patientsModule = new PatientModule($('#main-content'), configAuthModule);
 
             document.getElementById('nav-patients').addEventListener('click', function() {
-                patients.renderPatientList();
+                patientsModule.renderPatientList();
             });
 
             document.getElementById('nav-home').addEventListener('click', function() {
@@ -57,7 +59,7 @@
             </ul>
         </nav>
 
-        <div id="main-content" class="row">
+        <div id="main-content" class="container">
             Select
         </div>
     </div>
