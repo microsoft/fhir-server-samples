@@ -4,6 +4,9 @@ class PatientModule
     {
         this.anchor = anchor;
         this.configAuth = configAuthModule;
+        this.patientList = [];
+        this.maxPatientsPerPage = 10;
+        this.currentPatientIndex = 0;
     }
 
     renderPatient(patientId)
@@ -219,62 +222,176 @@ class PatientModule
         count.innerText = Number(count.innerText) + 1;
     }
 
+    getPatientSearchNextLink(callback)
+    {
+        var ptMod = this;
+        if (ptMod.patientSearchNextLink === undefined) {
+            ptMod.configAuth.getFhirServerUrl(function(fhirServerUrl) {
+                ptMod.patientSearchNextLink = fhirServerUrl + '/Patient';
+                callback(ptMod.patientSearchNextLink);
+            });
+        } else {
+            callback(ptMod.patientSearchNextLink);
+        }
+    }
+
+    fetchPatients(patientsNeeded, callback)
+    {
+        var ptMod = this;
+
+        //Let's see if we have the patients already
+        if (patientsNeeded < ptMod.patientList.length)
+        {
+            callback();
+            return;
+        }
+
+        //Otherwise get some patients
+        this.configAuth.getFhirServerAccessInfo(function (fhirServerUrl, accessToken) {
+            ptMod.getPatientSearchNextLink(function(searchUrl){
+                if (searchUrl) {
+                    //Get all patients
+                    $.ajax(
+                        {
+                            type: 'GET',
+                            url: searchUrl,
+                            beforeSend: function (xhdr) {
+                                xhdr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+                            },
+                            success: function (result, status) {
+                                ptMod.patientSearchNextLink = null; //Assume we are at the end
+                                if (Array.isArray(result.link))
+                                {
+                                    for (var i = 0; i < result.link.length; i++) 
+                                    {
+                                        if (result.link[i].relation == "next") 
+                                        {
+                                            //Set new search link
+                                            ptMod.patientSearchNextLink = result.link[i].url;
+                                            break;
+                                        }
+                                    }
+                                }
+    
+                                if (Array.isArray(result.entry))
+                                {
+                                    for (var i = 0; i < result.entry.length; i++) 
+                                    {
+                                        ptMod.patientList.push(result.entry[i].resource);
+                                    }
+                                }
+
+                                if (ptMod.patientSearchNextLink && patientsNeeded > ptMod.patientList.length) 
+                                {
+                                    ptMod.fetchPatients(patientsNeeded, callback);
+                                }
+                                else
+                                {
+                                    callback();
+                                }
+                            }
+                        }
+                    );
+                }
+                else
+                {
+                    callback();
+                }
+            });
+        });
+    }
+
+    forwardPatientList()
+    {
+        this.currentPatientIndex += this.maxPatientsPerPage;
+        this.renderPatientList();
+    }
+    
+    reversePatientList()
+    {
+        this.currentPatientIndex -= this.maxPatientsPerPage;
+        if (this.currentPatientIndex < 0)
+        {
+            this.currentPatientIndex = 0;
+        }
+        this.renderPatientList();
+    }
+
     renderPatientList()
     {
-        var anchorElement = this.anchor;
+        var ptMod = this;
 
-        var markup = `
-        <table id="patient-list-table" class="table">
-            <thead>
-                <tr>
-                        <th>
-                            Family Name
-                        </th>
-                        <th>
-                            Given Name
-                        </th>
-                        <th>
-                            Age
-                        </th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-        `;
+        this.fetchPatients(ptMod.currentPatientIndex + ptMod.maxPatientsPerPage, function() {
+            var anchorElement = ptMod.anchor;
 
-        anchorElement.html(markup);
+            var markup = `
+            <div>
+            <a href="#" id="patient-list-rev" class="btn disabled"><i class='fas fa-angle-left'></i></a>
+            <a href="#" id="patient-list-fwd" class="btn disabled"><i class='fas fa-angle-right'></i></a>
+            </div>
+            <table id="patient-list-table" class="table">
+                <thead>
+                    <tr>
+                            <th>
+                            </th>
+                            <th>
+                                Family Name
+                            </th>
+                            <th>
+                                Given Name
+                            </th>
+                            <th>
+                                Age
+                            </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            `;
+    
+            anchorElement.html(markup);
 
-        this.configAuth.getFhirServerAccessInfo(function (fhirServerUrl, accessToken) {
-            //Print the token
-            $("#token").text(accessToken);
+            var table = document.getElementById('patient-list-table');
 
-            //Get all patients
-            $.ajax(
-                {
-                    type: 'GET',
-                    url: fhirServerUrl + '/Patient',
-                    beforeSend: function (xhdr) {
-                        xhdr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-                    },
-                    success: function (result, status) {
-                        var table = document.getElementById('patient-list-table');
+            for (var i = ptMod.currentPatientIndex; 
+                 (i < (ptMod.currentPatientIndex + ptMod.maxPatientsPerPage)) && (i < ptMod.patientList.length); 
+                 i++)
+            {
+                var currentPt = ptMod.patientList[i];
+                var row = table.insertRow(-1);
+                var patientIndex = row.insertCell(-1);
+                patientIndex.innerHTML = i+1;
+                var familyName = row.insertCell(-1);
+                familyName.innerText = currentPt.name[0].family;
+                var givenName = row.insertCell(-1);
+                givenName.innerText = currentPt.name[0].given;
+                var age = row.insertCell(-1);
+                age.innerText = getAgeFromDateString(currentPt.birthDate);
+                var links = row.insertCell(-1);
+                links.innerHTML = '<a href="#" onClick="patientsModule.renderPatient(\'' + currentPt.id + '\');")>[Details]</a>';
+            }
 
-                        $.each(result.entry, function (index, val) {
-                            var row = table.insertRow(-1);
-                            var familyName = row.insertCell(0);
-                            familyName.innerText = val.resource.name[0].family;
-                            var givenName = row.insertCell(1);
-                            givenName.innerText = val.resource.name[0].given;
-                            var age = row.insertCell(2);
-                            age.innerText = getAgeFromDateString(val.resource.birthDate);
-                            var links = row.insertCell(3);
-                            links.innerHTML = '<a href="#" onClick="patientsModule.renderPatient(\'' + val.resource.id + '\');")>[Details]</a>';
-                        });
-                    }
-                }
-            );
+            if (ptMod.currentPatientIndex > 0)
+            {
+                var revLink = document.getElementById('patient-list-rev');
+                revLink.className = "btn enabled";
+                revLink.addEventListener('click', function() {
+                    ptMod.reversePatientList()
+                });
+            }
+
+            if (((ptMod.currentPatientIndex + ptMod.maxPatientsPerPage) < ptMod.patientList.length) ||
+                (ptMod.patientSearchNextLink))
+            {
+                var fwdLink = document.getElementById('patient-list-fwd');
+                fwdLink.className = "btn enabled";
+                fwdLink.addEventListener('click', function() {
+                    ptMod.forwardPatientList()
+                });
+            }
+
         });
     }
 }
