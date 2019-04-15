@@ -19,6 +19,7 @@
     <script src="js/ResourceModule.js"></script>
 
     <script>
+        // Some global variables for the modules in the application
         const configAuthModule = new ConfigAuth();
         var patientsModule;
         var aboutMeModule;
@@ -39,8 +40,8 @@
 
             resourceModule = new ResourceModule($('#resource-modal'), configAuthModule);
 
-            // patientsModule.renderPatientList();
-
+            // Start by rendering a patient list
+            patientsModule.renderPatientList();
         });
     </script>
 
@@ -60,12 +61,12 @@
             </ul>
         </nav>
 
+        <!-- MAIN CONTENT PANE -->
         <div id="main-content" class="container">
-            <a class="btn" href="#" onClick="resourceModule.show('/config.json');">Resource Modal</a>
             Loading...
         </div>
 
-        <!-- Modal for displaying Resources -->
+        <!-- MODAL USED FOR RESOURCE DISPLAY -->
         <div id="resource-modal" class="modal fade" role="dialog">
         </div>
     </div>

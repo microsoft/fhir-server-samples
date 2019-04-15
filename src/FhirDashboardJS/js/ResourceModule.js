@@ -10,12 +10,8 @@ class ResourceModule
     {
         var resMod = this;
 
-        // TODO set content-type to JSON
-        // Get actual FHIR Resource
-        // Set width of modal
-
         this.configAuth.getFhirServerAccessInfo(function (fhirServerUrl, accessToken) {
-            var fullQuery = resourceUrl; // fhirServerUrl + resourceUrl;
+            var fullQuery = fhirServerUrl + resourceUrl;
             $.ajax(
                 {
                     type: 'GET',
@@ -26,7 +22,7 @@ class ResourceModule
                     },
                     success: function(data, status) {
                         var markup = `
-                            <div class="modal-dialog">
+                            <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
