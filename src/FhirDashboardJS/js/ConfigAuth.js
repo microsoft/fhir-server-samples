@@ -3,16 +3,35 @@ class ConfigAuth {
     }
 
     getFhirServerUrl(callback) {
-        if (this.fhirServerUrl) {
-            callback(this.fhirServerUrl);
+        var authConfig = this;
+
+        if (authConfig.fhirServerUrl) {
+            callback(authConfig.fhirServerUrl);
         }
         else {
             $.getJSON('/config.json', function (data, status) {
-                this.fhirServerUrl = data.FhirServerUrl;
-                callback(this.fhirServerUrl);
+                authConfig.fhirServerUrl = data.FhirServerUrl;
+                callback(authConfig.fhirServerUrl);
             });
         }
     }
+
+    getSmartOnFhirApps(callback) {
+        var authConfig = this;
+
+        authConfig.getFhirServerUrl(function (fhirServerUrl) {
+            if (authConfig.smartOnFhirApps) {
+                callback(fhirServerUrl, authConfig.smartOnFhirApps);
+            }
+            else {
+                $.getJSON('/config.json', function (data, status) {
+                    authConfig.smartOnFhirApps = data.SmartOnFhirApps;
+                    callback(fhirServerUrl, authConfig.smartOnFhirApps);
+                });
+            }
+        });
+    }
+
 
     getAccessToken(callback) {
         var authConfig = this;

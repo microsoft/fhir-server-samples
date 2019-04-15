@@ -23,6 +23,12 @@ class PatientModule
                 </div>
             </div>
 
+            <div id="patient-smart-on-fhir-card" class="card d-none" style="margin-bottom: 10px;">
+                <div class="card-header">SMART on FHIR Apps</div>
+                    <div id="patient-smart-on-fhir-apps" class="card-body">
+                    </div>
+            </div>
+
             <div id="accordion">
             <div class="card">
             <div class="card-header">
@@ -120,9 +126,29 @@ class PatientModule
 
         //Now start loading the patient details
         this.fetchPatientInfo(patientId);
+        this.displaySmartOnFhirPanel(patientId);
         this.fetchResources('/Condition?patient=' + patientId, this.addPatientCondition);
         this.fetchResources('/Encounter?patient=' + patientId, this.addPatientEncounter);
         this.fetchResources('/Observation?patient=' + patientId, this.addPatientObservation);
+    }
+
+    displaySmartOnFhirPanel(patientId)
+    {
+        var launchContext = {patient: patientId};
+        var launchContextString = encodeURIComponent(btoa(JSON.stringify(launchContext)));
+        this.configAuth.getSmartOnFhirApps(function(fhirServerUrl, smartOnFhirApps){
+            if (smartOnFhirApps) {
+                var smartLinks = '';
+                for (var i = 0; i < smartOnFhirApps.length; i++)
+                {
+                    var appUrl = smartOnFhirApps[i].LaunchUrl + '?launch=' + launchContextString + '&iss=' + fhirServerUrl;
+                    smartLinks += '<a class="btn border border-secondary" href="' +  appUrl + '" target="_blank">' +  smartOnFhirApps[i].DisplayName + '</a>&nbsp;';
+                }
+                $('#patient-smart-on-fhir-apps').html(smartLinks);
+                $("#patient-smart-on-fhir-card").removeClass('d-none')
+            }
+        });
+
     }
 
     fetchPatientInfo(patientId)
