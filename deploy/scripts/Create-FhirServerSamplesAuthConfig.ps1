@@ -166,6 +166,9 @@ Set-FhirServerUserAppRoleAssignments -ApiAppId $application.AppId -UserPrincipal
 $dashboardName = "${EnvironmentName}dash"
 $dashboardUrl = "https://${dashboardName}.${WebAppSuffix}"
 $dashboardReplyUrl = "${dashboardUrl}/signin-oidc"
+$dashboardJSName = "${EnvironmentName}js"
+$dashboardJSUrl = "https://${dashboardJSName}.${WebAppSuffix}"
+$dashboardJSReplyUrl = "${dashboardJSUrl}/.auth/login/aad/callback"
 $growthChartName = "${EnvironmentName}growth"
 $growthChartUrl = "https://${growthChartName}.${WebAppSuffix}"
 $medicationsName = "${EnvironmentName}meds"
@@ -175,6 +178,22 @@ $confidentialClientAppName = "${EnvironmentName}-confidential-client"
 $confidentialClient = Get-AzureAdApplication -Filter "DisplayName eq '$confidentialClientAppName'"
 if (!$confidentialClient) {
     $confidentialClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $confidentialClientAppName -ReplyUrl $dashboardReplyUrl
+
+    $appId = $confidentialClient.AppId
+    $appReg = Get-AzureADApplication -Filter "AppId eq '$appId'"
+    if (!$appReg) {
+        Write-Host "Application with AppId = $AppId was not found."
+        return
+    }
+
+    $origReplyUrls = $appReg.ReplyUrls
+
+    # Add Reply URL if not already in the list 
+    if ($origReplyUrls -NotContains $dashboardJSReplyUrl) {
+        $origReplyUrls.Add($dashboardJSReplyUrl)
+        Set-AzureADApplication -ObjectId $appReg.ObjectId -ReplyUrls $origReplyUrls
+    }
+
     $secretSecureString = ConvertTo-SecureString $confidentialClient.AppSecret -AsPlainText -Force
 } else {
     $existingPassword = Get-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId | Remove-AzureADApplicationPasswordCredential -ObjectId $confidentialClient.ObjectId
