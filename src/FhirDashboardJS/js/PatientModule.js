@@ -206,53 +206,43 @@ class PatientModule
 
     }
 
-    addPatientCondition(conditionResource)
+    addPatientCondition(resource)
     {
-        var conditionTable = document.getElementById('patient-condition-table');
-        var conditionCount = document.getElementById('patient-condition-count');
-        var row = conditionTable.insertRow(-1);
-        var onset = row.insertCell(-1);
-        onset.innerText = conditionResource.onsetDateTime;
-        var description = row.insertCell(-1);
-        description.innerText = conditionResource.code.text;
-        var status = row.insertCell(-1);
-        status.innerText = conditionResource.clinicalStatus;
-        conditionCount.innerText = Number(conditionCount.innerText) + 1;
-        var links = row.insertCell(-1);
-        links.innerHTML = '<a class="btn" href="#" onClick="resourceModule.show(\'/Condition/' + conditionResource.id + '\');")><i class="fas fa-fire"></i></a>';
+        appendRowToTable(
+            document.getElementById('patient-condition-table'), 
+            document.getElementById('patient-condition-count'), 
+            [
+                resource.onsetDateTime,
+                resource.code.text,
+                resource.clinicalStatus,
+                '<a class="btn" href="#" onClick="resourceModule.show(\'/Condition/' + resource.id + '\');")><i class="fas fa-fire"></i></a>'
+            ]);
     }
 
     addPatientEncounter(resource)
     {
-        var table = document.getElementById('patient-encounter-table');
-        var count = document.getElementById('patient-encounter-count');
-        var row = table.insertRow(-1);
-        var date = row.insertCell(-1);
-        date.innerText = resource.period.start;
-        var title = row.insertCell(-1);
-        title.innerText = resource.type[0].text;
-        var id = row.insertCell(-1);
-        id.innerText = resource.id;
-        count.innerText = Number(count.innerText) + 1;
-        var links = row.insertCell(-1);
-        links.innerHTML = '<a class="btn" href="#" onClick="resourceModule.show(\'/Encounter/' + resource.id + '\');")><i class="fas fa-fire"></i></a>';
-
+        appendRowToTable(
+            document.getElementById('patient-encounter-table'), 
+            document.getElementById('patient-encounter-count'), 
+            [
+                resource.period.start,
+                resource.type[0].text,
+                resource.id,
+                '<a class="btn" href="#" onClick="resourceModule.show(\'/Encounter/' + resource.id + '\');")><i class="fas fa-fire"></i></a>'
+            ]);
     }
 
     addPatientObservation(resource)
     {
-        var table = document.getElementById('patient-observation-table');
-        var count = document.getElementById('patient-observation-count');
-        var row = table.insertRow(-1);
-        var date = row.insertCell(-1);
-        date.innerText = resource.issued;
-        var title = row.insertCell(-1);
-        title.innerText = resource.code.text;
-        var id = row.insertCell(-1);
-        id.innerText = resource.id;
-        count.innerText = Number(count.innerText) + 1;
-        var links = row.insertCell(-1);
-        links.innerHTML = '<a class="btn" href="#" onClick="resourceModule.show(\'/Observation/' + resource.id + '\');")><i class="fas fa-fire"></i></a>';
+        appendRowToTable(
+            document.getElementById('patient-observation-table'), 
+            document.getElementById('patient-observation-count'), 
+            [
+                resource.issued,
+                resource.code.text,
+                resource.id,
+                '<a class="btn" href="#" onClick="resourceModule.show(\'/Observation/' + resource.id + '\');")><i class="fas fa-fire"></i></a>'
+            ]);
     }
 
     getPatientSearchNextLink(callback)
@@ -393,18 +383,15 @@ class PatientModule
                  i++)
             {
                 var currentPt = ptMod.patientList[i];
-                var row = table.insertRow(-1);
-                var patientIndex = row.insertCell(-1);
-                patientIndex.innerHTML = i+1;
-                var familyName = row.insertCell(-1);
-                familyName.innerText = currentPt.name[0].family;
-                var givenName = row.insertCell(-1);
-                givenName.innerText = currentPt.name[0].given;
-                var age = row.insertCell(-1);
-                age.innerText = getAgeFromDateString(currentPt.birthDate);
-                var links = row.insertCell(-1);
-                links.innerHTML = '<a class="btn" href="#" onClick="patientsModule.renderPatient(\'' + currentPt.id + '\');")><i class="fas fa-info-circle"></i></a>' +
-                                  '<a class="btn" href="#" onClick="resourceModule.show(\'/Patient/' + currentPt.id + '\');")><i class="fas fa-fire"></i></a>';
+                appendRowToTable(table, null,
+                    [
+                        i+1,
+                        currentPt.name[0].family,
+                        currentPt.name[0].given,
+                        getAgeFromDateString(currentPt.birthDate),
+                        '<a class="btn" href="#" onClick="patientsModule.renderPatient(\'' + currentPt.id + '\');")><i class="fas fa-info-circle"></i></a>' +
+                        '<a class="btn" href="#" onClick="resourceModule.show(\'/Patient/' + currentPt.id + '\');")><i class="fas fa-fire"></i></a>'
+                    ]);               
             }
 
             if (ptMod.currentPatientIndex > 0)
@@ -442,4 +429,20 @@ function getAgeFromDateString(dateString)
         age--;
     }
     return age;
+}
+
+
+function appendRowToTable(table, count, cells)
+{
+    var row = table.insertRow(-1);
+    for (var i = 0; i < cells.length; i++)
+    {
+        var cell = row.insertCell(-1);
+        cell.innerHTML = cells[i];
+    }
+
+    if (count) 
+    {
+        count.innerHTML = table.getElementsByTagName('tr').length-1;
+    }
 }
