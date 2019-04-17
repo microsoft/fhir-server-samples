@@ -214,7 +214,7 @@
                         "clientSecret": "[parameters('aadClientSecret')]",
                         "issuer": "[parameters('aadAuthority')]",
                         "additionalLoginParams": [
-                            "[concat('resource=',parameters('aadAudience'))]"
+                            "[concat('resource=',variables('aadAudience'))]"
                         ],
                         "isAadAutoProvisioned": false
                     }
