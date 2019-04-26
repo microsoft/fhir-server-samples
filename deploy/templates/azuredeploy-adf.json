@@ -55,7 +55,7 @@
                 "description": "Storage Account type"
             }
         },
-        "resourceList": {
+        "resourceTypes": {
             "type": "array",
             "defaultValue": [
                 "Patient",
@@ -147,11 +147,11 @@
             ]
         },
         {
-            "name": "[concat(variables('adfName'), '/Rest', parameters('resourceList')[copyIndex()])]",
+            "name": "[concat(variables('adfName'), '/Rest', parameters('resourceTypes')[copyIndex()])]",
             "type": "Microsoft.DataFactory/factories/datasets",
             "apiVersion": "2018-06-01",
             "copy": {
-                "count": "[length(parameters('resourceList'))]",
+                "count": "[length(parameters('resourceTypes'))]",
                 "name": "fhir-rest-data-loop"
             },
             "properties": {
@@ -162,7 +162,7 @@
                 "annotations": [],
                 "type": "RestResource",
                 "typeProperties": {
-                    "relativeUrl": "[concat('/', parameters('resourceList')[copyIndex()])]",
+                    "relativeUrl": "[concat('/', parameters('resourceTypes')[copyIndex()])]",
                     "requestMethod": "GET",
                     "paginationRules": {
                         "AbsoluteUrl": "$.['link'][?(@.relation == 'next')]['url']"
@@ -174,10 +174,10 @@
             ]
         },
         {
-            "name": "[concat(variables('adfName'), '/StageAzureBlob', parameters('resourceList')[copyIndex()])]",
+            "name": "[concat(variables('adfName'), '/StageAzureBlob', parameters('resourceTypes')[copyIndex()])]",
             "type": "Microsoft.DataFactory/factories/datasets",
             "copy": {
-                "count": "[length(parameters('resourceList'))]",
+                "count": "[length(parameters('resourceTypes'))]",
                 "name": "blob-stage-data-loop"
             },
             "apiVersion": "2018-06-01",
@@ -203,7 +203,7 @@
                             "resource": "[concat('[', '''resource'']')]"
                         }
                     },
-                    "fileName": "[concat(parameters('resourceList')[copyIndex()], '.json')]",
+                    "fileName": "[concat(parameters('resourceTypes')[copyIndex()], '.json')]",
                     "folderPath": "[variables('blobStageContainer')]"
                 }
             },
@@ -212,10 +212,10 @@
             ]
         },
         {
-            "name": "[concat(variables('adfName'), '/ExportAzureBlob', parameters('resourceList')[copyIndex()])]",
+            "name": "[concat(variables('adfName'), '/ExportAzureBlob', parameters('resourceTypes')[copyIndex()])]",
             "type": "Microsoft.DataFactory/factories/datasets",
             "copy": {
-                "count": "[length(parameters('resourceList'))]",
+                "count": "[length(parameters('resourceTypes'))]",
                 "name": "blob-export-data-loop"
             },
             "apiVersion": "2018-06-01",
@@ -244,7 +244,7 @@
                         "skipLineCount": 0,
                         "firstRowAsHeader": false
                     },
-                    "fileName": "[concat(parameters('resourceList')[copyIndex()], '.json')]",
+                    "fileName": "[concat(parameters('resourceTypes')[copyIndex()], '.json')]",
                     "folderPath": "[variables('blobExportContainer')]"
                 }
             },
@@ -253,11 +253,11 @@
             ]
         },
         {
-            "name": "[concat(variables('adfName'), '/Export', parameters('resourceList')[copyIndex()])]",
+            "name": "[concat(variables('adfName'), '/Export', parameters('resourceTypes')[copyIndex()])]",
             "type": "Microsoft.DataFactory/factories/pipelines",
             "apiVersion": "2018-06-01",
             "copy": {
-                "count": "[length(parameters('resourceList'))]",
+                "count": "[length(parameters('resourceTypes'))]",
                 "name": "pipeline-loop"
             },
             "properties": {
@@ -294,14 +294,14 @@
                         },
                         "inputs": [
                             {
-                                "referenceName": "[concat('Rest', parameters('resourceList')[copyIndex()])]",
+                                "referenceName": "[concat('Rest', parameters('resourceTypes')[copyIndex()])]",
                                 "type": "DatasetReference",
                                 "parameters": {}
                             }
                         ],
                         "outputs": [
                             {
-                                "referenceName": "[concat('StageAzureBlob', parameters('resourceList')[copyIndex()])]",
+                                "referenceName": "[concat('StageAzureBlob', parameters('resourceTypes')[copyIndex()])]",
                                 "type": "DatasetReference",
                                 "parameters": {}
                             }
@@ -344,14 +344,14 @@
                         },
                         "inputs": [
                             {
-                                "referenceName": "[concat('StageAzureBlob', parameters('resourceList')[copyIndex()])]",
+                                "referenceName": "[concat('StageAzureBlob', parameters('resourceTypes')[copyIndex()])]",
                                 "type": "DatasetReference",
                                 "parameters": {}
                             }
                         ],
                         "outputs": [
                             {
-                                "referenceName": "[concat('ExportAzureBlob', parameters('resourceList')[copyIndex()])]",
+                                "referenceName": "[concat('ExportAzureBlob', parameters('resourceTypes')[copyIndex()])]",
                                 "type": "DatasetReference",
                                 "parameters": {}
                             }
