@@ -236,7 +236,7 @@
             "apiVersion": "2018-05-01",
             "properties": {
                 "templateLink": {
-                    "uri": "[parameters('adfTemplateUrl')]",
+                    "uri": "[variables('adfTemplateUrl')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
