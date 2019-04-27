@@ -6,7 +6,7 @@ Once deployed these export pipelines can be triggered manually to export a given
 
 ## Using Databricks
 
-Here is an example of building a table in Spark that joins data from `Patient` and `Observation` resources:
+Here is an example of building a table in Spark that joins data from `Patient` and `Observation` resources. There is also an [notebook available](fhirnotebook.ipynb) that you can import into Databricks.
 
 First connect to the blob storage where the ndjson files have been exported:
 
