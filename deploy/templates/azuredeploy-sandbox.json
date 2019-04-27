@@ -111,6 +111,13 @@
                 "description": "URL for SMART on FHIR app template"
             }
         },
+        "adfTemplateUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "URL for Azure Data Factory template"
+            }
+        },
         "fhirDashboardRepositoryUrl": {
             "type": "string",
             "defaultValue": "https://github.com/Microsoft/fhir-server-samples",
@@ -145,6 +152,19 @@
             "metadata": {
                 "description": "Access policies for Azure API for FHIR PaaS service"
             }
+        },
+        "adfExportResourceTypes": {
+            "type": "array",
+            "defaultValue": [
+                "Patient",
+                "Observation",
+                "Encounter",
+                "Practitioner",
+                "MedicationRequest"
+            ],
+            "metadata": {
+                "description": "List of Resources to export"
+            }
         }
     },
     "variables": {
@@ -163,7 +183,10 @@
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
         "medicationsName": "[concat(variables('environmentName'),'meds')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
-        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",        "allowedOrigins": [
+        "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
+        "adfTemplateUrl": "[if(empty(parameters('adfTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-adf.json'), parameters('adfTemplateUrl'))]",
+        "adfName": "[concat(variables('environmentName'), 'adf')]",
+        "allowedOrigins": [
             "*"
         ]
     },
@@ -205,6 +228,41 @@
                 "cosmosDbConfiguration": {
                     "offerThroughput": "[variables('cosmosThroughPut')]"
                 }
+            }
+        },
+        {
+            "name": "[concat(variables('adfName'),'-deploy')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "properties": {
+                "templateLink": {
+                    "uri": "[parameters('adfTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "adfName": {
+                        "value": "[variables('adfName')]"
+                    },
+                    "fhirServerUrl": {
+                        "value": "[variables('fhirServiceUrl')]"
+                    },
+                    "aadAuthority": {
+                        "value": "[parameters('aadAuthority')]"
+                    },
+                    "aadAudience": {
+                        "value": "[variables('aadFhirServerAudience')]"
+                    },
+                    "aadClientId": {
+                        "value": "[parameters('aadServiceClientId')]"
+                    },
+                    "aadClientSecret": {
+                        "value": "[parameters('aadServiceClientSecret')]"
+                    },
+                    "resourceTypes": {
+                        "value": "[parameters('adfExportResourceTypes')]"
+                    }
+                },
+                "mode": "incremental"
             }
         },
         {
