@@ -185,7 +185,7 @@
         "baseUri": "[deployment().properties.templateLink.uri]",
         "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
         "adfTemplateUrl": "[if(empty(parameters('adfTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-adf.json'), parameters('adfTemplateUrl'))]",
-        "adfName": "[concat(variables('environmentName'), uniqueString(resourceGroup().id))]",
+        "adfName": "[concat(variables('environmentName'), substring(uniqueString(resourceGroup().id),0,8))]",
         "allowedOrigins": [
             "*"
         ]
