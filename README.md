@@ -4,15 +4,17 @@ This respository contains example applications and scenarios that show use of th
 
 The scenario is meant to illustrate how to connect a web application to the FHIR API. The scenario also illustrates features such as the SMART on FHIR Active Directory Proxy. It can be deployed using the Open Source version of the FHIR server:
 
-<center><img src="images//fhir-server-samples-oss.png" width="320"></center>
+<center><img src="images//fhir-server-samples-oss.png" width="480"></center>
 
 Or the Azure API for FHIR PaaS server:
 
 <center>
-<img src="images//fhir-server-samples-paas.png" width="320">
+<img src="images//fhir-server-samples-paas.png" width="480">
 </center>
 
 In both cases a storage account will be deploy and in this storage account there is a BLOB container called `fhirimport`, patient bundles generated with [Synthea](https://github.com/synthetichealth/synthea) can dumped in this storage container and they will be ingested into the FHIR server. The bulk ingestion is performed by an Azure Function.
+
+The environments include an [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) instance, which has export pipelines configured for selected resources. You can decide which resources to export using the `adfExportResourceTypes` template parameter. The pipelines have to be activated manually and will produce a since new line delimited json (ndjson) for each resource type. These ndjson files are easily consumed with something like [Databricks](https://azure.microsoft.com/en-us/services/databricks/) (Apache-Spark). Please see the [analytics](analytics/) folder for some details and example queries. Note that a Databricks environment is not deployed automatically with the sandbox.
 
 # Deployment
 
