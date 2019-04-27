@@ -72,7 +72,7 @@
     "variables": {
         "adfName": "[if(empty(parameters('adfName')), concat('fhiradf', uniqueString(resourceGroup().id)), parameters('adfName'))]",
         "factoryId": "[concat('Microsoft.DataFactory/factories/', variables('adfName'))]",
-        "storageAccountName": "[concat(toLower(variables('adfName')),'sa')]",
+        "storageAccountName": "[replace(concat(toLower(variables('adfName')), 'sa'),'-','')]",
         "restServiceLinkName": "FhirRestService",
         "blobStorageLinkName": "AzureBlobStorage1",
         "fhirExportPipeLineNamePrefix": "FHIRExport",
