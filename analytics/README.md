@@ -1,6 +1,6 @@
 # Analytics with ADF and Databricks
 
-The [templates](../deploy/templates) folder includes a [template for Azure Data Factory](../deploy/templates/azuredeploy-adf.json). This template will deploy an Azure Data Factor instances, which can be used to export specific resource types to [ndjson](http://ndjson.org/) files. Specifically, the template has an array parameter called `resourceTypes`, which can be set to the resource types for which export pipelines should be deployed. 
+The [templates](../deploy/templates) folder includes a [template for Azure Data Factory](../deploy/templates/azuredeploy-adf.json). This template will deploy an Azure Data Factory instances, which can be used to export specific resource types to [ndjson](http://ndjson.org/) files. Specifically, the template has an array parameter called `resourceTypes`, which can be set to the resource types for which export pipelines should be deployed.
 
 Once deployed these export pipelines can be triggered manually to export a given resource type to blob storage. The ndjson files are easily consumed, e.g. in [Databricks](https://azure.microsoft.com/en-us/services/databricks/) (Apache-Spark).
 
