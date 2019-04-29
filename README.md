@@ -4,11 +4,11 @@ This respository contains example applications and scenarios that show use of th
 
 The scenario is meant to illustrate how to connect a web application to the FHIR API. The scenario also illustrates features such as the SMART on FHIR Active Directory Proxy. It can be deployed using the Azure API for FHIR PaaS server:
 
-<center><img src="images//fhir-server-samples-paas.png" width="480"></center>
+<center><img src="images//fhir-server-samples-paas.png" width="512"></center>
 
 Or the open source FHIR Server for Azure:
 
-<center><img src="images//fhir-server-samples-oss.png" width="480"></center>
+<center><img src="images//fhir-server-samples-oss.png" width="512"></center>
 
 In both cases a storage account will be deploy and in this storage account there is a BLOB container called `fhirimport`, patient bundles generated with [Synthea](https://github.com/synthetichealth/synthea) can dumped in this storage container and they will be ingested into the FHIR server. The bulk ingestion is performed by an Azure Function.
 
