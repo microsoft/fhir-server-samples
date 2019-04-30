@@ -153,6 +153,13 @@
                 "description": "Access policies for Azure API for FHIR PaaS service"
             }
         },
+        "deployAdf": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Flag to determine if Azure Data Factory should be deployed"
+            }
+        },
         "adfExportResourceTypes": {
             "type": "array",
             "defaultValue": [
@@ -233,6 +240,7 @@
         {
             "name": "[concat(variables('adfName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
+            "condition": "[parameters('deployAdf')]",
             "apiVersion": "2018-05-01",
             "properties": {
                 "templateLink": {

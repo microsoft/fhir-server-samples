@@ -30,25 +30,61 @@ Create some tables from the ndjson files
 Select the latest height measurements:
 
 ```
-%sql CREATE OR REPLACE TEMPORARY VIEW temp_heights AS SELECT * FROM (SELECT subject.reference as patient, valueQuantity.value as heightValue, valueQuantity.unit as heightUnit,  ROW_NUMBER() OVER (PARTITION BY subject.reference ORDER BY issued DESC) AS rn FROM observationTable WHERE code.coding[0].code = "8302-2") tm WHERE tm.rn = 1
+%sql 
+CREATE OR REPLACE TEMPORARY VIEW temp_heights AS 
+  SELECT * FROM (
+    SELECT 
+      SUBSTRING_INDEX(subject.reference,'/',-1) AS patient, 
+      valueQuantity.value as heightValue, 
+      valueQuantity.unit as heightUnit,  
+      ROW_NUMBER() OVER (PARTITION BY subject.reference ORDER BY issued DESC) AS rn 
+   FROM observationTable WHERE code.coding[0].code = "8302-2") tm 
+  WHERE tm.rn = 1
 ```
 
 And weights measurements
 
 ```
-%sql CREATE OR REPLACE TEMPORARY VIEW temp_weights AS SELECT * FROM (SELECT subject.reference as patient, valueQuantity.value as weightValue, valueQuantity.unit as weightUnit,  ROW_NUMBER() OVER (PARTITION BY subject.reference ORDER BY issued DESC) AS rn FROM observationTable WHERE code.coding[0].code = "29463-7") tm WHERE tm.rn = 1
+%sql 
+CREATE OR REPLACE TEMPORARY VIEW temp_weights AS 
+  SELECT * FROM (
+    SELECT 
+      SUBSTRING_INDEX(subject.reference,'/',-1) AS patient, 
+      valueQuantity.value as weightValue, 
+      valueQuantity.unit as weightUnit,  
+      ROW_NUMBER() OVER (PARTITION BY subject.reference ORDER BY issued DESC) AS rn 
+   FROM observationTable WHERE code.coding[0].code = "29463-7") tm 
+  WHERE tm.rn = 1
 ```
 
 Get the latitude and longitude of each patient and store in temp tables:
 
 ```
 %sql 
-CREATE OR REPLACE TEMPORARY VIEW temp_latitude AS SELECT id, coord.valueDecimal AS latitude FROM (SELECT id, explode(address[0].extension[0].extension) as coord FROM patientTable) WHERE coord.url = 'latitude';
-CREATE OR REPLACE TEMPORARY VIEW temp_longitude AS SELECT id, coord.valueDecimal AS longitude FROM (SELECT id, explode(address[0].extension[0].extension) as coord FROM patientTable) WHERE coord.url = 'longitude'
+CREATE OR REPLACE TEMPORARY VIEW temp_latitude AS 
+  SELECT id, coord.valueDecimal AS latitude FROM 
+    (SELECT id, explode(address[0].extension[0].extension) as coord FROM patientTable) 
+  WHERE coord.url = 'latitude';
+  
+CREATE OR REPLACE TEMPORARY VIEW temp_longitude AS 
+  SELECT id, coord.valueDecimal AS longitude FROM 
+    (SELECT id, explode(address[0].extension[0].extension) as coord FROM patientTable) 
+  WHERE coord.url = 'longitude'
 ```
 
 And finally join all the data
 
 ```
-%sql SELECT patientTable.id, patientTable.name[0].family AS lastName, temp_longitude.longitude AS longitude, temp_latitude.latitude AS latitude, temp_weights.weightValue, temp_heights.heightValue FROM patientTable INNER JOIN temp_weights ON temp_weights.patient LIKE concat('%', patientTable.id, '%') INNER JOIN temp_heights ON temp_heights.patient LIKE concat('%', patientTable.id, '%') INNER JOIN temp_latitude ON temp_latitude.id = patientTable.id INNER JOIN temp_longitude ON temp_longitude.id = patientTable.id
+%sql 
+SELECT 
+  patientTable.id, 
+  patientTable.name[0].family AS lastName, 
+  temp_longitude.longitude AS longitude, 
+  temp_latitude.latitude AS latitude, 
+  temp_weights.weightValue, temp_heights.heightValue
+FROM patientTable 
+  INNER JOIN temp_weights ON temp_weights.patient = patientTable.id 
+  INNER JOIN temp_heights ON temp_heights.patient = patientTable.id 
+  INNER JOIN temp_latitude ON temp_latitude.id = patientTable.id 
+  INNER JOIN temp_longitude ON temp_longitude.id = patientTable.id
 ```

@@ -24,6 +24,9 @@ param
     [Parameter(Mandatory = $false)]
     [bool]$UsePaaS = $true,
 
+    [Parameter(Mandatory = $false)]
+    [bool]$DeployAdf = $false,
+
     [parameter(Mandatory = $false)]
     [SecureString]$AdminPassword
 
@@ -110,7 +113,7 @@ $accessPolicies += @{ "objectId" = $serviceClientObjectId.ToString() }
 $accessPolicies += @{ "objectId" = $dashboardUserOid.ToString() }
 
 # Deploy the template
-New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies
+New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
 
 Write-Host "Warming up site..."
 Invoke-WebRequest -Uri "${fhirServerUrl}/metadata" | Out-Null

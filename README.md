@@ -4,15 +4,17 @@ This respository contains example applications and scenarios that show use of th
 
 The scenario is meant to illustrate how to connect a web application to the FHIR API. The scenario also illustrates features such as the SMART on FHIR Active Directory Proxy. It can be deployed using the Azure API for FHIR PaaS server:
 
-<center><img src="images//fhir-server-samples-paas.png" width="480"></center>
+<center><img src="images//fhir-server-samples-paas.png" width="512"></center>
 
 Or the open source FHIR Server for Azure:
 
-<center><img src="images//fhir-server-samples-oss.png" width="480"></center>
+<center><img src="images//fhir-server-samples-oss.png" width="512"></center>
 
 In both cases a storage account will be deploy and in this storage account there is a BLOB container called `fhirimport`, patient bundles generated with [Synthea](https://github.com/synthetichealth/synthea) can dumped in this storage container and they will be ingested into the FHIR server. The bulk ingestion is performed by an Azure Function.
 
-The environments also include an [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) instance, which has export pipelines configured for selected resources. You can decide which resources to export using the `adfExportResourceTypes` template parameter. The pipelines have to be activated manually and will produce a new line delimited json (ndjson) for each resource type. These ndjson files are easily consumed with something like [Databricks](https://azure.microsoft.com/en-us/services/databricks/) (Apache-Spark). Please see the [analytics](analytics/) folder for some details and example queries. Note that the Databricks environment is not deployed automatically with the sandbox and must be set up separately.
+The environments also optionally include an [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) instance, which has export pipelines configured for selected resources. The ADF export pipeline is **experimental** and not deployed by default. To deploy the ADF pipeline, add the `-DeployAdf $true` parameter to the script below.
+
+You can decide which resources to export using the `adfExportResourceTypes` template parameter. The pipelines have to be activated manually and will produce a new line delimited json (ndjson) for each resource type. These ndjson files are easily consumed with something like [Databricks](https://azure.microsoft.com/en-us/services/databricks/) (Apache-Spark). Please see the [analytics](analytics/) folder for some details and example queries. Note that the Databricks environment is not deployed automatically with the sandbox and must be set up separately.
 
 # Deployment
 
@@ -45,6 +47,12 @@ or the managed Azure API for FHIR:
 
 ```PowerShell
 .\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true
+```
+
+and to include the ADF pipeline:
+
+```PowerShell
+.\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true -DeployAdf $true
 ```
 
 To delete the senario:
