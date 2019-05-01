@@ -7,6 +7,17 @@ param
 (
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
+    [ValidateLength(5,12)]
+    [ValidateScript({
+        Write-Host $_
+        if ("$_" -Like "* *") {
+            throw "Environment name cannot contain whitespace"
+            return $false
+        }
+        else {
+            return $true
+        }
+    })]
     [string]$EnvironmentName,
 
     [Parameter(Mandatory = $false)]

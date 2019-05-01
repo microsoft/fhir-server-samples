@@ -16,6 +16,15 @@ The environments also optionally include an [Azure Data Factory](https://azure.m
 
 You can decide which resources to export using the `adfExportResourceTypes` template parameter. The pipelines have to be activated manually and will produce a new line delimited json (ndjson) for each resource type. These ndjson files are easily consumed with something like [Databricks](https://azure.microsoft.com/en-us/services/databricks/) (Apache-Spark). Please see the [analytics](analytics/) folder for some details and example queries. Note that the Databricks environment is not deployed automatically with the sandbox and must be set up separately.
 
+# Prerequisites
+
+Before deploying the samples scenario make sure that you have `AzureRm` and `AzureAd` powershell modules installed:
+
+```PowerShell
+Install-Module AzureRm
+Install-Module AzureAd
+```
+
 # Deployment
 
 To deploy the sample scenario, first clone this git repo and find the deployment scripts folder:
