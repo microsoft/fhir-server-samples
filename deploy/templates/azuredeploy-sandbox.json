@@ -479,7 +479,10 @@
                         "value": "[parameters('smartAppClientId')]"
                     },
                     "repositoryUrl": {
-                        "value": "https://github.com/smart-on-fhir/growth-chart-app"
+                        "value": "https://github.com/hansenms/growth-chart-app"
+                    },
+                    "repositoryBranch": {
+                        "value": "http-server-version"
                     },
                     "repositoryProjectPath": {
                         "value": "."
