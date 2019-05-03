@@ -148,7 +148,7 @@
                         "OriginalClientId": "[variables('originalClientId')]",
                         "NewClientId": "[parameters('clientId')]",
                         "LaunchFileName": "[parameters('launchFileName')]",
-                        "COMMAND": "cd %PROJECT% && npm update && xcopy . D:\\home\\site\\wwwroot\\ /E /S /Y && cd D:\\home\\site\\wwwroot\\ && npm install && cd %PROJECT% && powershell.exe -command \"(gc %LaunchFileName%) -replace '%OriginalClientId%', '%NewClientId%' | Out-File -Encoding utf8 D:\\home\\site\\wwwroot\\launch.html\""
+                        "COMMAND": "cd %PROJECT% && npm update && xcopy . D:\\home\\site\\wwwroot\\ /E /S /Y && cd D:\\home\\site\\wwwroot\\ && npm install && cd D:\\home\\site\\repository\\%PROJECT% && powershell.exe -command \"(gc %LaunchFileName%) -replace '%OriginalClientId%', '%NewClientId%' | Out-File -Encoding utf8 D:\\home\\site\\wwwroot\\launch.html\""
                       }
                 },        
                 {
