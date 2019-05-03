@@ -195,7 +195,7 @@
                         "WEBSITE_NODE_DEFAULT_VERSION": "6.9.4",
                         "PROJECT": "[parameters('repositoryProjectPath')]",
                         "CONFIGFILESTRING": "[variables('configObjectString')]",
-                        "COMMAND": "cd %PROJECT% && npm install && xcopy . D:\\home\\site\\wwwroot\\ /E /S /Y && @echo %CONFIGFILESTRING% >D:\\home\\site\\wwwroot\\config.json"
+                        "COMMAND": "cd %PROJECT% && xcopy . D:\\home\\site\\wwwroot\\ /E /S /Y && @echo %CONFIGFILESTRING% >D:\\home\\site\\wwwroot\\config.json"
                       }
                 },
                 {
