@@ -9,7 +9,6 @@ param
     [ValidateNotNullOrEmpty()]
     [ValidateLength(5,12)]
     [ValidateScript({
-        Write-Host $_
         if ("$_" -Like "* *") {
             throw "Environment name cannot contain whitespace"
             return $false
@@ -43,7 +42,7 @@ param
     [ValidateSet('Stu3','R4')]
     [string]$FhirVersion = "Stu3",
 
-    [Parameter(Mandatory = {return $PersistenceProvider -eq 'sql'})]
+    [Parameter(Mandatory = $false)]
     [SecureString]$SqlAdminPassword,
 
     [Parameter(Mandatory = $false)]
@@ -57,6 +56,11 @@ param
 Set-StrictMode -Version Latest
 
 # Some additional parameter validation
+if (($PersistenceProvider -eq "sql") -and ([string]::IsNullOrEmpty($SqlAdminPassword)))
+{
+    throw 'For SQL persistence provider you must provide -SqlAdminPassword parameter'
+}
+
 if ($UsePaaS -and (($PersistenceProvider -ne "cosmos") -or ($FhirVersion -ne "stu3")))
 {
     throw 'SQL Server or FHIR R4 are only supported in OSS. Set -UsePaaS $false when using either of those options'
@@ -147,6 +151,12 @@ $accessPolicies = @()
 $accessPolicies += @{ "objectId" = $currentObjectId.ToString() }
 $accessPolicies += @{ "objectId" = $serviceClientObjectId.ToString() }
 $accessPolicies += @{ "objectId" = $dashboardUserOid.ToString() }
+
+#We need to pass "something" as SQL server password even when it is not used:
+if ([string]::IsNullOrEmpty($SqlAdminPassword))
+{
+    $SqlAdminPassword = ConvertTo-SecureString -AsPlainText -Force "DummySQLServerPasswordNotUsed"
+}
 
 # Deploy the template
 New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -sqlAdminPassword $SqlAdminPassword -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
