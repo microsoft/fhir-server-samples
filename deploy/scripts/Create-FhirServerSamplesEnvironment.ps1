@@ -43,6 +43,9 @@ param
     [ValidateSet('Stu3','R4')]
     [string]$FhirVersion = "Stu3",
 
+    [Parameter(Mandatory = {return $PersistenceProvider -eq 'sql'})]
+    [SecureString]$SqlAdminPassword,
+
     [Parameter(Mandatory = $false)]
     [bool]$DeployAdf = $false,
 
