@@ -208,13 +208,15 @@ class PatientModule
 
     addPatientCondition(resource)
     {
+        // We need to deal with STU3/R4 differences
+        var conditionStatus = resource.clinicalStatus.coding ? resource.clinicalStatus.coding[0].code : resource.clinicalStatus;
         appendRowToTable(
             document.getElementById('patient-condition-table'), 
             document.getElementById('patient-condition-count'), 
             [
                 resource.onsetDateTime,
                 resource.code.text,
-                resource.clinicalStatus,
+                conditionStatus,
                 '<a class="btn" href="#" onClick="resourceModule.show(\'/Condition/' + resource.id + '\');")><i class="fas fa-fire"></i></a>'
             ]);
     }

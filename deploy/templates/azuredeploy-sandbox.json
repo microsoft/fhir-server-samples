@@ -378,6 +378,7 @@
             "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
+            "condition": "[equals(parameters('fhirVersion'),'Stu3')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
