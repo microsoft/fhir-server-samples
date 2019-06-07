@@ -125,6 +125,7 @@ $tenantDomain = $tenantInfo.TenantDomain
 $aadAuthority = "https://login.microsoftonline.com/${tenantDomain}"
 
 $dashboardUrl = "https://${EnvironmentName}dash.azurewebsites.net"
+$dashboardJSUrl = "https://${EnvironmentName}js.azurewebsites.net"
 
 if ($UsePaaS) {
     $fhirServerUrl = "https://${EnvironmentName}.azurehealthcareapis.com"
@@ -156,7 +157,7 @@ $functionAppUrl = "https://${EnvironmentName}imp.azurewebsites.net"
 Invoke-WebRequest -Uri $functionAppUrl | Out-Null 
 
 @{
-    dashboardUrl              = $dashboardUrl
+    dashboardUrl              = $dashboardJSUrl
     fhirServerUrl             = $fhirServerUrl
     dashboardUserUpn          = $dashboardUserUpn
     dashboardUserPassword     = $dashboardUserPassword
