@@ -36,6 +36,14 @@ param
     [bool]$UsePaaS = $true,
 
     [Parameter(Mandatory = $false)]
+    [ValidateSet('cosmos','sql')]
+    [string]$PersistenceProvider = "cosmos",
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet('Stu3','R4')]
+    [string]$FhirVersion = "Stu3",
+
+    [Parameter(Mandatory = $false)]
     [bool]$DeployAdf = $false,
 
     [parameter(Mandatory = $false)]
@@ -44,6 +52,13 @@ param
 )
 
 Set-StrictMode -Version Latest
+
+# Some additional parameter validation
+if ($UsePaaS -and (($PersistenceProvider -ne "cosmos") -or ($FhirVersion -ne "stu3")))
+{
+    throw 'SQL Server or FHIR R4 are only supported in OSS. Set -UsePaaS $false when using either of those options'
+}
+
 
 # Get current AzureAd context
 try {
@@ -91,6 +106,12 @@ else {
 ./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $EnvironmentName -EnvironmentLocation $EnvironmentLocation -AdminPassword $AdminPassword -UsePaaS $UsePaaS
 
 #Template URLs
+$fhirServerTemplateUrl = "https://raw.githubusercontent.com/microsoft/fhir-server/master/samples/templates/default-azuredeploy.json"
+if ($PersistenceProvider -eq 'sql')
+{
+    $fhirServerTemplateUrl = "https://raw.githubusercontent.com/microsoft/fhir-server/master/samples/templates/default-azuredeploy-sql.json"
+}
+
 $githubRawBaseUrl = $SourceRepository.Replace("github.com","raw.githubusercontent.com").TrimEnd('/')
 $sandboxTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-sandbox.json"
 $dashboardTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-fhirdashboard.json"
@@ -124,7 +145,7 @@ $accessPolicies += @{ "objectId" = $serviceClientObjectId.ToString() }
 $accessPolicies += @{ "objectId" = $dashboardUserOid.ToString() }
 
 # Deploy the template
-New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
+New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
 
 Write-Host "Warming up site..."
 Invoke-WebRequest -Uri "${fhirServerUrl}/metadata" | Out-Null

@@ -97,6 +97,14 @@
                 "description": "URL for FHIR dashboard (JS edition) template"
             }
         },
+        "fhirVersion": {
+            "type": "string",
+            "allowedValues": [ "Stu3", "R4"],
+            "defaultValue": "Stu3",
+            "metadata": {
+                "description": "FHIR version. Only used with OSS FHIR Server. Defaults to stu3"
+            }
+        },
         "fhirImporterTemplateUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-importer.json",
@@ -307,6 +315,9 @@
                             "FhirServer:Cors:Headers:0" : "*",
                             "FhirServer:Cors:MaxAge"  : "1440"
                         }
+                    },
+                    "fhirVersion": {
+                        "value": "[parameters('fhirVersion')]"
                     }
                 },
                 "mode": "incremental"
