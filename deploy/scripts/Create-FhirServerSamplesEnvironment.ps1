@@ -9,7 +9,6 @@ param
     [ValidateNotNullOrEmpty()]
     [ValidateLength(5,12)]
     [ValidateScript({
-        Write-Host $_
         if ("$_" -Like "* *") {
             throw "Environment name cannot contain whitespace"
             return $false
@@ -36,6 +35,17 @@ param
     [bool]$UsePaaS = $true,
 
     [Parameter(Mandatory = $false)]
+    [ValidateSet('cosmos','sql')]
+    [string]$PersistenceProvider = "cosmos",
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet('Stu3','R4')]
+    [string]$FhirVersion = "Stu3",
+
+    [Parameter(Mandatory = $false)]
+    [SecureString]$SqlAdminPassword,
+
+    [Parameter(Mandatory = $false)]
     [bool]$DeployAdf = $false,
 
     [parameter(Mandatory = $false)]
@@ -44,6 +54,18 @@ param
 )
 
 Set-StrictMode -Version Latest
+
+# Some additional parameter validation
+if (($PersistenceProvider -eq "sql") -and ([string]::IsNullOrEmpty($SqlAdminPassword)))
+{
+    throw 'For SQL persistence provider you must provide -SqlAdminPassword parameter'
+}
+
+if ($UsePaaS -and (($PersistenceProvider -ne "cosmos") -or ($FhirVersion -ne "stu3")))
+{
+    throw 'SQL Server or FHIR R4 are only supported in OSS. Set -UsePaaS $false when using either of those options'
+}
+
 
 # Get current AzureAd context
 try {
@@ -91,6 +113,12 @@ else {
 ./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $EnvironmentName -EnvironmentLocation $EnvironmentLocation -AdminPassword $AdminPassword -UsePaaS $UsePaaS
 
 #Template URLs
+$fhirServerTemplateUrl = "https://raw.githubusercontent.com/microsoft/fhir-server/master/samples/templates/default-azuredeploy.json"
+if ($PersistenceProvider -eq 'sql')
+{
+    $fhirServerTemplateUrl = "https://raw.githubusercontent.com/microsoft/fhir-server/master/samples/templates/default-azuredeploy-sql.json"
+}
+
 $githubRawBaseUrl = $SourceRepository.Replace("github.com","raw.githubusercontent.com").TrimEnd('/')
 $sandboxTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-sandbox.json"
 $dashboardTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-fhirdashboard.json"
@@ -101,6 +129,7 @@ $tenantDomain = $tenantInfo.TenantDomain
 $aadAuthority = "https://login.microsoftonline.com/${tenantDomain}"
 
 $dashboardUrl = "https://${EnvironmentName}dash.azurewebsites.net"
+$dashboardJSUrl = "https://${EnvironmentName}js.azurewebsites.net"
 
 if ($UsePaaS) {
     $fhirServerUrl = "https://${EnvironmentName}.azurehealthcareapis.com"
@@ -123,8 +152,14 @@ $accessPolicies += @{ "objectId" = $currentObjectId.ToString() }
 $accessPolicies += @{ "objectId" = $serviceClientObjectId.ToString() }
 $accessPolicies += @{ "objectId" = $dashboardUserOid.ToString() }
 
+#We need to pass "something" as SQL server password even when it is not used:
+if ([string]::IsNullOrEmpty($SqlAdminPassword))
+{
+    $SqlAdminPassword = ConvertTo-SecureString -AsPlainText -Force "DummySQLServerPasswordNotUsed"
+}
+
 # Deploy the template
-New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
+New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -sqlAdminPassword $SqlAdminPassword -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
 
 Write-Host "Warming up site..."
 Invoke-WebRequest -Uri "${fhirServerUrl}/metadata" | Out-Null
@@ -132,7 +167,7 @@ $functionAppUrl = "https://${EnvironmentName}imp.azurewebsites.net"
 Invoke-WebRequest -Uri $functionAppUrl | Out-Null 
 
 @{
-    dashboardUrl              = $dashboardUrl
+    dashboardUrl              = $dashboardJSUrl
     fhirServerUrl             = $fhirServerUrl
     dashboardUserUpn          = $dashboardUserUpn
     dashboardUserPassword     = $dashboardUserPassword

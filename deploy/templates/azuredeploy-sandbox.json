@@ -83,6 +83,12 @@
                 "description": "URL for FHIR Server template"
             }
         },
+        "sqlAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password for the sql admin user if using SQL server."
+            }
+        },
         "fhirDashboardTemplateUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard.json",
@@ -95,6 +101,14 @@
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard-js.json",
             "metadata": {
                 "description": "URL for FHIR dashboard (JS edition) template"
+            }
+        },
+        "fhirVersion": {
+            "type": "string",
+            "allowedValues": [ "Stu3", "R4"],
+            "defaultValue": "Stu3",
+            "metadata": {
+                "description": "FHIR version. Only used with OSS FHIR Server. Defaults to stu3"
             }
         },
         "fhirImporterTemplateUrl": {
@@ -195,7 +209,42 @@
         "adfName": "[concat(variables('environmentName'), substring(uniqueString(resourceGroup().id),0,8))]",
         "allowedOrigins": [
             "*"
-        ]
+        ],
+        "ossBaseTemplateParameters": {
+            "serviceName": {
+                "value": "[variables('fhirServiceName')]"
+            },
+            "securityAuthenticationAuthority": {
+                "value": "[parameters('aadAuthority')]"
+            },
+            "securityAuthenticationAudience": {
+                "value": "[variables('aadFhirServerAudience')]"
+            },
+            "enableAadSmartOnFhirProxy": {
+                "value": true
+            },
+            "additionalFhirServerConfigProperties": {
+                "value": {
+                    "FhirServer:Security:Authorization:Roles:0:name": "admin",
+                    "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:0": "Read",
+                    "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:1": "Write",
+                    "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:2": "HardDelete",
+                    "FhirServer:Cors:Origins:0" : "*",
+                    "FhirServer:Cors:Methods:0" : "*",
+                    "FhirServer:Cors:Headers:0" : "*",
+                    "FhirServer:Cors:MaxAge"  : "1440"
+                }
+            },
+            "fhirVersion": {
+                "value": "[parameters('fhirVersion')]"
+            }
+        },
+        "ossSqlTemplateParameters": {
+            "sqlAdminPassword": {
+                "value": "[parameters('sqlAdminPassword')]"
+            }
+        },
+        "ossTemplateParameters": "[if(contains(parameters('fhirServerTemplateUrl'),'sql'),union(variables('ossBaseTemplateParameters'),variables('ossSqlTemplateParameters')),variables('ossBaseTemplateParameters'))]"
     },
     "resources": [
         {
@@ -283,32 +332,7 @@
                     "uri": "[parameters('fhirServerTemplateUrl')]",
                     "contentVersion": "1.0.0.0"
                 },
-                "parameters": {
-                    "serviceName": {
-                        "value": "[variables('fhirServiceName')]"
-                    },
-                    "securityAuthenticationAuthority": {
-                        "value": "[parameters('aadAuthority')]"
-                    },
-                    "securityAuthenticationAudience": {
-                        "value": "[variables('aadFhirServerAudience')]"
-                    },
-                    "enableAadSmartOnFhirProxy": {
-                        "value": true
-                    },
-                    "additionalFhirServerConfigProperties": {
-                        "value": {
-                            "FhirServer:Security:Authorization:Roles:0:name": "admin",
-                            "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:0": "Read",
-                            "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:1": "Write",
-                            "FhirServer:Security:Authorization:Roles:0:resourcePermissions:0:actions:2": "HardDelete",
-                            "FhirServer:Cors:Origins:0" : "*",
-                            "FhirServer:Cors:Methods:0" : "*",
-                            "FhirServer:Cors:Headers:0" : "*",
-                            "FhirServer:Cors:MaxAge"  : "1440"
-                        }
-                    }
-                },
+                "parameters": "[variables('ossTemplateParameters')]",
                 "mode": "incremental"
             }
         },
@@ -354,6 +378,7 @@
             "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
+            "condition": "[equals(parameters('fhirVersion'),'Stu3')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
