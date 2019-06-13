@@ -103,6 +103,14 @@
                 "description": "URL for FHIR dashboard (JS edition) template"
             }
         },
+        "fhirApiLocation": {
+            "type": "string",
+            "allowedValues": [ "westus2", "northcentralus", "ukwest"],
+            "defaultValue": "westus2",
+            "metadata": {
+                "description": "Location of Azure API for FHIR"
+            }
+        },
         "fhirVersion": {
             "type": "string",
             "allowedValues": [ "Stu3", "R4"],
@@ -264,7 +272,7 @@
             "kind": "fhir",
             "name": "[variables('fhirServiceName')]",
             "apiVersion": "2018-08-20-preview",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('fhirApiLocation')]",
             "condition": "[parameters('usePaaS')]",
             "tags": {},
             "properties": {
