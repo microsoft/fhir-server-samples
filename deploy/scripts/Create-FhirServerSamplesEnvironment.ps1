@@ -20,7 +20,7 @@ param
     [string]$EnvironmentName,
 
     [Parameter(Mandatory = $false)]
-    [string]$EnvironmentLocation = "westus2",
+    [string]$EnvironmentLocation = "westus",
 
     [Parameter(Mandatory = $false)]
     [string]$SourceRepository = "https://github.com/Microsoft/fhir-server-samples",

@@ -10,7 +10,7 @@ param
     [string]$EnvironmentName,
 
     [Parameter(Mandatory = $false)]
-    [string]$EnvironmentLocation = "West US",
+    [string]$EnvironmentLocation = "westus",
 
     [Parameter(Mandatory = $false )]
     [String]$WebAppSuffix = "azurewebsites.net",
