@@ -2,7 +2,7 @@
 
 The Azure function app will monitor a `fhirimport` container in the attached storage account and ingest patient bundles into the FHIR service.
 
-The function can be deployed with the [azuredeploy-importer.json](../../deploy/templates/azuredeploy-importer.json) template, whcih will use an Azure Function App (App Service).
+The function can be deployed with the [azuredeploy-importer.json](../../deploy/templates/azuredeploy-importer.json) template, which will use an Azure Function App (App Service).
 
 It can also be deployed as a container using Azure Container Instances. For this approach, first build the Docker image:
 
