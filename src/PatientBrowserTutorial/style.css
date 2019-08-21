@@ -1,0 +1,57 @@
+@font-face {
+  font-family: 'Segoe UI';
+  src: url('https://static2.sharepointonline.com/files/fabric/assets/fonts/segoeui-westeuropean/segoeui-semibold.woff2') format('woff2'), url('https://static2.sharepointonline.com/files/fabric/assets/fonts/segoeui-westeuropean/segoeui-semibold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+}
+
+        div {
+            font-family: 'Segoe UI';
+        }
+
+        
+        .btn {
+            padding: 5px 16px;
+            background-color: aliceblue;
+            border: none;
+            color: black;
+            margin-right: 0.5cm;
+        }
+
+        .md-form {
+            visibility: hidden;
+            margin-bottom: 0.2cm;
+        }
+
+        #SignIn {
+            margin-bottom: 0.5cm;
+        }
+
+       
+        #WelcomeMessage {
+            font-size: xx-large;
+            text-align: center;
+            margin-top: 2cm;
+            margin-bottom: 2cm;
+        }
+        #myTable {
+            visibility: hidden;
+            font-family: 'Segoe UI';
+            border-collapse: collapse;
+            width: 60%;
+            text-align: center;
+        }
+        
+        #myTable th {
+            background-color: aliceblue;
+            padding: 8px;
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        
+        #myTable tr:nth-child(even) {
+            background-color: #f1f2f5d0;
+        }
+        #myTable tr:hover {
+            background-color: rgb(216, 224, 252);
+        }

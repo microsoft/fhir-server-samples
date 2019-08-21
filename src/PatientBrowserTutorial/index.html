@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>FHIR Patient browser sample app</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+        integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.0/js/msal.js"></script>
+
+    <!-- Conditionally include either config.js or config.local.js -->
+    <script>
+        if (location.hostname.includes('localhost')) {
+            document.write('<script src="config.local.js">');
+        } else {
+            document.write('<script src="config.js">');
+        }
+    </script>
+
+    <script>
+        console.log(JSON.stringify(config));
+    </script>
+</head>
+
+
+    <div class="container">
+        <div class="leftContainer">
+            <p id="WelcomeMessage">Welcome to the FHIR Patient Browsing Sample Application</p>
+            <button type="button" id="SignIn" onclick="signIn()">Sign In</button>
+        </div>
+
+        <form class="md-form">
+                <div class="file-field">
+                  <div class="btn float-left">
+                    <input type="file" name="chosen_file" id="chosen_file" oninput="fileSelected()">
+                  </div>
+                </div>
+        </form>
+ 
+        <div>
+            <table id="myTable" class="table">
+                    <tr>
+                    <th scope="col">Last Name</th>
+                    <th scope="col">First Name</th>
+                    <th scope="col">Sex</th>
+                    <th scope="col">Birth Date</th>
+                    <th scope="col">Details</th>
+                    </tr>
+            </table>
+        </div>
+       
+        <div class="rightContainer">
+            <pre id="json"></pre>
+        </div>
+    </div>
+
+<script>
+    var msalConfig = {
+        auth: {
+            clientId: config.clientId,
+            authority: config.authority
+        },
+        cache: {
+            cacheLocation: "localStorage",
+            storeAuthStateInCookie: true
+        }
+    }
+    var FHIRConfig = {
+        FHIRendpoint: config.fhirServerUrl
+    }
+    var requestObj = {
+        scopes: config.scopes
+    }
+    var myMSALObj = new Msal.UserAgentApplication(msalConfig);
+    myMSALObj.handleRedirectCallback(authRedirectCallBack);
+    function authRedirectCallBack(error, response) {
+        if (error) {
+            console.log(error);
+        } else {
+            if (response.tokenType === "access_token") {
+                callFHIRServer(FHIRConfig.FHIRendpoint + '/Patient','GET', null, response.accessToken, FHIRCallback);
+            } else {
+                console.log("token type is:" + response.tokenType);
+            }
+        }
+    }
+    
+    function signIn() {
+        myMSALObj.loginPopup(requestObj).then(function (loginResponse) {
+            showWelcomeMessage();
+            document.getElementsByClassName('md-form')[0].style.visibility = "visible";
+            document.getElementById('myTable').style.visibility = "visible";
+            myMSALObj.acquireTokenSilent(requestObj).then(function (tokenResponse) {
+                callFHIRServer(FHIRConfig.FHIRendpoint + '/Patient','GET',null, tokenResponse.accessToken, FHIRCallback);
+            }).catch(function (error) {
+                console.log(error);
+                if (requiresInteraction(error.errorCode)) {
+                    myMSALObj.acquireTokenPopup(requestObj).then(function (tokenResponse) {
+                        callFHIRServer(FHIRConfig.FHIRendpoint + '/Patient','GET',null, tokenResponse.accessToken, FHIRCallback);
+                    }).catch(function(error) {
+                        console.log(error);
+                    })
+                }
+            });
+        }).catch(function(error) {
+            console.log(error);
+        })
+    }
+    function requiresInteraction(errorCode) {
+        if (!errorCode || !errorCode.length) {
+            return false;
+        }
+        return errorCode === "consent_required" ||
+            errorCode === "interaction_required" ||
+            errorCode === "login_required";
+    }
+
+    function signOut() {
+        myMSALObj.logout();
+    }
+
+    
+
+
+    function FHIRCallback(json) {
+        for (var i = 0; i < Object.keys(json.entry).length; i++) {
+            json2table(json, i);
+            var display = JSON.stringify(json.entry[i].resource, null, 2);
+            document.getElementById('View_Patient_'+i).setAttribute('onclick', 'showPatientEntries('+display+','+i+')');
+        }
+    }
+
+    function callFHIRServer(theUrl, method, message, accessToken, callBack) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200)
+                callBack(JSON.parse(this.responseText));
+        }
+        xmlHttp.open(method, theUrl, true);
+        xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xmlHttp.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+        xmlHttp.send(message);
+    }
+
+    function FHIRProcessBundle(data) {
+        myMSALObj.acquireTokenSilent(requestObj).then(function(tokenResponse) {
+            for (var i=0; i<Object.keys(data.entry).length; i++) {
+                // For simplicity we only handle patient resources
+                if (data.entry[i].resource.resourceType == "Patient") {
+                    resource = JSON.stringify(data.entry[i].resource);
+                    callFHIRServer(FHIRConfig.FHIRendpoint + '/' + data.entry[i].resource.resourceType, 'POST', resource, tokenResponse.accessToken, loadPatients());
+                }
+            }   
+        });
+    }
+    function loadPatients() {
+        myMSALObj.acquireTokenSilent(requestObj).then(function(tokenResponse) {
+            callFHIRServer(FHIRConfig.FHIRendpoint + '/Patient', 'GET', null, tokenResponse.accessToken, FHIRCallback)
+        });
+    }
+
+
+
+
+    function json2table(json, i) {
+        var table = document.getElementById("myTable");
+
+        if (document.getElementById("myTable").rows.length <= i+1) {
+            var row = table.insertRow(-1);
+            for (var j=0; j<5; j++) {
+                row.insertCell(-1);
+            }
+            var button = document.createElement('button');
+            var span = document.createElement('span');
+            span.setAttribute('id', 'Span_Patient_' + i);
+            span.innerHTML = " View";
+            button.appendChild(span);
+            row.cells[4].appendChild(button);
+            button.setAttribute('id', 'View_Patient_' + i);
+        }
+        
+        row = document.getElementById("myTable").rows[i+1];
+        var lastName = row.cells[0];
+        var firstName = row.cells[1];
+        var sex = row.cells[2];
+        var birthDate = row.cells[3];
+        lastName.innerHTML = json.entry[i].resource.name[0].family;
+        firstName.innerHTML = json.entry[i].resource.name[0].given.join(' ');
+        sex.innerHTML = json.entry[i].resource.gender;
+        birthDate.innerHTML = json.entry[i].resource.birthDate;
+
+        var eachentry = document.createElement('p');
+        eachentry.setAttribute('id', 'resource bundle ' + i);
+        document.getElementById('json').appendChild(eachentry);
+    }
+
+    function showPatientEntries(display, i) {
+        display = JSON.stringify(display, null, 2);
+        document.getElementById('resource bundle '+i).innerHTML = display;
+        document.getElementById('Span_Patient_'+i).innerHTML = "Hide";
+        document.getElementById('View_Patient_'+i).setAttribute('onclick', 'hideEntries('+display+','+i+')');
+    }
+    function hideEntries(display, i) {
+        display = JSON.stringify(display, null, 2);
+        document.getElementById('resource bundle '+i).innerHTML = "";
+        document.getElementById('Span_Patient_'+i).innerHTML = "View";
+        document.getElementById('View_Patient_'+i).setAttribute('onclick', 'showPatientEntries('+display+','+i+')');
+    }
+
+
+
+    
+    function showWelcomeMessage() {
+        var divWelcome = document.getElementById('WelcomeMessage');
+        divWelcome.innerHTML = "Welcome " + myMSALObj.getAccount().userName + " to FHIR Patient Browsing App";
+        var loginbutton = document.getElementById('SignIn');
+        loginbutton.innerHTML = 'Sign Out';
+        loginbutton.setAttribute('onclick', 'signOut()')
+    }
+
+    function fileSelected() {
+        var f = document.getElementById('chosen_file').files[0];
+        var oReader = new FileReader();
+        oReader.onload = (function(theFile) {
+            return function(e) {
+                JsonObj = JSON.parse(e.target.result);
+                FHIRProcessBundle(JsonObj);
+            };
+        })(f);
+        oReader.readAsText(f);
+    }
+
+</script>
+</html>

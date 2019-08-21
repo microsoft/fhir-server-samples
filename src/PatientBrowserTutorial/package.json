@@ -1,0 +1,11 @@
+{
+  "name": "fhir-tutorial",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "start": "http-server -p 9090 -c-1"
+  },
+  "dependencies": {
+    "http-server": "^0.10.0"
+  }
+}
