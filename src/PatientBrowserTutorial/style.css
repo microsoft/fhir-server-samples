@@ -9,18 +9,10 @@
             font-family: 'Segoe UI';
         }
 
-        
-        .btn {
-            padding: 5px 16px;
-            background-color: aliceblue;
-            border: none;
-            color: black;
-            margin-right: 0.5cm;
-        }
-
         .md-form {
             visibility: hidden;
-            margin-bottom: 0.2cm;
+            width: 300px;
+            margin-left: 1.5cm;
         }
 
         #SignIn {
@@ -35,10 +27,10 @@
             margin-bottom: 2cm;
         }
         #myTable {
+            margin-left: 1.5cm;
             visibility: hidden;
             font-family: 'Segoe UI';
-            border-collapse: collapse;
-            width: 60%;
+            width: 90%;
             text-align: center;
         }
         
