@@ -114,6 +114,13 @@
             "metadata": {
                 "description": "Launch URL for medications SMART on FHIR App"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
     },
     "variables": {
@@ -143,6 +150,9 @@
             "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
             "apiVersion": "2017-05-10",
             "name": "fhir-dashboard-nested-asp-template",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
@@ -172,6 +182,9 @@
             "apiVersion": "2015-08-01",
             "type": "Microsoft.Web/sites",
             "name": "[variables('siteName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "location": "[resourceGroup().location]",
             "identity": {
                 "type": "SystemAssigned"

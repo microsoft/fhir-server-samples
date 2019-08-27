@@ -67,7 +67,15 @@
             "metadata": {
                 "description": "List of Resources to export"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
+
     },
     "variables": {
         "adfName": "[if(empty(parameters('adfName')), concat('fhiradf', uniqueString(resourceGroup().id)), parameters('adfName'))]",
@@ -86,6 +94,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('storageAccountName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "apiVersion": "2017-10-01",
             "location": "[resourceGroup().location]",
             "sku": {
@@ -97,6 +108,9 @@
         {
             "name": "[variables('adfName')]",
             "type": "Microsoft.DataFactory/factories",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "apiVersion": "2018-06-01",
             "location": "[resourceGroup().location]",
             "identity": {

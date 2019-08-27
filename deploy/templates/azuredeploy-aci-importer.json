@@ -86,8 +86,14 @@
             "metadata": {
                 "description": "Maximum number of concurrent HTTP requests in each function"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
-
     },
     "variables": {
         "applicationInsightsName": "[parameters('appName')]",
@@ -99,6 +105,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('storageAccountName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "apiVersion": "2016-12-01",
             "location": "[parameters('location')]",
             "kind": "Storage",
@@ -133,6 +142,9 @@
         {
             "apiVersion": "2018-05-01-preview",
             "name": "[variables('applicationInsightsName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "type": "Microsoft.insights/components",
             "location": "East US",
             "tags": {
@@ -146,6 +158,9 @@
         {
             "name": "[parameters('appName')]",
             "type": "Microsoft.ContainerInstance/containerGroups",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "apiVersion": "2018-02-01-preview",
             "location": "[resourceGroup().location]",
             "dependsOn": [

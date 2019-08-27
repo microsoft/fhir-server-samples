@@ -34,6 +34,13 @@
             "metadata": {
                 "description": "Enable SMART on FHIR AAD proxy"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
     },
     "resources": [
@@ -41,6 +48,9 @@
             "type": "Microsoft.HealthcareApis/services",
             "kind": "fhir",
             "name": "[parameters('serviceName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "apiVersion": "2018-08-20-preview",
             "location": "[resourceGroup().location]",
             "tags": {},

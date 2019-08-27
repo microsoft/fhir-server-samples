@@ -194,6 +194,13 @@
             "metadata": {
                 "description": "List of Resources to export"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
     },
     "variables": {
@@ -258,6 +265,9 @@
         {
             "apiVersion": "2015-08-01",
             "name": "[variables('appServicePlanName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "type": "Microsoft.Web/serverfarms",
             "location": "[resourceGroup().location]",
             "sku": {
@@ -271,10 +281,12 @@
             "type": "Microsoft.HealthcareApis/services",
             "kind": "fhir",
             "name": "[variables('fhirServiceName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "apiVersion": "2018-08-20-preview",
             "location": "[parameters('fhirApiLocation')]",
             "condition": "[parameters('usePaaS')]",
-            "tags": {},
             "properties": {
                 "accessPolicies": "[parameters('accessPolicies')]",
                 "authenticationConfiguration": {
@@ -299,6 +311,9 @@
             "type": "Microsoft.Resources/deployments",
             "condition": "[parameters('deployAdf')]",
             "apiVersion": "2018-05-01",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "properties": {
                 "templateLink": {
                     "uri": "[variables('adfTemplateUrl')]",
