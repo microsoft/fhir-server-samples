@@ -14,15 +14,6 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
     {
         private SignInPage signInPage = new SignInPage();
 
-        /// <summary>
-        /// Validate the title of the page with the expected title
-        /// </summary>
-        public void ValidateTitle()
-        {
-            var signInPage = new SignInPage();
-            signInPage.ValidateTitle();
-        }
-
         private void ClickNext()
         {
             signInPage.ButtonNext.Click();
@@ -45,7 +36,6 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
         /// <param name="password">Password</param>
         public void SignIn(string userName, string password)
         {
-            ValidateTitle();
             InputUserName(userName);
             ClickNext();
             InputPassword(password);
@@ -79,8 +69,6 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
             CommonActions.NavigateToDashBoard();
             var signInPageAction = new SignInPageAction();
             signInPageAction.SignIn(Configuration.DashboardUserUpn, Configuration.DashboardUserPassword);
-            var homePageAction = new HomePageAction();
-            homePageAction.ValidateTitle();
         }
     }
 }

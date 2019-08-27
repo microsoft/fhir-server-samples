@@ -15,14 +15,6 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
         private AboutMePage aboutMePage = new AboutMePage();
 
         /// <summary>
-        /// Validate the title of the page with the expected title
-        /// </summary>
-        public void ValidateTitle()
-        {
-            aboutMePage.ValidateTitle();
-        }
-
-        /// <summary>
         /// Validate token
         /// </summary>
         /// <param name="serverUrl">Pass the server URL</param>

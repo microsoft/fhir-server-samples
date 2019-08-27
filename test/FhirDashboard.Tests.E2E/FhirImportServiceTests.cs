@@ -36,10 +36,10 @@ namespace FhirDashboard.Tests.E2E
         [InlineData("Patient-Synthea.json", true)]
         public async Task WhenUploadingFileToStorageItIsAcceptedOrRejected(string testFileName, bool acceptFile)
         {
-            Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
+            // Assert.True(!string.IsNullOrWhiteSpace(_config["DashboardUrl"]));
             Assert.True(!string.IsNullOrWhiteSpace(_config["FhirServerUrl"]));
 
-            Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
+            // Assert.True(await CheckForSiteSuccess(new Uri(_config["DashboardUrl"])));
             Assert.True(await CheckForSiteSuccess(new Uri(_config["FhirServerUrl"].TrimEnd('/') + "/metadata")));
 
             await DeleteFileFromRejectContainer(testFileName);

@@ -30,10 +30,5 @@ namespace FhirDashboard.Tests.E2E.UIPages
         {
             Driver.Navigate(uRL);
         }
-
-        public void ValidateTitle(string expectedTitle)
-        {
-            Assert.Equal(expectedTitle, Title);
-        }
     }
 }

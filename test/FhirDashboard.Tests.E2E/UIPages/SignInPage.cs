@@ -34,10 +34,5 @@ namespace FhirDashboard.Tests.E2E.UIPages
                 return Driver.GetElement(By.Id("idSIButton9"), true);
             }
         }
-
-        public void ValidateTitle()
-        {
-            ValidateTitle(ExpectedTitle);
-        }
     }
 }

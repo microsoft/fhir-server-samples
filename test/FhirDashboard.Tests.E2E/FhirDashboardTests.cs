@@ -13,7 +13,7 @@ namespace FhirDashboard.Tests.E2E
     public class FhirDashboardTests : BaseTest
     {
         [Fact]
-        public async Task DashboardLoginSuccessFull_and_TokenValidForFhirServer()
+        public void DashboardLoginSuccessFull_and_TokenValidForFhirServer()
         {
             // Verify all environment variables are set
             Assert.True(!string.IsNullOrWhiteSpace(Configuration.FhirServerUrl), "Environment variable FhirServerUrl not set !");
@@ -22,8 +22,8 @@ namespace FhirDashboard.Tests.E2E
             Assert.True(!string.IsNullOrWhiteSpace(Configuration.DashboardUserPassword), "Environment variable DashboardUserPassword not set !");
 
             // On a fresh deployment it can take time before site is deployed
-            var result = await CommonActions.CheckForSiteSuccess(Configuration.DashboardUrl);
-            Assert.True(result.IsSuccessStatusCode);
+            // var result = await CommonActions.CheckForSiteSuccess(Configuration.DashboardUrl);
+            // Assert.True(result.IsSuccessStatusCode);
 
             // Hit dashboard URL and sign in using user name and password
             var signInPageAction = new SignInPageAction();
