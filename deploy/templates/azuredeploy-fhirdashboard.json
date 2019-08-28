@@ -159,9 +159,6 @@
             "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
             "apiVersion": "2017-05-10",
             "name": "fhir-dashboard-nested-asp-template",
-            "tags": {
-                "FhirServerSolution": "[parameters('solutionType')]"
-            },
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",

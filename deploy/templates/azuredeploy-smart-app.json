@@ -102,9 +102,6 @@
             "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
             "apiVersion": "2017-05-10",
             "name": "[variables('aspDeploymentName')]",
-            "tags": {
-                "FhirServerSolution": "[parameters('solutionType')]"
-            },
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
