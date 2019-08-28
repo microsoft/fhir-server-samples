@@ -40,7 +40,7 @@ param
 
     [Parameter(Mandatory = $false)]
     [ValidateSet('Stu3','R4')]
-    [string]$FhirVersion = "Stu3",
+    [string]$FhirVersion = "R4",
 
     [Parameter(Mandatory = $false)]
     [SecureString]$SqlAdminPassword,
@@ -61,9 +61,9 @@ if (($PersistenceProvider -eq "sql") -and ([string]::IsNullOrEmpty($SqlAdminPass
     throw 'For SQL persistence provider you must provide -SqlAdminPassword parameter'
 }
 
-if ($UsePaaS -and (($PersistenceProvider -ne "cosmos") -or ($FhirVersion -ne "stu3")))
+if ($UsePaaS -and ($PersistenceProvider -ne "cosmos"))
 {
-    throw 'SQL Server or FHIR R4 are only supported in OSS. Set -UsePaaS $false when using either of those options'
+    throw 'SQL Server is only supported in OSS. Set -UsePaaS $false when using SQL'
 }
 
 

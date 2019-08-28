@@ -107,9 +107,9 @@
         "fhirVersion": {
             "type": "string",
             "allowedValues": [ "Stu3", "R4"],
-            "defaultValue": "Stu3",
+            "defaultValue": "R4",
             "metadata": {
-                "description": "FHIR version. Only used with OSS FHIR Server. Defaults to stu3"
+                "description": "FHIR version. Defaults to R4"
             }
         },
         "fhirImporterTemplateUrl": {
@@ -206,6 +206,7 @@
         "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
         "fhirServerUrlSuffix": "[if(parameters('usePaaS'),'.azurehealthcareapis.com', variables('webAppSuffix'))]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'), variables('fhirServerUrlSuffix'))]",
+        "fhirServiceKind": "[concat('fhir-', parameters('fhirVersion'))]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
         "fhirDashboardJSName": "[concat(variables('environmentName'),'dash')]",
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
@@ -271,7 +272,7 @@
         },
         {
             "type": "Microsoft.HealthcareApis/services",
-            "kind": "fhir",
+            "kind": "[variables('fhirServiceKind')]",
             "name": "[variables('fhirServiceName')]",
             "apiVersion": "2018-08-20-preview",
             "location": "[parameters('fhirApiLocation')]",
