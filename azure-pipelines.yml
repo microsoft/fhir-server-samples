@@ -60,7 +60,9 @@ stages:
                            Write-Host "##vso[task.setvariable variable=FhirServerUrl]https://${environmentName}.azurehealthcareapis.com"
                            
                            cd $(Build.SourcesDirectory)/deploy/scripts/
-                           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -DeployAdf $true -UsePaaS $true -SourceRepository $remoteRepo -SourceRevision $remoteBranch
+                           Write-Host "Remote Repo: ${remoteRepo}"
+                           Write-Host "Remote branch: ${remoteBranch}"
+                           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -DeployAdf $true -UsePaaS $true -SourceRepository "${remoteRepo}" -SourceRevision "${remoteBranch}"
  
                            $DashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
                            $DashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
