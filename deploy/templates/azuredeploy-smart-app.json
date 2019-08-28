@@ -100,7 +100,7 @@
     "resources": [
         {
             "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-08-01",
             "name": "[variables('aspDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
             "properties": {

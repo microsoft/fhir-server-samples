@@ -157,7 +157,7 @@
     "resources": [
         {
             "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-08-01",
             "name": "fhir-dashboard-nested-asp-template",
             "type": "Microsoft.Resources/deployments",
             "properties": {
@@ -170,6 +170,9 @@
                     "resources": [
                         {
                             "apiVersion": "2015-08-01",
+                            "tags": {
+                                "FhirServerSolution": "[parameters('solutionType')]"
+                            },
                             "name": "[variables('appServicePlanName')]",
                             "type": "Microsoft.Web/serverfarms",
                             "location": "[resourceGroup().location]",

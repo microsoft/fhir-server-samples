@@ -161,6 +161,9 @@
                     "resources": [
                         {
                             "apiVersion": "2015-08-01",
+                            "tags": {
+                                "FhirServerSolution": "[parameters('solutionType')]"
+                            },
                             "name": "[variables('appServicePlanName')]",
                             "type": "Microsoft.Web/serverfarms",
                             "location": "[resourceGroup().location]",
