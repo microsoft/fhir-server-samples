@@ -79,6 +79,13 @@
             "metadata": {
                 "description": "Path within source code repository for FHIR Dashboard application"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
     },
     "variables": {
@@ -93,6 +100,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('storageAccountName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "apiVersion": "2016-12-01",
             "location": "[parameters('location')]",
             "kind": "Storage",
@@ -128,6 +138,9 @@
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2015-04-01",
             "name": "[variables('hostingPlanName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "location": "[parameters('location')]",
             "properties": {
                 "name": "[variables('hostingPlanName')]",
@@ -138,7 +151,10 @@
         {
             "apiVersion": "2015-08-01",
             "type": "Microsoft.Web/sites",
-            "name": "[variables('functionAppName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
+            "name": "[variables('functionAppName')]",  
             "location": "[parameters('location')]",
             "kind": "functionapp",
             "dependsOn": [

@@ -8,10 +8,5 @@ namespace FhirDashboard.Tests.E2E.UIPages
     internal class HomePage : BasePage
     {
         public const string ExpectedTitle = "Home Page - FhirDashboard";
-
-        public void ValidateTitle()
-        {
-            ValidateTitle(ExpectedTitle);
-        }
     }
 }

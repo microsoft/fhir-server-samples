@@ -81,6 +81,13 @@
             "metadata": {
                 "description": "Launch file name in repository. Will be copied to wwwroot/launch.html with the client id replaced"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
     },
     "variables": {
@@ -93,7 +100,7 @@
     "resources": [
         {
             "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-08-01",
             "name": "[variables('aspDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
             "properties": {
@@ -107,6 +114,9 @@
                         {
                             "apiVersion": "2015-08-01",
                             "name": "[variables('appServicePlanName')]",
+                            "tags": {
+                                "FhirServerSolution": "[parameters('solutionType')]"
+                            },                
                             "type": "Microsoft.Web/serverfarms",
                             "location": "[resourceGroup().location]",
                             "sku": {
@@ -124,6 +134,9 @@
             "apiVersion": "2015-08-01",
             "type": "Microsoft.Web/sites",
             "name": "[variables('siteName')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "location": "[resourceGroup().location]",
             "identity": {
                 "type": "SystemAssigned"

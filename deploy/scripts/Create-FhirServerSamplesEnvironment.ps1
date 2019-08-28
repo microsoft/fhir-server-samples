@@ -40,7 +40,7 @@ param
 
     [Parameter(Mandatory = $false)]
     [ValidateSet('Stu3','R4')]
-    [string]$FhirVersion = "Stu3",
+    [string]$FhirVersion = "R4",
 
     [Parameter(Mandatory = $false)]
     [SecureString]$SqlAdminPassword,
@@ -61,9 +61,9 @@ if (($PersistenceProvider -eq "sql") -and ([string]::IsNullOrEmpty($SqlAdminPass
     throw 'For SQL persistence provider you must provide -SqlAdminPassword parameter'
 }
 
-if ($UsePaaS -and (($PersistenceProvider -ne "cosmos") -or ($FhirVersion -ne "stu3")))
+if ($UsePaaS -and ($PersistenceProvider -ne "cosmos"))
 {
-    throw 'SQL Server or FHIR R4 are only supported in OSS. Set -UsePaaS $false when using either of those options'
+    throw 'SQL Server is only supported in OSS. Set -UsePaaS $false when using SQL'
 }
 
 
@@ -121,15 +121,13 @@ if ($PersistenceProvider -eq 'sql')
 
 $githubRawBaseUrl = $SourceRepository.Replace("github.com","raw.githubusercontent.com").TrimEnd('/')
 $sandboxTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-sandbox.json"
-$dashboardTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-fhirdashboard.json"
 $dashboardJSTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-fhirdashboard-js.json"
 $importerTemplate = "${githubRawBaseUrl}/${SourceRevision}/deploy/templates/azuredeploy-importer.json"
 
 $tenantDomain = $tenantInfo.TenantDomain
 $aadAuthority = "https://login.microsoftonline.com/${tenantDomain}"
 
-$dashboardUrl = "https://${EnvironmentName}dash.azurewebsites.net"
-$dashboardJSUrl = "https://${EnvironmentName}js.azurewebsites.net"
+$dashboardJSUrl = "https://${EnvironmentName}dash.azurewebsites.net"
 
 if ($UsePaaS) {
     $fhirServerUrl = "https://${EnvironmentName}.azurehealthcareapis.com"
@@ -159,7 +157,7 @@ if ([string]::IsNullOrEmpty($SqlAdminPassword))
 }
 
 # Deploy the template
-New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -sqlAdminPassword $SqlAdminPassword -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
+New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -sqlAdminPassword $SqlAdminPassword -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
 
 Write-Host "Warming up site..."
 Invoke-WebRequest -Uri "${fhirServerUrl}/metadata" | Out-Null

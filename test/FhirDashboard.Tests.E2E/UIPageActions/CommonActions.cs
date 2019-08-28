@@ -30,10 +30,12 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
         /// </summary>
         public static void NavigateToAboutMe()
         {
-            string dashboardUrl = Configuration.DashboardUrl;
-            WebDriver.CurrentState.Navigate($"{dashboardUrl}/Home/AboutMe");
+            WebDriver.CurrentState.Navigate(Configuration.DashboardUrl);
+            IWebElement aboutMeButton = WebDriver.CurrentState.GetElement(By.Id("nav-about-me"));
+            aboutMeButton.Click();
+            Thread.Sleep(2000);
 
-            if (!WebDriver.CurrentState.URL().StartsWith($"{dashboardUrl}/Home/AboutMe"))
+            if (!WebDriver.CurrentState.URL().StartsWith(Configuration.DashboardUrl))
             {
                 // We may have to consent a second time since we are asking for a new audience
                 try
@@ -49,7 +51,6 @@ namespace FhirDashboard.Tests.E2E.UIPageActions
             }
 
             var aboutMePageAction = new AboutMePageAction();
-            aboutMePageAction.ValidateTitle();
         }
 
         /// <summary>

@@ -89,13 +89,6 @@
                 "description": "The password for the sql admin user if using SQL server."
             }
         },
-        "fhirDashboardTemplateUrl": {
-            "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard.json",
-            "metadata": {
-                "description": "URL for FHIR dashboard template"
-            }
-        },
         "fhirDashboardJSTemplateUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard-js.json",
@@ -114,9 +107,9 @@
         "fhirVersion": {
             "type": "string",
             "allowedValues": [ "Stu3", "R4"],
-            "defaultValue": "Stu3",
+            "defaultValue": "R4",
             "metadata": {
-                "description": "FHIR version. Only used with OSS FHIR Server. Defaults to stu3"
+                "description": "FHIR version. Defaults to R4"
             }
         },
         "fhirImporterTemplateUrl": {
@@ -194,6 +187,13 @@
             "metadata": {
                 "description": "List of Resources to export"
             }
+        },
+        "solutionType": {
+            "type": "string",
+            "defaultValue": "FhirServerSamples",
+            "metadata": {
+                "description": "The type of the solution"
+            }
         }
     },
     "variables": {
@@ -206,9 +206,9 @@
         "webAppsuffix": "[if(variables('isMAG'),'.azurewebsites.us','.azurewebsites.net')]",
         "fhirServerUrlSuffix": "[if(parameters('usePaaS'),'.azurehealthcareapis.com', variables('webAppSuffix'))]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'), variables('fhirServerUrlSuffix'))]",
+        "fhirServiceKind": "[concat('fhir-', parameters('fhirVersion'))]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
-        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
-        "fhirDashboardJSName": "[concat(variables('environmentName'),'js')]",
+        "fhirDashboardJSName": "[concat(variables('environmentName'),'dash')]",
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
         "medicationsName": "[concat(variables('environmentName'),'meds')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
@@ -259,6 +259,9 @@
             "apiVersion": "2015-08-01",
             "name": "[variables('appServicePlanName')]",
             "type": "Microsoft.Web/serverfarms",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "location": "[resourceGroup().location]",
             "sku": {
                 "name": "[parameters('appServicePlanSku')]"
@@ -269,12 +272,11 @@
         },
         {
             "type": "Microsoft.HealthcareApis/services",
-            "kind": "fhir",
+            "kind": "[variables('fhirServiceKind')]",
             "name": "[variables('fhirServiceName')]",
             "apiVersion": "2018-08-20-preview",
             "location": "[parameters('fhirApiLocation')]",
             "condition": "[parameters('usePaaS')]",
-            "tags": {},
             "properties": {
                 "accessPolicies": "[parameters('accessPolicies')]",
                 "authenticationConfiguration": {
@@ -298,7 +300,7 @@
             "name": "[concat(variables('adfName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "condition": "[parameters('deployAdf')]",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "properties": {
                 "templateLink": {
                     "uri": "[variables('adfTemplateUrl')]",
@@ -333,7 +335,7 @@
         {
             "name": "[concat(variables('fhirServiceName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "condition": "[not(parameters('usePaaS'))]",
             "properties": {
                 "templateLink": {
@@ -347,7 +349,7 @@
         {
             "name": "[concat(variables('fhirImporterName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "properties": {
                 "templateLink": {
                     "uri": "[parameters('fhirImporterTemplateUrl')]",
@@ -383,63 +385,9 @@
             }
         },
         {
-            "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
-            "condition": "[equals(parameters('fhirVersion'),'Stu3')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
-            ],
-            "properties": {
-                "templateLink": {
-                    "uri": "[parameters('fhirDashboardTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "siteName": {
-                        "value": "[variables('fhirDashboardName')]"
-                    },
-                    "appServicePlanName": {
-                        "value": "[variables('appServicePlanName')]"
-                    },
-                    "appServicePlanResourceGroup": {
-                        "value": "[resourceGroup().name]"
-                    },
-                    "aadAuthority": {
-                        "value": "[parameters('aadAuthority')]"
-                    },
-                    "aadClientId": {
-                        "value": "[parameters('aadDashboardClientId')]"
-                    },
-                    "aadClientSecret": {
-                        "value": "[parameters('aadDashboardClientSecret')]"
-                    },
-                    "fhirServerUrl": {
-                        "value": "[variables('fhirServiceUrl')]"
-                    },
-                    "repositoryUrl": {
-                        "value": "[parameters('fhirDashboardRepositoryUrl')]"
-                    },
-                    "repositoryBranch": {
-                        "value": "[parameters('fhirDashboardRepositoryBranch')]"
-                    },
-                    "deploySourceCode": {
-                        "value": "[parameters('deployDashboardSourceCode')]"
-                    },
-                    "growthChartAppLaunchUrl": {
-                        "value": "[concat('https://', variables('growthChartName'), variables('webAppSuffix'), '/launch.html')]"
-                    },
-                    "medicationsAppLaunchUrl": {
-                        "value": "[concat('https://', variables('medicationsName'), variables('webAppSuffix'), '/launch.html')]"
-                    }
-                },
-                "mode": "incremental"
-            }
-        },
-        {
             "name": "[concat(variables('fhirDashboardJSName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
@@ -489,7 +437,7 @@
         {
             "name": "[concat(variables('growthChartName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
@@ -530,7 +478,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "properties": {
                 "templateLink": {
                     "uri": "[variables('smartAppTemplateUrl')]",

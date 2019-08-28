@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2402B2ED-5ACD-4184-90E0-63319DF369C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FhirDashboard", "src\FhirDashboard\FhirDashboard.csproj", "{FC1D7D07-9E41-4651-89EF-EE7A3AE82E05}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{25A6F929-F7DF-46DB-B262-C10CC89C0C24}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FhirDashboard.Tests.E2E", "test\FhirDashboard.Tests.E2E\FhirDashboard.Tests.E2E.csproj", "{BB9A3C89-8616-4681-9049-C0DBADD5EF12}"
@@ -50,7 +48,6 @@ Global
 		{BB9A3C89-8616-4681-9049-C0DBADD5EF12}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{FC1D7D07-9E41-4651-89EF-EE7A3AE82E05} = {2402B2ED-5ACD-4184-90E0-63319DF369C4}
 		{BB9A3C89-8616-4681-9049-C0DBADD5EF12} = {25A6F929-F7DF-46DB-B262-C10CC89C0C24}
 	EndGlobalSection
 EndGlobal

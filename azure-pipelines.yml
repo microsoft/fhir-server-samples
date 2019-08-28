@@ -1,55 +1,114 @@
 # Build ASP.NET Core project using Azure Pipelines
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core?view=vsts
 
-pool:
-  vmImage: 'vs2017-win2016'
-  
 variables:
-  buildConfiguration: 'Release'
+    buildConfiguration: "Release"
+stages:
+    - stage: Deploy
+      jobs:
+          - job: DeployAndTest
+            pool:
+                vmImage: "vs2017-win2016"
+            steps:
+                - task: DotNetCoreInstaller@0
+                  displayName: "Use .NET Core sdk 2.2"
+                  inputs:
+                      version: 2.2.101
+                - powershell: |
+                      Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
+                      Install-Module -Name AzureAD -Force -Verbose -Scope CurrentUser
+                  displayName: "Install AzureAD"
+                - task: AzureKeyVault@1
+                  displayName: "Azure Key Vault: fhirserversamples-tenant"
+                  inputs:
+                      azureSubscription: "Microsoft Health Open Source Subscription"
+                      KeyVaultName: "fhirserversamples-tenant"
+                - task: AzurePowerShell@3
+                  displayName: "Deploy to Azure"
+                  inputs:
+                      preferredAzurePowerShellVersion: 5.1.1
+                      azureSubscription: "Microsoft Health Open Source Subscription"
+                      ScriptType: InlineScript
+                      Inline: |
+                          $user = "$(tenant-admin-username)"
+                          $passwd = ConvertTo-SecureString -AsPlainText "$(tenant-admin-password)" -Force
+                          $adminCreds = New-Object PSCredential $user,$passwd
+                          Connect-AzureAD -TenantId "$(tenant-id)" -Credential $adminCreds
+                          $tenantInfo = Get-AzureADCurrentSessionInfo -ErrorAction Stop
+                           
+                          $environmentName = "fhirsampdev"
+                           
+                          if ($env:BUILD_SOURCEBRANCHNAME -eq "merge")
+                          {
+                               # branch: /refs/pull/<PR>/merge
+                               $pr = $env:BUILD_SOURCEBRANCH.split('/')[2]
+                               $environmentName = "fhirsamp-$pr"
+                               $pulls = Invoke-WebRequest 'https://api.github.com/repos/Microsoft/fhir-server-samples/pulls' | ConvertFrom-Json
+                               $pullDetails = $pulls | Where-Object { $_.number -eq $pr }
+                               $remoteRepo = $pullDetails.head.repo.full_name
+                               $remoteRepo = "https://github.com/" + $remoteRepo
+                               $remoteBranch = $pullDetails.head.ref
+                           }
+                           else
+                           {
+                               $remoteRepo = "https://github.com/Microsoft/fhir-server-samples"
+                               $remoteBranch = "master"
+                           }
+                           
+                           Write-Host "##vso[task.setvariable variable=dashboardWebAppName]${environmentName}dash"
+                           
+                           Write-Host "##vso[task.setvariable variable=DashboardUrl]https://${environmentName}dash.azurewebsites.net"
+                           Write-Host "##vso[task.setvariable variable=FhirServerUrl]https://${environmentName}.azurehealthcareapis.com"
+                           
+                           cd $(Build.SourcesDirectory)/deploy/scripts/
+                           Write-Host "Remote Repo: ${remoteRepo}"
+                           Write-Host "Remote branch: ${remoteBranch}"
+                           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -DeployAdf $true -UsePaaS $true -SourceRepository "${remoteRepo}" -SourceRevision "${remoteBranch}"
+ 
+                           $DashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
+                           $DashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
+                           Write-Host "##vso[task.setvariable variable=DashboardUserUpn]$DashboardUserUpn"
+                           Write-Host "##vso[task.setvariable variable=DashboardUserPassword]$DashboardUserPassword"
+                           $storageAccountName = ("${environmentName}impsa").Replace('-','');
+                           $storageAccountKey = (Get-AzureRmStorageAccountKey -Name $storageAccountName -ResourceGroupName $environmentName)[0].Value
+                           $storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}"
+                           Write-Host "##vso[task.setvariable variable=StorageAccountConnectionString]$storageAccountConnectionString"
+                           
+                           $fhirServerMetadataUrl = "https://${environmentName}.azurehealthcareapis.com/metadata"
+                           Invoke-WebRequest $fhirServerMetadataUrl
+                           $functionAppUrl = "https://${environmentName}imp.azurewebsites.net"
+                           Invoke-WebRequest $functionAppUrl
+                - powershell: |
+                      $env:FhirServerUrl = "$(FhirServerUrl)"
+                      $env:DashboardUrl = "$(DashboardUrl)"
+                      $env:DashboardUserUpn  = "$(DashboardUserUpn)"
+                      $env:DashboardUserPassword  = "$(DashboardUserPassword)"
+                      $env:StorageAccountConnectionString = "$(StorageAccountConnectionString)"
+                      Write-Host "FhirServerUrl: " + $env:FhirServerUrl
+                      Write-Host "DashboardUrl: " + $env:DashboardUrl
+                      Write-Host "DashboardUserUpn: " + $env:DashboardUserUpn
+                      Write-Host "DashboardUserPassword: " + $env:DashboardUserPassword
+                      Write-Host "StorageAccountConnectionString: " + $env:StorageAccountConnectionString
+                      cd $(Build.SourcesDirectory)/test/FhirDashboard.Tests.E2E
+                      dotnet test
+                  displayName: "PowerShell Script"
+                - task: AzurePowerShell@3
+                  displayName: "Delete Environment"
+                  inputs:
+                      preferredAzurePowerShellVersion: 5.1.1
+                      azureSubscription: "Microsoft Health Open Source Subscription"
+                      ScriptType: InlineScript
+                      Inline: |
+                          $user = "$(tenant-admin-username)"
+                          $passwd = ConvertTo-SecureString -AsPlainText "$(tenant-admin-password)" -Force
+                          $adminCreds = New-Object PSCredential $user,$passwd
+                          Connect-AzureAD -TenantId "$(tenant-id)" -Credential $adminCreds
+                          if ($env:BUILD_SOURCEBRANCHNAME -eq "merge")
+                          {
+                               # branch: /refs/pull/<PR>/merge
+                               $pr = $env:BUILD_SOURCEBRANCH.split('/')[2]
+                               $environmentName = "fhirsamp-$pr"
+                                                          cd $(Build.SourcesDirectory)/deploy/scripts/
+                               ./Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName
+                          }
 
-steps:
-- task: DotNetCoreInstaller@0
-  inputs:
-    version: '2.2.101'
-
-- script: dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
-  displayName: 'dotnet build $(buildConfiguration)'
-
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet publish web'
-  inputs:
-    command: publish
-    projects: '**/FhirDashboard.csproj'
-    arguments: '--output $(build.artifactStagingDirectory)/dashboard --configuration $(buildConfiguration) --no-build'
-    publishWebProjects: false
-
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet publish Integration Tests'
-  inputs:
-    command: publish
-    projects: 'test/**/*.csproj'
-    arguments: '--version-suffix $(build.buildnumber) -o "$(build.binariesdirectory)/IntegrationTests" --configuration $(buildConfiguration) --no-build'
-    publishWebProjects: false
-    zipAfterPublish: false
-
-
-- task: PublishBuildArtifacts@1
-  displayName: 'publish Dashboard artifacts'
-  inputs:
-    pathToPublish: '$(build.artifactStagingDirectory)/dashboard'
-    artifactName: 'deploy'
-    artifactType: 'container'
-
-- task: PublishBuildArtifacts@1
-  displayName: 'publish samples'
-  inputs:
-    pathToPublish: './deploy/'
-    artifactName: 'deploy'
-    artifactType: 'container'
-
-- task: PublishBuildArtifacts@1
-  displayName: 'publish Integration Tests'
-  inputs:
-    pathToPublish: '$(build.binariesdirectory)/IntegrationTests'
-    artifactName: 'IntegrationTests'
-    artifactType: 'container'

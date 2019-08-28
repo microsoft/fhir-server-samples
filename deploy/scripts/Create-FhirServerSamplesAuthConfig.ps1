@@ -174,10 +174,7 @@ Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-upn" -SecretValu
 Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-password" -SecretValue $passwordSecureString | Out-Null   
 Set-FhirServerUserAppRoleAssignments -ApiAppId $application.AppId -UserPrincipalName $userUpn -AppRoles "admin"
 
-$dashboardName = "${EnvironmentName}dash"
-$dashboardUrl = "https://${dashboardName}.${WebAppSuffix}"
-$dashboardReplyUrl = "${dashboardUrl}/signin-oidc"
-$dashboardJSName = "${EnvironmentName}js"
+$dashboardJSName = "${EnvironmentName}dash"
 $dashboardJSUrl = "https://${dashboardJSName}.${WebAppSuffix}"
 $dashboardJSReplyUrl = "${dashboardJSUrl}/.auth/login/aad/callback"
 $growthChartName = "${EnvironmentName}growth"
@@ -188,7 +185,7 @@ $medicationsUrl = "https://${medicationsName}.${WebAppSuffix}"
 $confidentialClientAppName = "${EnvironmentName}-confidential-client"
 $confidentialClient = Get-AzureAdApplication -Filter "DisplayName eq '$confidentialClientAppName'"
 if (!$confidentialClient) {
-    $confidentialClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $confidentialClientAppName -ReplyUrl $dashboardReplyUrl
+    $confidentialClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $confidentialClientAppName -ReplyUrl $dashboardJSReplyUrl
 
     $appId = $confidentialClient.AppId
     $appReg = Get-AzureADApplication -Filter "AppId eq '$appId'"

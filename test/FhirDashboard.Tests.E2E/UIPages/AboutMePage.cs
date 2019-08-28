@@ -16,13 +16,8 @@ namespace FhirDashboard.Tests.E2E.UIPages
         {
             get
             {
-                return Driver.GetElement(By.Id("tokenfield"));
+                return Driver.GetElement(By.Id("token"));
             }
-        }
-
-        public void ValidateTitle()
-        {
-            ValidateTitle(ExpectedTitle);
         }
     }
 }
