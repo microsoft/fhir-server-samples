@@ -59,39 +59,12 @@ stages:
                            Write-Host "##vso[task.setvariable variable=DashboardUrl]https://${environmentName}dash.azurewebsites.net"
                            Write-Host "##vso[task.setvariable variable=FhirServerUrl]https://${environmentName}.azurehealthcareapis.com"
                            
-                            cd $(Build.SourcesDirectory)/deploy/scripts/
-                           ./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus"
-                           
-                           $sourceStamp = $env:BUILD_SOURCEVERSION
-                           $tpb = "https://raw.githubusercontent.com/Microsoft/fhir-server-samples"
-                           $sandboxTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-sandbox.json"
-                           $dashboardTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-fhirdashboard.json"
-                           $dashboardJSTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-fhirdashboard-js.json"
-                           $importerTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-importer.json"
-                           $tenantDomain = $tenantInfo.TenantDomain
-                           $aadAuthority = "https://login.microsoftonline.com/${tenantDomain}"
-                           
-                           $confidentialClientId = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-confidential-client-id").SecretValueText
-                           $confidentialClientSecret = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-confidential-client-secret").SecretValueText
-                           $serviceClientId  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-service-client-id").SecretValueText
-                           $serviceClientSecret  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-service-client-secret").SecretValueText
-                           $serviceClientObjectId = (Get-AzureADServicePrincipal -Filter "AppId eq '$serviceClientId'").ObjectId
-                           $publicClientId  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-public-client-id").SecretValueText
+                           cd $(Build.SourcesDirectory)/deploy/scripts/
+                           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -DeployAdf $true -UsePaaS $true -SourceRepository $remoteRepo -SourceRevision $remoteBranch
+ 
                            $DashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
                            $DashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
-                           $dashboardUserOid = (Get-AzureADUser -Filter "UserPrincipalName eq '$dashboardUserUpn'").ObjectId
-                           
                            Write-Host "##vso[task.setvariable variable=DashboardUserUpn]$DashboardUserUpn"
-                           Write-Host "##vso[task.setvariable variable=DashboardUserPassword]$DashboardUserPassword"
-                           
-                           $aPol = @()
-                           $aPol += @{ "objectId" = $serviceClientObjectId.ToString() }
-                           $aPol += @{ "objectId" = $dashboardUserOid.ToString() }
-                           
-                           $sqlAdminPassword = ConvertTo-SecureString -AsPlainText $DashboardUserPassword -Force
-                           
-                           New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $environmentName -ResourceGroupName $environmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $remoteRepo -fhirDashboardRepositoryBranch $remoteBranch  -deployDashboardSourceCode $false  -accessPolicies $aPol -sqlAdminPassword $sqlAdminPassword
-                           
                            $storageAccountName = ("${environmentName}impsa").Replace('-','');
                            $storageAccountKey = (Get-AzureRmStorageAccountKey -Name $storageAccountName -ResourceGroupName $environmentName)[0].Value
                            $storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}"
@@ -110,3 +83,23 @@ stages:
                       cd $(Build.SourcesDirectory)/test/FhirDashboard.Tests.E2E
                       dotnet test
                   displayName: "PowerShell Script"
+                - task: AzurePowerShell@3
+                  displayName: "Delete Environment"
+                  inputs:
+                      preferredAzurePowerShellVersion: 5.1.1
+                      azureSubscription: "Microsoft Health Open Source Subscription"
+                      ScriptType: InlineScript
+                      Inline: |
+                          $user = "$(tenant-admin-username)"
+                          $passwd = ConvertTo-SecureString -AsPlainText "$(tenant-admin-password)" -Force
+                          $adminCreds = New-Object PSCredential $user,$passwd
+                          Connect-AzureAD -TenantId "$(tenant-id)" -Credential $adminCreds
+                          if ($env:BUILD_SOURCEBRANCHNAME -eq "merge")
+                          {
+                               # branch: /refs/pull/<PR>/merge
+                               $pr = $env:BUILD_SOURCEBRANCH.split('/')[2]
+                               $environmentName = "fhirsamp-$pr"
+                                                          cd $(Build.SourcesDirectory)/deploy/scripts/
+                               ./Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName
+                          }
+
