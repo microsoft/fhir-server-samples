@@ -1,25 +1,20 @@
 # Build ASP.NET Core project using Azure Pipelines
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core?view=vsts
 
-pool:
-  vmImage: 'vs2017-win2016'
-  
 variables:
   buildConfiguration: 'Release'
-
 stages:
-
 - stage: Build
   jobs:
     - job: Build and Publish
+      pool:
+         vmImage: 'vs2017-win2016'
       steps:
        - task: DotNetCoreInstaller@0
          inputs:
            version: '2.2.101'
-
        - script: dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
          displayName: 'dotnet build $(buildConfiguration)'
-
        - task: DotNetCoreCLI@2
          displayName: 'dotnet publish Integration Tests'
          inputs:
@@ -28,14 +23,12 @@ stages:
            arguments: '--version-suffix $(build.buildnumber) -o "$(build.binariesdirectory)/IntegrationTests" --configuration $(buildConfiguration) --no-build'
            publishWebProjects: false
            zipAfterPublish: false
-
        - task: PublishBuildArtifacts@1
          displayName: 'publish samples'
          inputs:
            pathToPublish: './deploy/'
            artifactName: 'deploy'
            artifactType: 'container'
-
        - task: PublishBuildArtifacts@1
          displayName: 'publish Integration Tests'
          inputs:
