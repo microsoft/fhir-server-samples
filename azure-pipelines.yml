@@ -6,53 +6,12 @@ variables:
 stages:
     - stage: Build
       jobs:
-          - job: BuildAndPublish
-            pool:
-                vmImage: "vs2017-win2016"
-            steps:
-                - task: DotNetCoreInstaller@0
-                  inputs:
-                      version: "2.2.101"
-                - script: dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
-                  displayName: "dotnet build $(buildConfiguration)"
-                - task: DotNetCoreCLI@2
-                  displayName: "dotnet publish Integration Tests"
-                  inputs:
-                      command: publish
-                      projects: "test/**/*.csproj"
-                      arguments: '--version-suffix $(build.buildnumber) -o "$(build.binariesdirectory)/IntegrationTests" --configuration $(buildConfiguration) --no-build'
-                      publishWebProjects: false
-                      zipAfterPublish: false
-                - task: PublishBuildArtifacts@1
-                  displayName: "publish samples"
-                  inputs:
-                      pathToPublish: "./deploy/"
-                      artifactName: "deploy"
-                      artifactType: "container"
-                - task: PublishBuildArtifacts@1
-                  displayName: "publish Integration Tests"
-                  inputs:
-                      pathToPublish: "$(build.binariesdirectory)/IntegrationTests"
-                      artifactName: "IntegrationTests"
-                      artifactType: "container"
     - stage: Deploy
       jobs:
           - job: DeployAndTest
             pool:
                 vmImage: "vs2017-win2016"
             steps:
-                - task: DownloadBuildArtifacts@0
-                  inputs:
-                      buildType: "current"
-                      downloadType: "single"
-                      artifactName: "deploy"
-                      downloadPath: "$(System.ArtifactsDirectory)"
-                - task: DownloadBuildArtifacts@0
-                  inputs:
-                      buildType: "current"
-                      downloadType: "single"
-                      artifactName: "IntegrationTests"
-                      downloadPath: "$(System.ArtifactsDirectory)"
                 - task: DotNetCoreInstaller@0
                   displayName: "Use .NET Core sdk 2.2"
                   inputs:
@@ -102,7 +61,7 @@ stages:
                            Write-Host "##vso[task.setvariable variable=DashboardUrl]https://${environmentName}dash.azurewebsites.net"
                            Write-Host "##vso[task.setvariable variable=FhirServerUrl]https://${environmentName}.azurehealthcareapis.com"
                            
-                           Copy-Item -Path $(System.ArtifactsDirectory)/**/deploy/scripts/Create-FhirServerSamplesAuthConfig.ps1
+                            cd $(Build.SourcesDirectory)/deploy/scripts/
                            ./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus"
                            
                            $sourceStamp = $env:BUILD_SOURCEVERSION
@@ -150,6 +109,6 @@ stages:
                       $env:DashboardUserUpn  = "$(DashboardUserUpn)"
                       $env:DashboardUserPassword  = "$(DashboardUserPassword)"
                       $env:StorageAccountConnectionString = "$(StorageAccountConnectionString)"
-
-                      Get-ChildItem -Path $(System.ArtifactsDirectory) -Include *Tests.E2E.dll -Recurse | %{dotnet vstest $_.FullName /logger:trx`;logFileName="$($_.BaseName).TestOutput.xml"}
+                      cd $(Build.SourcesDirectory)/test/FhirDashboard.Tests.E2E
+                      dotnet test
                   displayName: "PowerShell Script"
