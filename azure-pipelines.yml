@@ -43,7 +43,8 @@ stages:
                                # branch: /refs/pull/<PR>/merge
                                $pr = $env:BUILD_SOURCEBRANCH.split('/')[2]
                                $environmentName = "fhirsamp-$pr"
-                               $pullDetails = Invoke-WebRequest 'https://api.github.com/repos/Microsoft/fhir-server-samples/pulls' | ConvertFrom-Json | Where-Object { $_.number -eq $pr }
+                               $pulls = Invoke-WebRequest 'https://api.github.com/repos/Microsoft/fhir-server-samples/pulls' | ConvertFrom-Json
+                               $pullDetails = $pulls | Where-Object { $_.number -eq $pr }
                                $remoteRepo = $pullDetails.head.repo.full_name
                                $remoteRepo = "https://github.com/" + $remoteRepo
                                $remoteBranch = $pullDetails.head.ref
