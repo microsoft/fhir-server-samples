@@ -310,7 +310,7 @@
             "name": "[concat(variables('adfName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
             "condition": "[parameters('deployAdf')]",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "tags": {
                 "FhirServerSolution": "[parameters('solutionType')]"
             },
@@ -348,7 +348,7 @@
         {
             "name": "[concat(variables('fhirServiceName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "condition": "[not(parameters('usePaaS'))]",
             "properties": {
                 "templateLink": {
@@ -362,7 +362,7 @@
         {
             "name": "[concat(variables('fhirImporterName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "properties": {
                 "templateLink": {
                     "uri": "[parameters('fhirImporterTemplateUrl')]",
@@ -400,7 +400,7 @@
         {
             "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "condition": "[equals(parameters('fhirVersion'),'Stu3')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
@@ -454,7 +454,7 @@
         {
             "name": "[concat(variables('fhirDashboardJSName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
@@ -504,7 +504,7 @@
         {
             "name": "[concat(variables('growthChartName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
@@ -545,7 +545,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
             ],
-            "apiVersion": "2018-05-01",
+            "apiVersion": "2019-08-01",
             "properties": {
                 "templateLink": {
                     "uri": "[variables('smartAppTemplateUrl')]",
