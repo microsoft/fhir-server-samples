@@ -252,7 +252,7 @@
             ]
         },
         {   
-        "apiVersion": "2019-08-01",
+        "apiVersion": "2018-05-01-preview",
         "name": "[variables('applicationInsightsName')]",
         "type": "microsoft.insights/components",
         "location": "East US",
