@@ -84,6 +84,11 @@ stages:
                       $env:DashboardUserUpn  = "$(DashboardUserUpn)"
                       $env:DashboardUserPassword  = "$(DashboardUserPassword)"
                       $env:StorageAccountConnectionString = "$(StorageAccountConnectionString)"
+                      Write-Host "FhirServerUrl: " + $env:FhirServerUrl
+                      Write-Host "DashboardUrl: " + $env:DashboardUrl
+                      Write-Host "DashboardUserUpn: " + $env:DashboardUserUpn
+                      Write-Host "DashboardUserPassword: " + $env:DashboardUserPassword
+                      Write-Host "StorageAccountConnectionString: " + $env:StorageAccountConnectionString
                       cd $(Build.SourcesDirectory)/test/FhirDashboard.Tests.E2E
                       dotnet test
                   displayName: "PowerShell Script"
