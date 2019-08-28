@@ -89,7 +89,7 @@
         "repositoryProjectPath":
         {
             "type": "string",
-            "defaultValue": "src/FhirDashboard",
+            "defaultValue": "src/FhirDashboardJS",
             "metadata": {
                 "description": "Path within source code repository for FHIR Dashboard application"
             }
@@ -100,25 +100,6 @@
             "metadata": {
                 "description": "Deploy source code (if repo and branch are not blank)"
             }
-        },
-        "deployApplicationInsights": {
-            "type": "bool",
-            "defaultValue": true,
-            "metadata": {
-                "description": "Deploy Application Insights for the FHIR client. Disabled for Microsoft Azure Government (MAG)"
-            }
-        },
-        "applicationInsightsLocation": {
-            "type": "string",
-            "defaultValue": "eastus",
-            "allowedValues": [
-                "southeastasia",
-                "northeurope",
-                "westeurope",
-                "eastus",
-                "southcentralus",
-                "westus2"
-            ]
         },
         "growthChartAppLaunchUrl": {
             "type": "string",
@@ -148,11 +129,21 @@
         "appServicePlanName": "[if(empty(parameters('appServicePlanName')),concat(variables('siteName'),'-asp'),parameters('appServicePlanName'))]",
         "deploySourceCode": "[and(parameters('deploySourceCode'),and(not(empty(parameters('repositoryUrl'))),not(empty(parameters('repositoryBranch')))))]",
         "isMAG": "[or(contains(resourceGroup().location,'usgov'),contains(resourceGroup().location,'usdod'))]",
-        "deployAppInsights": "[and(parameters('deployApplicationInsights'),not(variables('isMAG')))]",
-        "appInsightsName": "[concat('AppInsights-', variables('siteName'))]",
-        "aadInstance": "[concat('https://', split(parameters('aadAuthority'),'/')[sub(length(split(parameters('aadAuthority'),'/')),2)],'/')]",
-        "aadTenant": "[last(split(parameters('aadAuthority'),'/'))]",
-        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]"
+        "aadAudience": "[if(empty(parameters('aadAudience')),parameters('fhirServerUrl'),parameters('aadAudience'))]",
+        "configObject": {
+            "FhirServerUrl": "[parameters('fhirServerUrl')]",
+            "SmartOnFhirApps": [
+                {
+                    "DisplayName": "Growth Chart",
+                    "LaunchUrl": "[parameters('growthChartAppLaunchUrl')]"
+                },
+                {
+                    "DisplayName": "Medications",
+                    "LaunchUrl": "[parameters('medicationsAppLaunchUrl')]"
+                }
+            ]
+        },
+        "configObjectString": "[string(variables('configObject'))]"
     },
     "resources": [
         {
@@ -190,10 +181,10 @@
         {
             "apiVersion": "2015-08-01",
             "type": "Microsoft.Web/sites",
+            "name": "[variables('siteName')]",
             "tags": {
                 "FhirServerSolution": "[parameters('solutionType')]"
             },
-            "name": "[variables('siteName')]",
             "location": "[resourceGroup().location]",
             "identity": {
                 "type": "SystemAssigned"
@@ -211,25 +202,35 @@
                     "name": "appsettings",
                     "type": "config",
                     "dependsOn": [
-                        "[concat('Microsoft.Web/Sites/', variables('siteName'))]",
-                        "[if(variables('deployAppInsights'),concat('Microsoft.Insights/components/', variables('appInsightsName')),'nestedTemplate')]"
+                        "[concat('Microsoft.Web/Sites/', variables('siteName'))]"
                     ],
                     "properties": {
-                        "ApplicationInsights:InstrumentationKey": "[if(variables('deployAppInsights'), reference(concat('Microsoft.Insights/components/', variables('appInsightsName'))).InstrumentationKey, 'not set')]",
                         "WEBSITE_NODE_DEFAULT_VERSION": "6.9.4",
                         "PROJECT": "[parameters('repositoryProjectPath')]",
-                        "FhirServerUrl": "[parameters('fhirServerUrl')]",
-                        "FhirServerAudience": "[variables('aadAudience')]",
-                        "AzureAd:TenantId": "[variables('aadTenant')]",
-                        "AzureAd:Domain": "[variables('aadTenant')]",
-                        "AzureAd:Instance": "[variables('aadInstance')]",
-                        "AzureAd:ClientId": "[parameters('aadClientId')]",
-                        "AzureAd:ClientSecret": "[parameters('aadClientSecret')]",
-                        "SmartOnFhirApps:0:DisplayName": "Growth Chart",
-                        "SmartOnFhirApps:0:LaunchUrl": "[parameters('growthChartAppLaunchUrl')]",
-                        "SmartOnFhirApps:1:DisplayName": "Medications",
-                        "SmartOnFhirApps:1:LaunchUrl": "[parameters('medicationsAppLaunchUrl')]"
+                        "CONFIGFILESTRING": "[variables('configObjectString')]",
+                        "COMMAND": "cd %PROJECT% && xcopy . D:\\home\\site\\wwwroot\\ /E /S /Y && @echo %CONFIGFILESTRING% >D:\\home\\site\\wwwroot\\config.json"
                       }
+                },
+                {
+                    "apiVersion": "2015-08-01",
+                    "name": "authsettings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/Sites/', variables('siteName'))]"
+                    ],
+                    "properties": {
+                        "enabled": true,
+                        "unauthenticatedClientAction": "redirectToLoginPage",
+                        "tokenStoreEnabled": true,
+                        "defaultProvider": "AzureActiveDirectory",
+                        "clientId": "[parameters('aadClientId')]",
+                        "clientSecret": "[parameters('aadClientSecret')]",
+                        "issuer": "[parameters('aadAuthority')]",
+                        "additionalLoginParams": [
+                            "[concat('resource=',variables('aadAudience'))]"
+                        ],
+                        "isAadAutoProvisioned": false
+                    }
                 },        
                 {
                     "apiVersion": "2015-08-01",
@@ -247,22 +248,6 @@
                     }
                 }
             ]
-        },
-        {
-            "apiVersion": "2015-05-01",
-            "name": "[variables('appInsightsName')]",
-            "type": "Microsoft.Insights/components",
-            "location": "[parameters('applicationInsightsLocation')]",
-            "condition": "[variables('deployAppInsights')]",
-            "kind": "web",
-            "tags": {
-              "[concat('hidden-link:', resourceId('Microsoft.Web/sites', variables('siteName')))]": "Resource",
-              "displayName": "AppInsightsComponent"
-            },
-            "properties": {
-              "Application_Type": "web",
-              "ApplicationId": "[variables('siteName')]"
-            }
         }
     ]
 }
