@@ -6,7 +6,7 @@ variables:
 stages:
 - stage: Build
   jobs:
-    - job: Build and Publish
+    - job: BuildAndPublish
       pool:
          vmImage: 'vs2017-win2016'
       steps:
