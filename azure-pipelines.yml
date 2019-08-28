@@ -2,50 +2,142 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core?view=vsts
 
 variables:
-  buildConfiguration: 'Release'
+    buildConfiguration: "Release"
 stages:
-- stage: Build
-  jobs:
-    - job: BuildAndPublish
-      pool:
-         vmImage: 'vs2017-win2016'
-      steps:
-       - task: DotNetCoreInstaller@0
-         inputs:
-           version: '2.2.101'
-       - script: dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
-         displayName: 'dotnet build $(buildConfiguration)'
-       - task: DotNetCoreCLI@2
-         displayName: 'dotnet publish Integration Tests'
-         inputs:
-           command: publish
-           projects: 'test/**/*.csproj'
-           arguments: '--version-suffix $(build.buildnumber) -o "$(build.binariesdirectory)/IntegrationTests" --configuration $(buildConfiguration) --no-build'
-           publishWebProjects: false
-           zipAfterPublish: false
-       - task: PublishBuildArtifacts@1
-         displayName: 'publish samples'
-         inputs:
-           pathToPublish: './deploy/'
-           artifactName: 'deploy'
-           artifactType: 'container'
-       - task: PublishBuildArtifacts@1
-         displayName: 'publish Integration Tests'
-         inputs:
-           pathToPublish: '$(build.binariesdirectory)/IntegrationTests'
-           artifactName: 'IntegrationTests'
-           artifactType: 'container'
-- stage: Deploy
-  jobs:
-    - job: DeployAndTest
-      pool:
-        vmImage: 'vs2017-win2016'
-      steps:
-      - task: DotNetCoreInstaller@0
-        displayName: 'Use .NET Core sdk 2.2'
-        inputs:
-          version: 2.2.101
-      - powershell: |
-          Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
-          Install-Module -Name AzureAD -Force -Verbose -Scope CurrentUser
-        displayName: 'Install AzureAD'
+    - stage: Build
+      jobs:
+          - job: BuildAndPublish
+            pool:
+                vmImage: "vs2017-win2016"
+            steps:
+                - task: DotNetCoreInstaller@0
+                  inputs:
+                      version: "2.2.101"
+                - script: dotnet build --configuration $(buildConfiguration) --version-suffix $(build.buildNumber) /warnaserror
+                  displayName: "dotnet build $(buildConfiguration)"
+                - task: DotNetCoreCLI@2
+                  displayName: "dotnet publish Integration Tests"
+                  inputs:
+                      command: publish
+                      projects: "test/**/*.csproj"
+                      arguments: '--version-suffix $(build.buildnumber) -o "$(build.binariesdirectory)/IntegrationTests" --configuration $(buildConfiguration) --no-build'
+                      publishWebProjects: false
+                      zipAfterPublish: false
+                - task: PublishBuildArtifacts@1
+                  displayName: "publish samples"
+                  inputs:
+                      pathToPublish: "./deploy/"
+                      artifactName: "deploy"
+                      artifactType: "container"
+                - task: PublishBuildArtifacts@1
+                  displayName: "publish Integration Tests"
+                  inputs:
+                      pathToPublish: "$(build.binariesdirectory)/IntegrationTests"
+                      artifactName: "IntegrationTests"
+                      artifactType: "container"
+    - stage: Deploy
+      jobs:
+          - job: DeployAndTest
+            pool:
+                vmImage: "vs2017-win2016"
+            steps:
+                - task: DotNetCoreInstaller@0
+                  displayName: "Use .NET Core sdk 2.2"
+                  inputs:
+                      version: 2.2.101
+                - powershell: |
+                      Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
+                      Install-Module -Name AzureAD -Force -Verbose -Scope CurrentUser
+                  displayName: "Install AzureAD"
+                - task: AzureKeyVault@1
+                  displayName: "Azure Key Vault: fhirserversamples-tenant"
+                  inputs:
+                      azureSubscription: "Microsoft Health Open Source Subscription"
+                      KeyVaultName: "fhirserversamples-tenant"
+                - task: AzurePowerShell@3
+                  displayName: 'Deploy to Azure'
+                  inputs:
+                      preferredAzurePowerShellVersion: 5.1.1
+                      azureSubscription: 'Microsoft Health Open Source Subscription'
+                      ScriptType: InlineScript
+                      Inline: |
+                        $user = "$(tenant-admin-username)"
+                        $passwd = ConvertTo-SecureString -AsPlainText "$(tenant-admin-password)" -Force
+                        $adminCreds = New-Object PSCredential $user,$passwd
+                        Connect-AzureAD -TenantId "$(tenant-id)" -Credential $adminCreds
+                        $tenantInfo = Get-AzureADCurrentSessionInfo -ErrorAction Stop
+                        
+                        $environmentName = "fhirsampdev"
+                        
+                        if ($env:BUILD_SOURCEBRANCHNAME -eq "merge")
+                        {
+                            # branch: /refs/pull/<PR>/merge
+                            $pr = $env:BUILD_SOURCEBRANCH.split('/')[2]
+                            $environmentName = "fhirsamp-$pr"
+                            $pullDetails = Invoke-WebRequest 'https://api.github.com/repos/Microsoft/fhir-server-samples/pulls' | ConvertFrom-Json | Where-Object { $_.number -eq $pr }
+                            $remoteRepo = $pullDetails.head.repo.full_name
+                            $remoteRepo = "https://github.com/" + $remoteRepo
+                            $remoteBranch = $pullDetails.head.ref
+                        }
+                        else
+                        {
+                            $remoteRepo = "https://github.com/Microsoft/fhir-server-samples"
+                            $remoteBranch = "master"
+                        }
+                        
+                        Write-Host "##vso[task.setvariable variable=dashboardWebAppName]${environmentName}dash"
+                        
+                        Write-Host "##vso[task.setvariable variable=DashboardUrl]https://${environmentName}dash.azurewebsites.net"
+                        Write-Host "##vso[task.setvariable variable=FhirServerUrl]https://${environmentName}.azurehealthcareapis.com"
+                        
+                        Copy-Item -Path $(System.DefaultWorkingDirectory)/**/deploy/scripts/Create-FhirServerSamplesAuthConfig.ps1
+                        ./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus"
+                        
+                        $sourceStamp = $env:BUILD_SOURCEVERSION
+                        $tpb = "https://raw.githubusercontent.com/Microsoft/fhir-server-samples"
+                        $sandboxTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-sandbox.json"
+                        $dashboardTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-fhirdashboard.json"
+                        $dashboardJSTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-fhirdashboard-js.json"
+                        $importerTemplate = "${tpb}/${sourceStamp}/deploy/templates/azuredeploy-importer.json"
+                        $tenantDomain = $tenantInfo.TenantDomain
+                        $aadAuthority = "https://login.microsoftonline.com/${tenantDomain}"
+                        
+                        $confidentialClientId = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-confidential-client-id").SecretValueText
+                        $confidentialClientSecret = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-confidential-client-secret").SecretValueText
+                        $serviceClientId  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-service-client-id").SecretValueText
+                        $serviceClientSecret  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-service-client-secret").SecretValueText
+                        $serviceClientObjectId = (Get-AzureADServicePrincipal -Filter "AppId eq '$serviceClientId'").ObjectId
+                        $publicClientId  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-public-client-id").SecretValueText
+                        $DashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
+                        $DashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
+                        $dashboardUserOid = (Get-AzureADUser -Filter "UserPrincipalName eq '$dashboardUserUpn'").ObjectId
+                        
+                        Write-Host "##vso[task.setvariable variable=DashboardUserUpn]$DashboardUserUpn"
+                        Write-Host "##vso[task.setvariable variable=DashboardUserPassword]$DashboardUserPassword"
+                        
+                        $aPol = @()
+                        $aPol += @{ "objectId" = $serviceClientObjectId.ToString() }
+                        $aPol += @{ "objectId" = $dashboardUserOid.ToString() }
+                        
+                        $sqlAdminPassword = ConvertTo-SecureString -AsPlainText $DashboardUserPassword -Force
+                        
+                        New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $environmentName -ResourceGroupName $environmentName -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardTemplateUrl $dashboardTemplate -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $remoteRepo -fhirDashboardRepositoryBranch $remoteBranch  -deployDashboardSourceCode $false  -accessPolicies $aPol -sqlAdminPassword $sqlAdminPassword
+                        
+                        $storageAccountName = ("${environmentName}impsa").Replace('-','');
+                        $storageAccountKey = (Get-AzureRmStorageAccountKey -Name $storageAccountName -ResourceGroupName $environmentName)[0].Value
+                        $storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}"
+                        Write-Host "##vso[task.setvariable variable=StorageAccountConnectionString]$storageAccountConnectionString"
+                        
+                        $fhirServerMetadataUrl = "https://${environmentName}.azurehealthcareapis.com/metadata"
+                        Invoke-WebRequest $fhirServerMetadataUrl
+                        $functionAppUrl = "https://${environmentName}imp.azurewebsites.net"
+                        Invoke-WebRequest $functionAppUrl
+            - powershell: |
+                $env:FhirServerUrl = "$(FhirServerUrl)"
+                $env:DashboardUrl = "$(DashboardUrl)"
+                $env:DashboardUserUpn  = "$(DashboardUserUpn)"
+                $env:DashboardUserPassword  = "$(DashboardUserPassword)"
+                $env:StorageAccountConnectionString = "$(StorageAccountConnectionString)"
+                
+                Get-ChildItem -Path $(System.ArtifactsDirectory) -Include *Tests.E2E.dll -Recurse | %{dotnet vstest $_.FullName /logger:trx`;logFileName="$($_.BaseName).TestOutput.xml"}
+            displayName: 'PowerShell Script'
