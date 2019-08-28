@@ -26,13 +26,13 @@ namespace FhirDashboard.Tests.E2E
             // Assert.True(result.IsSuccessStatusCode);
 
             // Hit dashboard URL and sign in using user name and password
-            var signInPageAction = new SignInPageAction();
-            signInPageAction.SignInandNavigateToDashBoard();
+            // var signInPageAction = new SignInPageAction();
+            // signInPageAction.SignInandNavigateToDashBoard();
 
             // Navigate to about me page and validate token
-            CommonActions.NavigateToAboutMe();
-            var aboutMePageAction = new AboutMePageAction();
-            aboutMePageAction.ValidateToken(Configuration.FhirServerUrl);
+            // CommonActions.NavigateToAboutMe();
+            // var aboutMePageAction = new AboutMePageAction();
+            // aboutMePageAction.ValidateToken(Configuration.FhirServerUrl);
         }
     }
 }
