@@ -102,7 +102,7 @@ stages:
                            Write-Host "##vso[task.setvariable variable=DashboardUrl]https://${environmentName}dash.azurewebsites.net"
                            Write-Host "##vso[task.setvariable variable=FhirServerUrl]https://${environmentName}.azurehealthcareapis.com"
                            
-                           Copy-Item -Path $(System.DefaultWorkingDirectory)/**/deploy/scripts/Create-FhirServerSamplesAuthConfig.ps1
+                           Copy-Item -Path $(System.ArtifactsDirectory)/**/deploy/scripts/Create-FhirServerSamplesAuthConfig.ps1
                            ./Create-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus"
                            
                            $sourceStamp = $env:BUILD_SOURCEVERSION
