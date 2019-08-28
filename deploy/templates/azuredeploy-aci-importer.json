@@ -140,7 +140,7 @@
             ]
         },
         {
-            "apiVersion": "2018-05-01-preview",
+            "apiVersion": "2019-08-01",
             "name": "[variables('applicationInsightsName')]",
             "tags": {
                 "FhirServerSolution": "[parameters('solutionType')]"
