@@ -108,6 +108,9 @@
             "apiVersion": "2016-12-01",
             "location": "[parameters('location')]",
             "kind": "Storage",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "sku": {
                 "name": "[parameters('storageAccountType')]"
             },
@@ -142,7 +145,8 @@
             "type": "Microsoft.insights/components",
             "location": "East US",
             "tags": {
-                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('applicationInsightsName'))]": "Resource"
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('applicationInsightsName'))]": "Resource",
+                "FhirServerSolution": "[parameters('solutionType')]"
             },
             "properties": {
                 "ApplicationId": "[variables('applicationInsightsName')]",
@@ -153,7 +157,13 @@
             "name": "[parameters('appName')]",
             "type": "Microsoft.ContainerInstance/containerGroups",
             "apiVersion": "2018-02-01-preview",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "location": "[resourceGroup().location]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "dependsOn": [
                 "[resourceId('Microsoft.insights/components', variables('applicationInsightsName'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"

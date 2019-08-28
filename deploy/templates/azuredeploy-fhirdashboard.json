@@ -171,6 +171,9 @@
                         {
                             "apiVersion": "2015-08-01",
                             "name": "[variables('appServicePlanName')]",
+                            "tags": {
+                                "FhirServerSolution": "[parameters('solutionType')]"
+                            },                
                             "type": "Microsoft.Web/serverfarms",
                             "location": "[resourceGroup().location]",
                             "sku": {
@@ -187,6 +190,9 @@
         {
             "apiVersion": "2015-08-01",
             "type": "Microsoft.Web/sites",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "name": "[variables('siteName')]",
             "location": "[resourceGroup().location]",
             "identity": {

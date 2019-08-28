@@ -266,6 +266,9 @@
             "apiVersion": "2015-08-01",
             "name": "[variables('appServicePlanName')]",
             "type": "Microsoft.Web/serverfarms",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
+            },
             "location": "[resourceGroup().location]",
             "sku": {
                 "name": "[parameters('appServicePlanSku')]"
