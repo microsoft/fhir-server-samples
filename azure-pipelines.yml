@@ -4,8 +4,6 @@
 variables:
     buildConfiguration: "Release"
 stages:
-    - stage: Build
-      jobs:
     - stage: Deploy
       jobs:
           - job: DeployAndTest
