@@ -55,9 +55,9 @@ stages:
                                $remoteBranch = "master"
                            }
                            
-                           Write-Host "##vso[task.setvariable variable=dashboardWebAppName]${environmentName}js"
+                           Write-Host "##vso[task.setvariable variable=dashboardWebAppName]${environmentName}dash"
                            
-                           Write-Host "##vso[task.setvariable variable=DashboardUrl]https://${environmentName}js.azurewebsites.net"
+                           Write-Host "##vso[task.setvariable variable=DashboardUrl]https://${environmentName}dash.azurewebsites.net"
                            Write-Host "##vso[task.setvariable variable=FhirServerUrl]https://${environmentName}.azurehealthcareapis.com"
                            
                            cd $(Build.SourcesDirectory)/deploy/scripts/

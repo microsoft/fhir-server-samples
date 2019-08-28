@@ -89,13 +89,6 @@
                 "description": "The password for the sql admin user if using SQL server."
             }
         },
-        "fhirDashboardTemplateUrl": {
-            "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard.json",
-            "metadata": {
-                "description": "URL for FHIR dashboard template"
-            }
-        },
         "fhirDashboardJSTemplateUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/azuredeploy-dashboard-js.json",
@@ -214,8 +207,7 @@
         "fhirServerUrlSuffix": "[if(parameters('usePaaS'),'.azurehealthcareapis.com', variables('webAppSuffix'))]",
         "fhirServiceUrl": "[concat('https://', variables('fhirServiceName'), variables('fhirServerUrlSuffix'))]",
         "aadFhirServerAudience": "[if(empty(parameters('aadFhirServerAudience')), variables('fhirServiceUrl'), parameters('aadFhirServerAudience'))]",
-        "fhirDashboardName": "[concat(variables('environmentName'),'dash')]",
-        "fhirDashboardJSName": "[concat(variables('environmentName'),'js')]",
+        "fhirDashboardJSName": "[concat(variables('environmentName'),'dash')]",
         "growthChartName": "[concat(variables('environmentName'),'growth')]",
         "medicationsName": "[concat(variables('environmentName'),'meds')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
@@ -386,60 +378,6 @@
                     },
                     "repositoryBranch": {
                         "value": "[parameters('fhirDashboardRepositoryBranch')]"
-                    }
-                },
-                "mode": "incremental"
-            }
-        },
-        {
-            "name": "[concat(variables('fhirDashboardName'),'-deploy')]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2019-08-01",
-            "condition": "[equals(parameters('fhirVersion'),'Stu3')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
-            ],
-            "properties": {
-                "templateLink": {
-                    "uri": "[parameters('fhirDashboardTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "siteName": {
-                        "value": "[variables('fhirDashboardName')]"
-                    },
-                    "appServicePlanName": {
-                        "value": "[variables('appServicePlanName')]"
-                    },
-                    "appServicePlanResourceGroup": {
-                        "value": "[resourceGroup().name]"
-                    },
-                    "aadAuthority": {
-                        "value": "[parameters('aadAuthority')]"
-                    },
-                    "aadClientId": {
-                        "value": "[parameters('aadDashboardClientId')]"
-                    },
-                    "aadClientSecret": {
-                        "value": "[parameters('aadDashboardClientSecret')]"
-                    },
-                    "fhirServerUrl": {
-                        "value": "[variables('fhirServiceUrl')]"
-                    },
-                    "repositoryUrl": {
-                        "value": "[parameters('fhirDashboardRepositoryUrl')]"
-                    },
-                    "repositoryBranch": {
-                        "value": "[parameters('fhirDashboardRepositoryBranch')]"
-                    },
-                    "deploySourceCode": {
-                        "value": "[parameters('deployDashboardSourceCode')]"
-                    },
-                    "growthChartAppLaunchUrl": {
-                        "value": "[concat('https://', variables('growthChartName'), variables('webAppSuffix'), '/launch.html')]"
-                    },
-                    "medicationsAppLaunchUrl": {
-                        "value": "[concat('https://', variables('medicationsName'), variables('webAppSuffix'), '/launch.html')]"
                     }
                 },
                 "mode": "incremental"
