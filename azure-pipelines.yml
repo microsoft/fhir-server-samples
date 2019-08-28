@@ -35,3 +35,17 @@ stages:
            pathToPublish: '$(build.binariesdirectory)/IntegrationTests'
            artifactName: 'IntegrationTests'
            artifactType: 'container'
+- stage: Deploy
+  jobs:
+    - job: DeployAndTest
+      pool:
+        vmImage: 'vs2017-win2016'
+      steps:
+      - task: DotNetCoreInstaller@0
+        displayName: 'Use .NET Core sdk 2.2'
+        inputs:
+          version: 2.2.101
+      - powershell: |
+          Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
+          Install-Module -Name AzureAD -Force -Verbose -Scope CurrentUser
+        displayName: 'Install AzureAD'
