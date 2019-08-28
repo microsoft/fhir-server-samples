@@ -94,9 +94,6 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('storageAccountName')]",
-            "tags": {
-                "FhirServerSolution": "[parameters('solutionType')]"
-            },
             "apiVersion": "2017-10-01",
             "location": "[resourceGroup().location]",
             "sku": {
@@ -108,9 +105,6 @@
         {
             "name": "[variables('adfName')]",
             "type": "Microsoft.DataFactory/factories",
-            "tags": {
-                "FhirServerSolution": "[parameters('solutionType')]"
-            },
             "apiVersion": "2018-06-01",
             "location": "[resourceGroup().location]",
             "identity": {

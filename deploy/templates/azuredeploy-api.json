@@ -48,12 +48,8 @@
             "type": "Microsoft.HealthcareApis/services",
             "kind": "fhir",
             "name": "[parameters('serviceName')]",
-            "tags": {
-                "FhirServerSolution": "[parameters('solutionType')]"
-            },
             "apiVersion": "2018-08-20-preview",
             "location": "[resourceGroup().location]",
-            "tags": {},
             "properties": {
                 "accessPolicies": "[parameters('accessPolicies')]",
                 "authenticationConfiguration": {
