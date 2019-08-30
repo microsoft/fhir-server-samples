@@ -90,7 +90,8 @@ if ($azureRmContext.Account.Type -eq "User") {
 
     #If this is guest account, we will try a search instead
     if (!$currentUser) {
-        $currentUser = Get-AzureRmADUser -SearchString $azureRmContext.Account.Id
+        $tmpUserName = $azureRmContext.Account.Id.Replace("@", "_")
+        $currentUser = Get-AzureADUser -Filter "startswith(UserPrincipalName, '${tmpUserName}')"
     }
 
     $currentObjectId = $currentUser.Id
