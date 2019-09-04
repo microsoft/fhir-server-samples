@@ -94,9 +94,10 @@ if ($azureRmContext.Account.Type -eq "User") {
         # myuser_outlook.com#EXT#@mytenant.onmicrosoft.com for a user with username myuser@outlook.com
         $tmpUserName = $azureRmContext.Account.Id.Replace("@", "_")
         $currentUser = Get-AzureADUser -Filter "startswith(UserPrincipalName, '${tmpUserName}')"
+        $currentObjectId = $currentUser.ObjectId
+    } else {
+        $currentObjectId = $currentUser.Id
     }
-
-    $currentObjectId = $currentUser.Id
 
     if (!$currentObjectId) {
         throw "Failed to find objectId for signed in user"
