@@ -19,7 +19,5 @@
     <!-- Use back slash \ to indicate folder path e.g. C:\Temp\Git\ -->
     <ExcludeFolder>.gitignore</ExcludeFolder>
     <ExcludeFolder>GeoPol.xml</ExcludeFolder>
-    <ExcludeFolder>src\FhirDashboard\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js</ExcludeFolder>
-    <ExcludeFolder>src\FhirDashboard\wwwroot\lib\jquery-validation\dist\additional-methods.js</ExcludeFolder>
   </Component>
 </GeoPol_Folders>
