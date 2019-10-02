@@ -23,6 +23,9 @@ param
     [string]$EnvironmentLocation = "westus",
 
     [Parameter(Mandatory = $false)]
+    [string]$FhirApiLocation = "westus2",
+
+    [Parameter(Mandatory = $false)]
     [string]$SourceRepository = "https://github.com/Microsoft/fhir-server-samples",
 
     [Parameter(Mandatory = $false)]
@@ -161,7 +164,7 @@ if ([string]::IsNullOrEmpty($SqlAdminPassword))
 }
 
 # Deploy the template
-New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -sqlAdminPassword $SqlAdminPassword -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
+New-AzureRmResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -fhirApiLocation $FhirApiLocation -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -sqlAdminPassword $SqlAdminPassword -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
 
 Write-Host "Warming up site..."
 Invoke-WebRequest -Uri "${fhirServerUrl}/metadata" | Out-Null

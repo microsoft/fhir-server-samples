@@ -98,7 +98,7 @@
         },
         "fhirApiLocation": {
             "type": "string",
-            "allowedValues": [ "westus2", "northcentralus", "ukwest"],
+            "allowedValues": [ "westus2", "northcentralus", "ukwest", "uksouth", "southeastasia", "australiaeast", "westeurope" ],
             "defaultValue": "westus2",
             "metadata": {
                 "description": "Location of Azure API for FHIR"
