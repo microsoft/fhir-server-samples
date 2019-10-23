@@ -40,7 +40,7 @@ stages:
                            
                           if ($env:BUILD_SOURCEBRANCHNAME -eq "merge")
                           {
-                               # branch: /refs/pull/<PR>/merge
+                               # branch: /refs/pull/<PR>/merge 
                                $pr = $env:BUILD_SOURCEBRANCH.split('/')[2]
                                $environmentName = "fhirsamp-$pr"
                                $pulls = Invoke-WebRequest 'https://api.github.com/repos/Microsoft/fhir-server-samples/pulls' | ConvertFrom-Json
