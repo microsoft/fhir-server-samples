@@ -15,27 +15,27 @@ param
 
 Set-StrictMode -Version Latest
 
-# Get current AzureRm context
+# Get current Az context
 try {
-    $azureRmContext = Get-AzureRmContext
+    $azContext = Get-AzContext
 } 
 catch {
-    throw "Please log in to Azure RM with Login-AzureRmAccount cmdlet before proceeding"
+    throw "Please log in to Azure RM with Login-AzAccount cmdlet before proceeding"
 }
 
 $dashboardUrl = "https://${EnvironmentName}dash.azurewebsites.net"
 $growthChartAppLaunchUrl = "https://${EnvironmentName}growth.azurewebsites.net/launch.html"
 $medicationsAppLaunchUrl = "https://${EnvironmentName}meds.azurewebsites.net/launch.html"
 $fhirServerUrl = "https://${EnvironmentName}srvr.azurewebsites.net"
-$dashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-upn").SecretValueText
-$dashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password").SecretValueText
-$confidentialClientId  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-id").SecretValueText
-$confidentialClientSecret  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-secret").SecretValueText
-$serviceClientId  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-id").SecretValueText
-$serviceClientSecret  = (Get-AzureKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-secret").SecretValueText
+$dashboardUserUpn  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-upn").SecretValueText
+$dashboardUserPassword  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password").SecretValueText
+$confidentialClientId  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-id").SecretValueText
+$confidentialClientSecret  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-secret").SecretValueText
+$serviceClientId  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-id").SecretValueText
+$serviceClientSecret  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-secret").SecretValueText
 
 $storageAccountName = ("${EnvironmentName}dashsa").Replace('-','');
-$storageAccountKey = (Get-AzureRmStorageAccountKey -Name $storageAccountName -ResourceGroupName $EnvironmentName)[0].Value
+$storageAccountKey = (Get-AzStorageAccountKey -Name $storageAccountName -ResourceGroupName $EnvironmentName)[0].Value
 $storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}"
 
 $env:StorageAccountConnectionString = $storageAccountConnectionString

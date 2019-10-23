@@ -18,7 +18,7 @@ stages:
                       Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
                       Install-Module -Name AzureAD -Force -Verbose -Scope CurrentUser
                   displayName: "Install AzureAD"
-                - task: AzureKeyVault@1
+                - task: AzKeyVault@1
                   displayName: "Azure Key Vault: fhirserversamples-tenant"
                   inputs:
                       azureSubscription: "Microsoft Health Open Source Subscription"
@@ -65,12 +65,12 @@ stages:
                            Write-Host "Remote branch: ${remoteBranch}"
                            ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -DeployAdf $true -UsePaaS $true -SourceRepository "${remoteRepo}" -SourceRevision "${remoteBranch}"
  
-                           $DashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
-                           $DashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
+                           $DashboardUserUpn  = (Get-AzKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
+                           $DashboardUserPassword  = (Get-AzKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
                            Write-Host "##vso[task.setvariable variable=DashboardUserUpn]$DashboardUserUpn"
                            Write-Host "##vso[task.setvariable variable=DashboardUserPassword]$DashboardUserPassword"
                            $storageAccountName = ("${environmentName}impsa").Replace('-','');
-                           $storageAccountKey = (Get-AzureRmStorageAccountKey -Name $storageAccountName -ResourceGroupName $environmentName)[0].Value
+                           $storageAccountKey = (Get-AzStorageAccountKey -Name $storageAccountName -ResourceGroupName $environmentName)[0].Value
                            $storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}"
                            Write-Host "##vso[task.setvariable variable=StorageAccountConnectionString]$storageAccountConnectionString"
                            

@@ -49,12 +49,12 @@ catch {
     throw "Please log in to Azure AD with Connect-AzureAD cmdlet before proceeding"
 }
 
-# Get current AzureRm context
+# Get current Az context
 try {
-    $azureRmContext = Get-AzureRmContext
+    $azContext = Get-AzContext
 } 
 catch {
-    throw "Please log in to Azure RM with Login-AzureRmAccount cmdlet before proceeding"
+    throw "Please log in to Azure RM with Login-AzAccount cmdlet before proceeding"
 }
 
 # Ensure that we have the FhirServer PS Module loaded
@@ -68,27 +68,27 @@ if (Get-Module -Name FhirServer) {
     Import-Module .\fhir-server\samples\scripts\PowerShell\FhirServer\FhirServer.psd1
 }
 
-$keyVault = Get-AzureRmKeyVault -VaultName $KeyVaultName
+$keyVault = Get-AzKeyVault -VaultName $KeyVaultName
 
 if (!$keyVault) {
     Write-Host "Creating keyvault with the name $KeyVaultName"
-    $resourceGroup = Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
+    $resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (!$resourceGroup) {
-        New-AzureRmResourceGroup -Name $ResourceGroupName -Location $EnvironmentLocation | Out-Null
+        New-AzResourceGroup -Name $ResourceGroupName -Location $EnvironmentLocation | Out-Null
     }
-    New-AzureRmKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroupName -Location $EnvironmentLocation | Out-Null
+    New-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroupName -Location $EnvironmentLocation | Out-Null
 }
 
-if ($azureRmContext.Account.Type -eq "User") {
-    Write-Host "Current context is user: $($azureRmContext.Account.Id)"
+if ($azContext.Account.Type -eq "User") {
+    Write-Host "Current context is user: $($azContext.Account.Id)"
 
-    $currentUser = Get-AzureRmADUser -UserPrincipalName $azureRmContext.Account.Id
+    $currentUser = Get-AzADUser -UserPrincipalName $azContext.Account.Id
 
     #If this is guest account, we will try a search instead
     if (!$currentUser) {
         # External user accounts have UserPrincipalNames of the form:
         # myuser_outlook.com#EXT#@mytenant.onmicrosoft.com for a user with username myuser@outlook.com
-        $tmpUserName = $azureRmContext.Account.Id.Replace("@", "_")
+        $tmpUserName = $azContext.Account.Id.Replace("@", "_")
         $currentUser = Get-AzureADUser -Filter "startswith(UserPrincipalName, '${tmpUserName}')"
         $currentObjectId = $currentUser.ObjectId
     } else {
@@ -99,18 +99,18 @@ if ($azureRmContext.Account.Type -eq "User") {
         throw "Failed to find objectId for signed in user"
     }
 }
-elseif ($azureRmContext.Account.Type -eq "ServicePrincipal") {
-    Write-Host "Current context is service principal: $($azureRmContext.Account.Id)"
-    $currentObjectId = (Get-AzureRmADServicePrincipal -ServicePrincipalName $azureRmContext.Account.Id).Id
+elseif ($azContext.Account.Type -eq "ServicePrincipal") {
+    Write-Host "Current context is service principal: $($azContext.Account.Id)"
+    $currentObjectId = (Get-AzADServicePrincipal -ServicePrincipalName $azContext.Account.Id).Id
 }
 else {
-    Write-Host "Current context is account of type '$($azureRmContext.Account.Type)' with id of '$($azureRmContext.Account.Id)"
+    Write-Host "Current context is account of type '$($azContext.Account.Type)' with id of '$($azContext.Account.Id)"
     throw "Running as an unsupported account type. Please use either a 'User' or 'Service Principal' to run this command"
 }
 
 if ($currentObjectId) {
     Write-Host "Adding permission to keyvault for $currentObjectId"
-    Set-AzureRmKeyVaultAccessPolicy -VaultName $KeyVaultName -ObjectId $currentObjectId -PermissionsToSecrets Get, Set, List
+    Set-AzKeyVaultAccessPolicy -VaultName $KeyVaultName -ObjectId $currentObjectId -PermissionsToSecrets Get, Set, List
 }
 
 Write-Host "Ensuring API application exists"
@@ -174,8 +174,8 @@ else {
 }
 
 $upnSecureString = ConvertTo-SecureString $userUpn -AsPlainText -Force
-Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-upn" -SecretValue $upnSecureString | Out-Null   
-Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-password" -SecretValue $passwordSecureString | Out-Null   
+Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-upn" -SecretValue $upnSecureString | Out-Null   
+Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$userId-password" -SecretValue $passwordSecureString | Out-Null   
 Set-FhirServerUserAppRoleAssignments -ApiAppId $application.AppId -UserPrincipalName $userUpn -AppRoles "admin"
 
 $dashboardJSName = "${EnvironmentName}dash"
@@ -213,8 +213,8 @@ if (!$confidentialClient) {
     $secretSecureString = ConvertTo-SecureString $newPassword.Value -AsPlainText -Force
 }
 $secretConfidentialClientId = ConvertTo-SecureString $confidentialClient.AppId -AsPlainText -Force
-Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-id" -SecretValue $secretConfidentialClientId| Out-Null
-Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-secret" -SecretValue $secretSecureString | Out-Null
+Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-id" -SecretValue $secretConfidentialClientId| Out-Null
+Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-secret" -SecretValue $secretSecureString | Out-Null
 
 # Create service client
 $serviceClientAppName = "${EnvironmentName}-service-client"
@@ -231,8 +231,8 @@ if (!$serviceClient) {
 Set-FhirServerClientAppRoleAssignments -AppId $serviceClient.AppId -ApiAppId $application.AppId -AppRoles admin
 
 $secretServiceClientId = ConvertTo-SecureString $serviceClient.AppId -AsPlainText -Force
-Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-id" -SecretValue $secretServiceClientId| Out-Null
-Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-secret" -SecretValue $secretSecureString | Out-Null
+Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-id" -SecretValue $secretServiceClientId| Out-Null
+Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-secret" -SecretValue $secretSecureString | Out-Null
 
 
 # Create public (SMART on FHIR) client
@@ -241,7 +241,7 @@ $publicClient = Get-AzureAdApplication -Filter "DisplayName eq '$publicClientApp
 if (!$publicClient) {
     $publicClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $publicClientAppName -PublicClient:$true
     $secretPublicClientId = ConvertTo-SecureString $publicClient.AppId -AsPlainText -Force
-    Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name "$publicClientAppName-id" -SecretValue $secretPublicClientId| Out-Null
+    Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$publicClientAppName-id" -SecretValue $secretPublicClientId| Out-Null
 } 
 
 Set-FhirServerClientAppRoleAssignments -AppId $publicClient.AppId -ApiAppId $application.AppId -AppRoles admin
