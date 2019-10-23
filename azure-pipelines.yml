@@ -18,7 +18,7 @@ stages:
                       Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
                       Install-Module -Name AzureAD -Force -Verbose -Scope CurrentUser
                   displayName: "Install AzureAD"
-                - task: AzKeyVault@1
+                - task: AzureKeyVault@1
                   displayName: "Azure Key Vault: fhirserversamples-tenant"
                   inputs:
                       azureSubscription: "Microsoft Health Open Source Subscription"
