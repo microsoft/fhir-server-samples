@@ -23,7 +23,7 @@ stages:
                   inputs:
                       azureSubscription: "Microsoft Health Open Source Subscription"
                       KeyVaultName: "fhirserversamples-tenant"
-                - task: AzurePowerShell@3
+                - task: AzurePowerShell@4
                   displayName: "Deploy to Azure"
                   inputs:
                       preferredAzurePowerShellVersion: 5.1.1
