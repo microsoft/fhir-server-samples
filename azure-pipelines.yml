@@ -26,7 +26,7 @@ stages:
                 - task: AzurePowerShell@4
                   displayName: "Deploy to Azure"
                   inputs:
-                      preferredAzurePowerShellVersion: 2.4.0
+                      azurePowerShellVersion: latestVersion
                       azureSubscription: "Microsoft Health Open Source Subscription"
                       ScriptType: InlineScript
                       Inline: |
