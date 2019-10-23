@@ -23,10 +23,10 @@ stages:
                   inputs:
                       azureSubscription: "Microsoft Health Open Source Subscription"
                       KeyVaultName: "fhirserversamples-tenant"
-                - task: AzurePowerShell@3
+                - task: AzurePowerShell@4
                   displayName: "Deploy to Azure"
                   inputs:
-                      preferredAzurePowerShellVersion: 5.1.1
+                      azurePowerShellVersion: latestVersion
                       azureSubscription: "Microsoft Health Open Source Subscription"
                       ScriptType: InlineScript
                       Inline: |
@@ -40,7 +40,7 @@ stages:
                            
                           if ($env:BUILD_SOURCEBRANCHNAME -eq "merge")
                           {
-                               # branch: /refs/pull/<PR>/merge
+                               # branch: /refs/pull/<PR>/merge 
                                $pr = $env:BUILD_SOURCEBRANCH.split('/')[2]
                                $environmentName = "fhirsamp-$pr"
                                $pulls = Invoke-WebRequest 'https://api.github.com/repos/Microsoft/fhir-server-samples/pulls' | ConvertFrom-Json
@@ -65,12 +65,12 @@ stages:
                            Write-Host "Remote branch: ${remoteBranch}"
                            ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -DeployAdf $true -UsePaaS $true -SourceRepository "${remoteRepo}" -SourceRevision "${remoteBranch}"
  
-                           $DashboardUserUpn  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
-                           $DashboardUserPassword  = (Get-AzureKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
+                           $DashboardUserUpn  = (Get-AzKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
+                           $DashboardUserPassword  = (Get-AzKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText
                            Write-Host "##vso[task.setvariable variable=DashboardUserUpn]$DashboardUserUpn"
                            Write-Host "##vso[task.setvariable variable=DashboardUserPassword]$DashboardUserPassword"
                            $storageAccountName = ("${environmentName}impsa").Replace('-','');
-                           $storageAccountKey = (Get-AzureRmStorageAccountKey -Name $storageAccountName -ResourceGroupName $environmentName)[0].Value
+                           $storageAccountKey = (Get-AzStorageAccountKey -Name $storageAccountName -ResourceGroupName $environmentName)[0].Value
                            $storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}"
                            Write-Host "##vso[task.setvariable variable=StorageAccountConnectionString]$storageAccountConnectionString"
                            
@@ -92,10 +92,10 @@ stages:
                       cd $(Build.SourcesDirectory)/test/FhirDashboard.Tests.E2E
                       dotnet test
                   displayName: "PowerShell Script"
-                - task: AzurePowerShell@3
+                - task: AzurePowerShell@4
                   displayName: "Delete Environment"
                   inputs:
-                      preferredAzurePowerShellVersion: 5.1.1
+                      azurePowerShellVersion: latestVersion
                       azureSubscription: "Microsoft Health Open Source Subscription"
                       ScriptType: InlineScript
                       Inline: |

@@ -18,10 +18,10 @@ You can decide which resources to export using the `adfExportResourceTypes` temp
 
 # Prerequisites
 
-Before deploying the samples scenario make sure that you have `AzureRm` and `AzureAd` powershell modules installed:
+Before deploying the samples scenario make sure that you have `Az` and `AzureAd` powershell modules installed:
 
 ```PowerShell
-Install-Module AzureRm
+Install-Module Az
 Install-Module AzureAd
 ```
 
@@ -37,7 +37,7 @@ cd fhir-server-samples/deploy/scripts
 Log into your Azure subscription:
 
 ```PowerShell
-Login-AzureRmAccount -TenantId <AAD Tenant>
+Login-AzAccount
 ```
 
 Connect to Azure AD with:
@@ -45,6 +45,8 @@ Connect to Azure AD with:
 ```PowerShell
 Connect-AzureAd -TenantDomain <AAD TenantDomain>
 ```
+
+**NOTE** The connection to Azure AD can be made using a different tenant domain than the one tied to your Azure subscription. If you don't have privileges to create app registrations, users, etc. in your Azure AD tenant, you can [create a new one](https://docs.microsoft.com/azure/active-directory/develop/quickstart-create-new-tenant), which will just be used for demo identities, etc.
 
 Then deploy the scenario with the Open Source FHIR Server for Azure:
 
