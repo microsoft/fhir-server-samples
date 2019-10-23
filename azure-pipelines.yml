@@ -92,7 +92,8 @@ stages:
                       cd $(Build.SourcesDirectory)/test/FhirDashboard.Tests.E2E
                       dotnet test
                   displayName: "PowerShell Script"
-                - task: AzurePowerShell@3
+                - task: AzurePowerShell@4
+                  azurePowerShellVersion: latestVersion
                   displayName: "Delete Environment"
                   inputs:
                       preferredAzurePowerShellVersion: 5.1.1
