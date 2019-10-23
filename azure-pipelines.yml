@@ -93,10 +93,9 @@ stages:
                       dotnet test
                   displayName: "PowerShell Script"
                 - task: AzurePowerShell@4
-                  azurePowerShellVersion: latestVersion
                   displayName: "Delete Environment"
                   inputs:
-                      preferredAzurePowerShellVersion: 5.1.1
+                      azurePowerShellVersion: latestVersion
                       azureSubscription: "Microsoft Health Open Source Subscription"
                       ScriptType: InlineScript
                       Inline: |
