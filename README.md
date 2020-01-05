@@ -28,6 +28,8 @@ Install-Module AzureAd
 # Deployment
 
 To deploy the sample scenario, first clone this git repo and find the deployment scripts folder:
+**NOTE** You must use Windows Powershell, not Powershell Core! 
+**NOTE** AzureRM will cause a conflict in some cases. You can use ```Powershell Uninstall-AzureRM``` cmdlet to eliminate possible conflicts with differing Azure modules. 
 
 ```PowerShell
 git clone https://github.com/Microsoft/fhir-server-samples
@@ -60,7 +62,7 @@ or the managed Azure API for FHIR:
 .\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true
 ```
 
-and to include the ADF pipeline:
+and to include the ADF pipeline if using the PaaS Impl.:
 
 ```PowerShell
 .\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true -DeployAdf $true
