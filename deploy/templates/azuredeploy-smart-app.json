@@ -157,6 +157,7 @@
                         "[concat('Microsoft.Web/Sites/', variables('siteName'))]"
                     ],
                     "properties": {
+                        "WEBSITE_NODE_DEFAULT_VERSION": "8.10.0",
                         "PROJECT": "[parameters('repositoryProjectPath')]",
                         "OriginalClientId": "[variables('originalClientId')]",
                         "NewClientId": "[parameters('clientId')]",
