@@ -8,12 +8,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.WindowsAzure.Storage;
@@ -37,13 +41,13 @@ namespace Microsoft.Health
             log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {myBlob.Length} Bytes");
 
             var streamReader = new StreamReader(myBlob);
-            var fhirString = streamReader.ReadToEndAsync();
+            var fhirString = await streamReader.ReadToEndAsync();
             
             JObject bundle;
             JArray entries;
             try
             {
-                bundle = JObject.Parse(await fhirString);
+                bundle = JObject.Parse(fhirString);
             }
             catch (JsonReaderException)
             {
@@ -91,7 +95,6 @@ namespace Microsoft.Health
                 string clientId = System.Environment.GetEnvironmentVariable("ClientId");
                 string clientSecret = System.Environment.GetEnvironmentVariable("ClientSecret");
                 Uri fhirServerUrl = new Uri(System.Environment.GetEnvironmentVariable("FhirServerUrl"));
-                httpClient.BaseAddress = fhirServerUrl;
 
                 int maxDegreeOfParallelism;
                 if (!int.TryParse(System.Environment.GetEnvironmentVariable("MaxDegreeOfParallelism"), out maxDegreeOfParallelism))
@@ -124,7 +127,7 @@ namespace Microsoft.Health
                     {
                         authContext = new AuthenticationContext(authority);
                         clientCredential = new ClientCredential(clientId, clientSecret);
-                        authResult = await authContext.AcquireTokenAsync(audience, clientCredential);
+                        authResult = authContext.AcquireTokenAsync(audience, clientCredential).Result;
                         bearerToken = authResult.AccessToken;
                     }
                 }
@@ -134,18 +137,15 @@ namespace Microsoft.Health
                     throw;
                 }
 
-                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {bearerToken}");
-
-                var randomGenerator = new Random();
-
                 //var entriesNum = Enumerable.Range(0,entries.Count-1);
                 var actionBlock = new ActionBlock<int>(async i =>
                     {
                         var entry_json = ((JObject)entries[i])["resource"].ToString();
                         string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
                         string id = (string)((JObject)entries[i])["resource"]["id"];
+                        var randomGenerator = new Random();
 
-                        await Task.Delay(TimeSpan.FromMilliseconds(randomGenerator.Next(50)));
+                        Thread.Sleep(TimeSpan.FromMilliseconds(randomGenerator.Next(50)));
 
                         if (string.IsNullOrEmpty(entry_json))
                         {
@@ -174,9 +174,9 @@ namespace Microsoft.Health
                             .HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
                             .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
                             {
-                                entryStopWatch.Stop();
                                 log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
 
+                                entryStopWatch.Stop();
                                 telemetryClient.TrackEvent("Failed resource request",
                                     new Dictionary<string,string>{
                                         {"statusCode", result.Result.StatusCode.ToString()},
@@ -188,20 +188,21 @@ namespace Microsoft.Health
                                     }
                                 );
                             })
-                            .ExecuteAsync(async () => {
+                            .ExecuteAsync(() => {
                                 entryStopWatch.Start();                    
                                 var message = string.IsNullOrEmpty(id)
-                                    ? new HttpRequestMessage(HttpMethod.Post, new Uri($"/{resource_type}"))
-                                    : new HttpRequestMessage(HttpMethod.Put, new Uri($"/{resource_type}/{id}"));
+                                    ? new HttpRequestMessage(HttpMethod.Post, new Uri(fhirServerUrl, $"/{resource_type}"))
+                                    : new HttpRequestMessage(HttpMethod.Put, new Uri(fhirServerUrl, $"/{resource_type}/{id}"));
 
                                 message.Content = content;
-                                return await httpClient.SendAsync(message);
+                                message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+                                return httpClient.SendAsync(message);
                             });
 
                         if (!uploadResult.IsSuccessStatusCode)
                         {
-                            Task<string> resultContent = uploadResult.Content.ReadAsStringAsync();
-                            log.LogError(await resultContent);
+                            string resultContent = await uploadResult.Content.ReadAsStringAsync();
+                            log.LogError(resultContent);
 
                             // Throwing a generic exception here. This will leave the blob in storage and retry.
                             throw new Exception($"Unable to upload to server. Error code {uploadResult.StatusCode}");
