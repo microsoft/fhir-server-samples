@@ -4,15 +4,16 @@
 // -------------------------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.WindowsAzure.Storage;
@@ -30,16 +31,19 @@ namespace Microsoft.Health
         [FunctionName("FhirBundleBlobTrigger")]
         public static async Task Run([BlobTrigger("fhirimport/{name}", Connection = "AzureWebJobsStorage")]Stream myBlob, string name, ILogger log)
         {
+            var newConfig = TelemetryConfiguration.CreateDefault();
+            var telemetryClient = new TelemetryClient(newConfig);
+
             log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {myBlob.Length} Bytes");
 
             var streamReader = new StreamReader(myBlob);
-            var fhirString = await streamReader.ReadToEndAsync();
+            var fhirString = streamReader.ReadToEndAsync();
             
             JObject bundle;
             JArray entries;
             try
             {
-                bundle = JObject.Parse(fhirString);
+                bundle = JObject.Parse(await fhirString);
             }
             catch (JsonReaderException)
             {
@@ -61,6 +65,10 @@ namespace Microsoft.Health
                 return;
             }
 
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            int entriesCount = 0;
+            bool handled = default;
             try
             {
                 entries = (JArray)bundle["entry"];
@@ -75,11 +83,15 @@ namespace Microsoft.Health
                 ClientCredential clientCredential;
                 AuthenticationResult authResult;
 
+                string bearerToken;
+                entriesCount = entries.Count;
+
                 string authority = System.Environment.GetEnvironmentVariable("Authority");
                 string audience = System.Environment.GetEnvironmentVariable("Audience");
                 string clientId = System.Environment.GetEnvironmentVariable("ClientId");
                 string clientSecret = System.Environment.GetEnvironmentVariable("ClientSecret");
                 Uri fhirServerUrl = new Uri(System.Environment.GetEnvironmentVariable("FhirServerUrl"));
+                httpClient.BaseAddress = fhirServerUrl;
 
                 int maxDegreeOfParallelism;
                 if (!int.TryParse(System.Environment.GetEnvironmentVariable("MaxDegreeOfParallelism"), out maxDegreeOfParallelism))
@@ -89,9 +101,32 @@ namespace Microsoft.Health
 
                 try
                 {
-                    authContext = new AuthenticationContext(authority);
-                    clientCredential = new ClientCredential(clientId, clientSecret);
-                    authResult = authContext.AcquireTokenAsync(audience, clientCredential).Result;
+                    if(authority.Contains("connect/token"))
+                    {
+                        var formEntries = new List<KeyValuePair<string, string>>
+                        {
+                            new KeyValuePair<string, string>("client_id", clientId),
+                            new KeyValuePair<string, string>("client_secret", clientSecret),
+                            new KeyValuePair<string, string>("grant_type", "client_credentials"),
+                            new KeyValuePair<string, string>("scope", audience),
+                            new KeyValuePair<string, string>("resource", audience),
+                        };
+                        var formContent = new FormUrlEncodedContent(formEntries);
+
+                        var httpClient = new HttpClient();
+                        HttpResponseMessage tokenResponse = await httpClient.PostAsync(authority, formContent);
+
+                        var tokenJson = JObject.Parse(await tokenResponse.Content.ReadAsStringAsync());
+                        bearerToken = tokenJson["access_token"].Value<string>();
+
+                    }
+                    else
+                    {
+                        authContext = new AuthenticationContext(authority);
+                        clientCredential = new ClientCredential(clientId, clientSecret);
+                        authResult = await authContext.AcquireTokenAsync(audience, clientCredential);
+                        bearerToken = authResult.AccessToken;
+                    }
                 }
                 catch (Exception ee)
                 {
@@ -99,68 +134,94 @@ namespace Microsoft.Health
                     throw;
                 }
 
+                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {bearerToken}");
+
+                var randomGenerator = new Random();
+
                 //var entriesNum = Enumerable.Range(0,entries.Count-1);
                 var actionBlock = new ActionBlock<int>(async i =>
-                {
-                    var entry_json = ((JObject)entries[i])["resource"].ToString();
-                    string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
-                    string id = (string)((JObject)entries[i])["resource"]["id"];
-                    var randomGenerator = new Random();
-
-                    Thread.Sleep(TimeSpan.FromMilliseconds(randomGenerator.Next(50)));
-
-                    if (string.IsNullOrEmpty(entry_json))
                     {
-                        log.LogError("No 'resource' section found in JSON document");
-                        throw new FhirImportException("'resource' not found or empty");
-                    }
+                        var entry_json = ((JObject)entries[i])["resource"].ToString();
+                        string resource_type = (string)((JObject)entries[i])["resource"]["resourceType"];
+                        string id = (string)((JObject)entries[i])["resource"]["id"];
 
-                    if (string.IsNullOrEmpty(resource_type))
-                    {
-                        log.LogError("No resource_type found.");
-                        throw new FhirImportException("No resource_type in resource.");
-                    }
+                        await Task.Delay(TimeSpan.FromMilliseconds(randomGenerator.Next(50)));
 
-                    StringContent content = new StringContent(entry_json, Encoding.UTF8, "application/json");
-                    var pollyDelays =
-                            new[]
-                            {
-                                TimeSpan.FromMilliseconds(2000 + randomGenerator.Next(50)),
-                                TimeSpan.FromMilliseconds(3000 + randomGenerator.Next(50)),
-                                TimeSpan.FromMilliseconds(5000 + randomGenerator.Next(50)),
-                                TimeSpan.FromMilliseconds(8000 + randomGenerator.Next(50))
-                            };
-
-
-                    HttpResponseMessage uploadResult = await Policy
-                        .HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
-                        .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
+                        if (string.IsNullOrEmpty(entry_json))
                         {
-                            log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
-                        })
-                        .ExecuteAsync(() => {                            
-                            var message = string.IsNullOrEmpty(id)
-                                ? new HttpRequestMessage(HttpMethod.Post, new Uri(fhirServerUrl, $"/{resource_type}"))
-                                : new HttpRequestMessage(HttpMethod.Put, new Uri(fhirServerUrl, $"/{resource_type}/{id}"));
+                            log.LogError("No 'resource' section found in JSON document");
+                            throw new FhirImportException("'resource' not found or empty");
+                        }
 
-                            message.Content = content;
-                            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
-                            return httpClient.SendAsync(message);
-                        });
+                        if (string.IsNullOrEmpty(resource_type))
+                        {
+                            log.LogError("No resource_type found.");
+                            throw new FhirImportException("No resource_type in resource.");
+                        }
 
-                    if (!uploadResult.IsSuccessStatusCode)
-                    {
-                        string resultContent = await uploadResult.Content.ReadAsStringAsync();
-                        log.LogError(resultContent);
+                        StringContent content = new StringContent(entry_json, Encoding.UTF8, "application/json");
+                        var pollyDelays =
+                                new[]
+                                {
+                                    TimeSpan.FromMilliseconds(2000 + randomGenerator.Next(50)),
+                                    TimeSpan.FromMilliseconds(3000 + randomGenerator.Next(50)),
+                                    TimeSpan.FromMilliseconds(5000 + randomGenerator.Next(50)),
+                                    TimeSpan.FromMilliseconds(8000 + randomGenerator.Next(50))
+                                };
 
-                        // Throwing a generic exception here. This will leave the blob in storage and retry.
-                        throw new Exception($"Unable to upload to server. Error code {uploadResult.StatusCode}");
-                    }
-                    else
-                    {
-                        log.LogInformation($"Uploaded /{resource_type}/{id}");
-                    }
-                },
+                        var entryStopWatch = new Stopwatch();
+                        HttpResponseMessage uploadResult = await Policy
+                            .HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
+                            .WaitAndRetryAsync(pollyDelays, (result, timeSpan, retryCount, context) =>
+                            {
+                                entryStopWatch.Stop();
+                                log.LogWarning($"Request failed with {result.Result.StatusCode}. Waiting {timeSpan} before next retry. Retry attempt {retryCount}");
+
+                                telemetryClient.TrackEvent("Failed resource request",
+                                    new Dictionary<string,string>{
+                                        {"statusCode", result.Result.StatusCode.ToString()},
+                                        {"resourceId", $"/{resource_type}/{id}"},
+                                    },
+                                    new Dictionary<string, double>{
+                                        {"totalSeconds", entryStopWatch.Elapsed.TotalSeconds},
+                                        {"totalMilliseconds", entryStopWatch.Elapsed.TotalMilliseconds},
+                                    }
+                                );
+                            })
+                            .ExecuteAsync(async () => {
+                                entryStopWatch.Start();                    
+                                var message = string.IsNullOrEmpty(id)
+                                    ? new HttpRequestMessage(HttpMethod.Post, new Uri($"/{resource_type}"))
+                                    : new HttpRequestMessage(HttpMethod.Put, new Uri($"/{resource_type}/{id}"));
+
+                                message.Content = content;
+                                return await httpClient.SendAsync(message);
+                            });
+
+                        if (!uploadResult.IsSuccessStatusCode)
+                        {
+                            Task<string> resultContent = uploadResult.Content.ReadAsStringAsync();
+                            log.LogError(await resultContent);
+
+                            // Throwing a generic exception here. This will leave the blob in storage and retry.
+                            throw new Exception($"Unable to upload to server. Error code {uploadResult.StatusCode}");
+                        }
+                        else
+                        {
+                            entryStopWatch.Stop();
+                                telemetryClient.TrackEvent("Successful resource request",
+                                    new Dictionary<string,string>{
+                                        {"statusCode", uploadResult.StatusCode.ToString()},
+                                        {"resourceId", $"/{resource_type}/{id}"},
+                                    },
+                                    new Dictionary<string, double>{
+                                        {"totalSeconds", entryStopWatch.Elapsed.TotalSeconds},
+                                        {"totalMilliseconds", entryStopWatch.Elapsed.TotalMilliseconds},
+                                    }
+                                );
+                            log.LogInformation($"Uploaded /{resource_type}/{id}");
+                        }
+                    },
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = maxDegreeOfParallelism
@@ -174,11 +235,39 @@ namespace Microsoft.Health
                 actionBlock.Complete();
                 actionBlock.Completion.Wait();
 
+                stopWatch.Stop();
+                telemetryClient.TrackEvent("Upload bundle success",
+                    new Dictionary<string,string>{
+                        {"name", name},
+                    },
+                    new Dictionary<string, double>{
+                        {"totalSeconds", stopWatch.Elapsed.TotalSeconds},
+                        {"totalMilliseconds", stopWatch.Elapsed.TotalMilliseconds},
+                        {"entryCount", entriesCount},
+                    }
+                );
+                handled = true;
+
                 // We are done with this blob, upload was successful, it will be delete
                 await GetBlobReference("fhirimport", name, log).DeleteIfExistsAsync();
             }
             catch (FhirImportException)
             {
+                if(!handled){
+                    stopWatch.Stop();
+                    
+                    telemetryClient.TrackEvent("Upload bundle failure",
+                        new Dictionary<string,string>{
+                            {"name", name},
+                        },
+                        new Dictionary<string, double>{
+                            {"totalSeconds", stopWatch.Elapsed.TotalSeconds},
+                            {"totalMilliseconds", stopWatch.Elapsed.TotalMilliseconds},
+                            {"entryCount", entriesCount},
+                        }
+                    );
+                }
+
                 await MoveBlobToRejected(name, log);
             }
         }
