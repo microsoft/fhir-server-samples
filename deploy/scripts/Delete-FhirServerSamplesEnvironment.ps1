@@ -32,4 +32,5 @@ catch {
 ./Delete-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $EnvironmentName 
 
 # Wipe out the environment
+Get-AzResourceGroup -Name "${EnvironmentName}-sof" | Remove-AzResourceGroup -Verbose -Force
 Get-AzResourceGroup -Name $EnvironmentName | Remove-AzResourceGroup -Verbose -Force
