@@ -322,7 +322,7 @@
                     "offerThroughput": "[variables('cosmosThroughPut')]"
                 },
                 "exportConfiguration": {
-                    "storageAccountName": "[variables('exportStorageAccountName]"
+                    "storageAccountName": "[variables('exportStorageAccountName')]"
                 }
             }
         },
