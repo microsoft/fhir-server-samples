@@ -1,32 +1,29 @@
 {
-    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "siteName": {
             "type": "string",
             "metadata": {
-                "description": "Name of the FHIR dashboard web site."
+                "description": "Name of the SMART on FHIR web app"
             }
         },
-        "appServicePlanResourceGroup": {
+        "clientId": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
-                "description": "Resource group containing App Service Plan. If empty, deployment resource group is used."
+                "description": "Client Id"
             }
         },
-        "appServicePlanName": {
+        "imageName": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
-                "description": "Name of App Service Plan (existing or new). If empty, a name will be generated."
+                "description": "Docker image name, e.g. growth-chart-app:v1.0.0"
             }
         },
         "appServicePlanSku": {
             "type": "string",
             "allowedValues": [
                 "F1",
-                "D1",
                 "B1",
                 "B2",
                 "B3",
@@ -35,52 +32,9 @@
                 "S3",
                 "P1",
                 "P2",
-                "P3",
-                "P4"
+                "P3"
             ],
-            "defaultValue": "S1"
-        },
-        "clientId": {
-            "type": "string",
-            "metadata": {
-                "description": "OAuth client application id"
-            }
-        },
-        "originalClientId": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Original client_id in the launch.html file. If blank, it will default to 'my_web_app' unless this is the growth chart, then it will be 'growth_chart'"
-            }
-        },
-        "repositoryUrl": {
-            "type": "string",
-            "defaultValue": "https://github.com/smart-on-fhir/growth-chart-app",
-            "metadata": {
-                "description": "Respository to pull source code from."
-            }
-        },
-        "repositoryBranch": {
-            "type": "string",
-            "defaultValue": "master",
-            "metadata": {
-                "description": "Source code branch to deploy."
-            }
-        },
-        "repositoryProjectPath":
-        {
-            "type": "string",
-            "defaultValue": ".",
-            "metadata": {
-                "description": "Path within source code repository for SMART on FHIR application"
-            }
-        },
-        "launchFileName": {
-            "type": "string",
-            "defaultValue": "launch.html",
-            "metadata": {
-                "description": "Launch file name in repository. Will be copied to wwwroot/launch.html with the client id replaced"
-            }
+        "defaultValue": "B1"
         },
         "solutionType": {
             "type": "string",
@@ -91,95 +45,71 @@
         }
     },
     "variables": {
-        "siteName": "[toLower(parameters('siteName'))]",
-        "appServicePlanResourceGroup": "[if(empty(parameters('appServicePlanResourceGroup')), resourceGroup().name, parameters('appServicePlanResourceGroup'))]",
-        "appServicePlanName": "[if(empty(parameters('appServicePlanName')),concat(variables('siteName'),'-asp'),parameters('appServicePlanName'))]",
-        "aspDeploymentName": "[concat('smart-nested-asp', parameters('siteName'))]",
-        "originalClientId": "[if(empty(parameters('originalClientId')), if(contains(parameters('repositoryUrl'),'growth-chart-app'),'growth_chart','my_web_app'), parameters('originalClientId'))]"
+        "lowerCaseServiceName": "[toLower(parameters('siteName'))]",
+        "registryName": "healthplatformregistry.azurecr.io",
+        "resourcesLocation": "[resourceGroup().location]",
+        "serverfarmName": "[concat(variables('lowerCaseServiceName'), '-plan')]"
     },
     "resources": [
         {
-            "condition": "[empty(parameters('appServicePlanResourceGroup'))]",
-            "apiVersion": "2019-08-01",
-            "name": "[variables('aspDeploymentName')]",
-            "type": "Microsoft.Resources/deployments",
-            "properties": {
-                "mode": "Incremental",
-                "template": {
-                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {},
-                    "variables": {},
-                    "resources": [
-                        {
-                            "apiVersion": "2015-08-01",
-                            "name": "[variables('appServicePlanName')]",
-                            "tags": {
-                                "FhirServerSolution": "[parameters('solutionType')]"
-                            },                
-                            "type": "Microsoft.Web/serverfarms",
-                            "location": "[resourceGroup().location]",
-                            "sku": {
-                                "name": "[parameters('appServicePlanSku')]"
-                            },
-                            "properties": {
-                                "name": "[variables('appServicePlanName')]"
-                            }
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "apiVersion": "2015-08-01",
-            "type": "Microsoft.Web/sites",
-            "name": "[variables('siteName')]",
+            "apiVersion": "2018-02-01",
+            "name": "[variables('serverfarmName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[variables('resourcesLocation')]",
+            "kind": "linux",
             "tags": {
                 "FhirServerSolution": "[parameters('solutionType')]"
             },
-            "location": "[resourceGroup().location]",
-            "identity": {
-                "type": "SystemAssigned"
+            "sku": {
+                "name": "[parameters('appServicePlanSku')]"
             },
             "properties": {
-                "clientAffinityEnabled": false,
-                "serverFarmId": "[resourceId(variables('appServicePlanResourceGroup'), 'Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
+                "reserved": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-11-01",
+            "name": "[variables('lowerCaseServiceName')]",
+            "location": "[variables('resourcesLocation')]",
+            "tags": {
+                "FhirServerSolution": "[parameters('solutionType')]"
             },
             "dependsOn": [
-                "[variables('aspDeploymentName')]"
+                "[concat('Microsoft.Web/serverfarms/', variables('serverfarmName'))]"
             ],
-            "resources": [
-                {
-                    "apiVersion": "2015-08-01",
-                    "name": "appsettings",
-                    "type": "config",
-                    "dependsOn": [
-                        "[concat('Microsoft.Web/Sites/', variables('siteName'))]"
+            "properties": {
+                "name": "[variables('lowerCaseServiceName')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name":"CLIENT_ID",
+                            "value":"[parameters('clientId')]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_URL",
+                            "value": "[concat('https://', variables('registryName'))]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                            "value": ""
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                            "value": ""
+                        },
+                        {
+                            "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+                            "value": "false"
+                        }
                     ],
-                    "properties": {
-                        "WEBSITE_NODE_DEFAULT_VERSION": "8.10.0",
-                        "PROJECT": "[parameters('repositoryProjectPath')]",
-                        "OriginalClientId": "[variables('originalClientId')]",
-                        "NewClientId": "[parameters('clientId')]",
-                        "LaunchFileName": "[parameters('launchFileName')]",
-                        "COMMAND": "cd %PROJECT% && xcopy . D:\\home\\site\\wwwroot\\ /E /S /Y && cd D:\\home\\site\\wwwroot\\ && npm install --production && cd D:\\home\\site\\repository\\%PROJECT% && powershell.exe -command \"(gc %LaunchFileName%) -replace '%OriginalClientId%', '%NewClientId%' | Out-File -Encoding utf8 D:\\home\\site\\wwwroot\\launch.html\""
-                      }
-                },        
-                {
-                    "apiVersion": "2015-08-01",
-                    "name": "web",
-                    "type": "sourcecontrols",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/Sites', variables('siteName'))]",
-                        "[resourceId('Microsoft.Web/Sites/config', variables('siteName'), 'appsettings')]"
-                    ],
-                    "properties": {
-                        "RepoUrl": "[parameters('repositoryUrl')]",
-                        "branch": "[parameters('repositoryBranch')]",
-                        "IsManualIntegration": true
-                    }
-                }
-            ]
+                    "linuxFxVersion": "[concat('DOCKER|', variables('registryName'), '/', parameters('imageName'))]",
+                    "alwaysOn": true
+                },
+                "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('serverfarmName'))]",
+                "clientAffinityEnabled": false,
+                "httpsOnly": true
+            }
         }
     ]
 }

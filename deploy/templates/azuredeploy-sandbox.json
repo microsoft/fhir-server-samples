@@ -437,10 +437,8 @@
         {
             "name": "[concat(variables('growthChartName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
+            "resourceGroup": "[concat(resourceGroup().name, '-sof')]",
             "apiVersion": "2019-08-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
-            ],
             "properties": {
                 "templateLink": {
                     "uri": "[variables('smartAppTemplateUrl')]",
@@ -450,23 +448,11 @@
                     "siteName": {
                         "value": "[variables('growthChartName')]"
                     },
-                    "appServicePlanName": {
-                        "value": "[variables('appServicePlanName')]"
-                    },
-                    "appServicePlanResourceGroup": {
-                        "value": "[resourceGroup().name]"
-                    },
                     "clientId": {
                         "value": "[parameters('smartAppClientId')]"
                     },
-                    "repositoryUrl": {
-                        "value": "https://github.com/smart-on-fhir/growth-chart-app"
-                    },
-                    "repositoryBranch": {
-                        "value": "master"
-                    },
-                    "repositoryProjectPath": {
-                        "value": "."
+                    "imageName": {
+                        "value": "growth-chart-app:v1.0.0"
                     }
                 },
                 "mode": "incremental"
@@ -475,9 +461,7 @@
         {
             "name": "[concat(variables('medicationsName'),'-deploy')]",
             "type": "Microsoft.Resources/deployments",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
-            ],
+            "resourceGroup": "[concat(resourceGroup().name, '-sof')]",
             "apiVersion": "2019-08-01",
             "properties": {
                 "templateLink": {
@@ -488,23 +472,11 @@
                     "siteName": {
                         "value": "[variables('medicationsName')]"
                     },
-                    "appServicePlanName": {
-                        "value": "[variables('appServicePlanName')]"
-                    },
-                    "appServicePlanResourceGroup": {
-                        "value": "[resourceGroup().name]"
-                    },
                     "clientId": {
                         "value": "[parameters('smartAppClientId')]"
                     },
-                    "repositoryUrl": {
-                        "value": "https://github.com/smart-on-fhir/sample-apps-stu3"
-                    },
-                    "repositoryBranch": {
-                        "value": "master"
-                    },
-                    "repositoryProjectPath": {
-                        "value": "medications"
+                    "imageName": {
+                        "value": "medications-app:v1.0.0"
                     }
                 },
                 "mode": "incremental"

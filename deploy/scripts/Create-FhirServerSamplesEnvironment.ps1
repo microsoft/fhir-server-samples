@@ -163,6 +163,17 @@ if ([string]::IsNullOrEmpty($SqlAdminPassword))
     $SqlAdminPassword = ConvertTo-SecureString -AsPlainText -Force "DummySQLServerPasswordNotUsed"
 }
 
+$resourceGroup = Get-AzResourceGroup -Name $EnvironmentName -ErrorAction SilentlyContinue
+if (!$resourceGroup) {
+    New-AzResourceGroup -Name $EnvironmentName -Location $EnvironmentLocation | Out-Null
+}
+
+# Making a separate resource group for SMART on FHIR apps, since Linux Container apps cannot live in a resource group with windows apps
+$sofResourceGroup = Get-AzResourceGroup -Name "${EnvironmentName}-sof" -ErrorAction SilentlyContinue
+if (!$sofResourceGroup) {
+    New-AzResourceGroup -Name "${EnvironmentName}-sof" -Location $EnvironmentLocation | Out-Null
+}
+
 # Deploy the template
 New-AzResourceGroupDeployment -TemplateUri $sandboxTemplate -environmentName $EnvironmentName -fhirApiLocation $FhirApiLocation -ResourceGroupName $EnvironmentName -fhirServerTemplateUrl $fhirServerTemplateUrl -fhirVersion $FhirVersion -sqlAdminPassword $SqlAdminPassword -aadAuthority $aadAuthority -aadDashboardClientId $confidentialClientId -aadDashboardClientSecret $confidentialClientSecret -aadServiceClientId $serviceClientId -aadServiceClientSecret $serviceClientSecret -smartAppClientId $publicClientId -fhirDashboardJSTemplateUrl $dashboardJSTemplate -fhirImporterTemplateUrl $importerTemplate -fhirDashboardRepositoryUrl $SourceRepository -fhirDashboardRepositoryBranch $SourceRevision -deployDashboardSourceCode $DeploySource -usePaaS $UsePaaS -accessPolicies $accessPolicies -deployAdf $DeployAdf
 
