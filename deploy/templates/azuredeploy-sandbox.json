@@ -274,9 +274,12 @@
             "type": "Microsoft.HealthcareApis/services",
             "kind": "[variables('fhirServiceKind')]",
             "name": "[variables('fhirServiceName')]",
-            "apiVersion": "2018-08-20-preview",
+            "apiVersion": "2019-09-16",
             "location": "[parameters('fhirApiLocation')]",
             "condition": "[parameters('usePaaS')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "accessPolicies": "[parameters('accessPolicies')]",
                 "authenticationConfiguration": {
