@@ -194,6 +194,13 @@
             "metadata": {
                 "description": "The type of the solution"
             }
+        },
+        "enableExport": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Determines whether export will be enabled for this fhir instance. If true, a storage account will be created as part of the deployment. You will need owner or user-administrator permissions for this."
+            }
         }
     },
     "variables": {
@@ -252,7 +259,8 @@
                 "value": "[parameters('sqlAdminPassword')]"
             }
         },
-        "ossTemplateParameters": "[if(contains(parameters('fhirServerTemplateUrl'),'sql'),union(variables('ossBaseTemplateParameters'),variables('ossSqlTemplateParameters')),variables('ossBaseTemplateParameters'))]"
+        "ossTemplateParameters": "[if(contains(parameters('fhirServerTemplateUrl'),'sql'),union(variables('ossBaseTemplateParameters'),variables('ossSqlTemplateParameters')),variables('ossBaseTemplateParameters'))]",
+        "exportStorageAccountName": "[if(parameters('enableExport'), replace(concat(toLower(parameters('environmentName')), 'export'),'-',''),'')]"
     },
     "resources": [
         {
@@ -269,6 +277,22 @@
             "properties": {
                 "name": "[variables('appServicePlanName')]"
             }
+        },
+        {
+            "name": "[variables('exportStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "supportsHttpsTrafficOnly": "true"
+            },
+            "condition": "[and(parameters('usePaaS'),parameters('enableExport'))]",
+            "dependsOn": [],
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "kind": "Storage",
+            "tags": {}
         },
         {
             "type": "Microsoft.HealthcareApis/services",
@@ -296,6 +320,9 @@
                 },
                 "cosmosDbConfiguration": {
                     "offerThroughput": "[variables('cosmosThroughPut')]"
+                },
+                "exportConfiguration": {
+                    "storageAccountName": "[variables('exportStorageAccountName]"
                 }
             }
         },
