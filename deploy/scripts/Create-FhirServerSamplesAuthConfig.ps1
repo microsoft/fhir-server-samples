@@ -89,6 +89,7 @@ if ($azContext.Account.Type -eq "User") {
         # Selecting the same subscription with the same tenant (twice), brings us back to the UPN
         Select-AzSubscription -SubscriptionId $azContext.Subscription.Id -TenantId $azContext.Tenant.Id | Out-Null
         Select-AzSubscription -SubscriptionId $azContext.Subscription.Id -TenantId $azContext.Tenant.Id | Out-Null
+        $azContext = Get-AzContext
         Write-Host "Current context is user: $($azContext.Account.Id)"
         $currentUser = Get-AzADUser -UserPrincipalName $azContext.Account.Id    
     }
