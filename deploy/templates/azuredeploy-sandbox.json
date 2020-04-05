@@ -260,7 +260,8 @@
             }
         },
         "ossTemplateParameters": "[if(contains(parameters('fhirServerTemplateUrl'),'sql'),union(variables('ossBaseTemplateParameters'),variables('ossSqlTemplateParameters')),variables('ossBaseTemplateParameters'))]",
-        "exportStorageAccountName": "[if(parameters('enableExport'), replace(concat(toLower(parameters('environmentName')), 'export'),'-',''),'')]"
+        "exportStorageAccountName": "[if(parameters('enableExport'), replace(concat(toLower(parameters('environmentName')), 'export'),'-',''),'')]",
+        "storageBlobDataContributerRoleId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]"
     },
     "resources": [
         {
@@ -301,7 +302,7 @@
             "condition": "[and(parameters('usePaaS'),parameters('enableExport'))]",
             "dependsOn": [
                 "[variables('exportStorageAccountName')]",
-                "[variables('fhirServiceKind')]"
+                "[variables('fhirServiceName')]"
             ],
             "properties": {
                 "roleDefinitionId": "[variables('storageBlobDataContributerRoleId')]",
