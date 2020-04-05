@@ -252,6 +252,9 @@
             },
             "fhirVersion": {
                 "value": "[parameters('fhirVersion')]"
+            },
+            "enableExport": {
+                "value": "[parameters('enableExport')]"
             }
         },
         "ossSqlTemplateParameters": {
@@ -425,9 +428,6 @@
                     },
                     "repositoryBranch": {
                         "value": "[parameters('fhirDashboardRepositoryBranch')]"
-                    },
-                    "enableExport": {
-                        "value": "[parameters('enableExport')]"
                     }
                 },
                 "mode": "incremental"
