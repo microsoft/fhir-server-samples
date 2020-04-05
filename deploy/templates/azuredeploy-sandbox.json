@@ -276,11 +276,11 @@
             "condition": "[and(parameters('usePaaS'),parameters('enableExport'))]",
             "dependsOn": [
                 "[variables('exportStorageAccountName')]",
-                "[variables('fhirServiceName')]"
+                "[if(parameters('usePaas'), variables('fhirServiceName'), concat(variables('fhirServiceName'),'-deploy'))]"
             ],
             "properties": {
                 "roleDefinitionId": "[variables('storageBlobDataContributerRoleId')]",
-                "principalId": "[reference(concat('Microsoft.HealthcareApis/services/', variables('fhirServiceName')), '2019-09-16', 'full').identity.principalId]",
+                "principalId": "[if(parameters('usePaas'), reference(concat('Microsoft.HealthcareApis/services/', variables('fhirServiceName')), '2019-09-16', 'full').identity.principalId, '')]",
                 "principalType": "ServicePrincipal"
             }
         },
