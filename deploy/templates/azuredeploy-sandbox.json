@@ -305,7 +305,7 @@
             ],
             "properties": {
                 "roleDefinitionId": "[variables('storageBlobDataContributerRoleId')]",
-                "principalId": "[reference(concat('Microsoft.HealthcareApis/services', variables('fhirServiceName')), '2019-09-16', 'full').identity.principalId]",
+                "principalId": "[reference(concat('Microsoft.HealthcareApis/services/', variables('fhirServiceName')), '2019-09-16', 'full').identity.principalId]",
                 "principalType": "ServicePrincipal"
             }
         },
@@ -424,6 +424,9 @@
                     },
                     "repositoryBranch": {
                         "value": "[parameters('fhirDashboardRepositoryBranch')]"
+                    },
+                    "enableExport": {
+                        "value": "[parameters('enableExport')]"
                     }
                 },
                 "mode": "incremental"
