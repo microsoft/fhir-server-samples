@@ -84,6 +84,16 @@ if ($azContext.Account.Type -eq "User") {
 
     $currentUser = Get-AzADUser -UserPrincipalName $azContext.Account.Id
 
+    if (!$currentUser) {
+        # For some reason $azContext.Account.Id will sometimes be the email of the user instead of the UPN, we need the UPN
+        # Selecting the same subscription with the same tenant (twice), brings us back to the UPN
+        Select-AzSubscription -SubscriptionId $azContext.Subscription.Id -TenantId $azContext.Tenant.Id | Out-Null
+        Select-AzSubscription -SubscriptionId $azContext.Subscription.Id -TenantId $azContext.Tenant.Id | Out-Null
+        $azContext = Get-AzContext
+        Write-Host "Current context is user: $($azContext.Account.Id)"
+        $currentUser = Get-AzADUser -UserPrincipalName $azContext.Account.Id    
+    }
+
     #If this is guest account, we will try a search instead
     if (!$currentUser) {
         # External user accounts have UserPrincipalNames of the form:
