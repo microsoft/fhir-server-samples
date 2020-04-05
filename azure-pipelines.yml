@@ -63,7 +63,7 @@ stages:
                            cd $(Build.SourcesDirectory)/deploy/scripts/
                            Write-Host "Remote Repo: ${remoteRepo}"
                            Write-Host "Remote branch: ${remoteBranch}"
-                           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -DeployAdf $true -UsePaaS $true -SourceRepository "${remoteRepo}" -SourceRevision "${remoteBranch}"
+                           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $environmentName -AdminPassword $(ConvertTo-SecureString "Fh1rD3m0!!" -AsPlainText -Force) -EnvironmentLocation "westus" -EnableExport $true -UsePaaS $true -SourceRepository "${remoteRepo}" -SourceRevision "${remoteBranch}"
  
                            $DashboardUserUpn  = (Get-AzKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-upn").SecretValueText
                            $DashboardUserPassword  = (Get-AzKeyVaultSecret -VaultName "${environmentName}-ts" -Name "${environmentName}-admin-password").SecretValueText

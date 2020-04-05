@@ -12,9 +12,9 @@ Or the open source FHIR Server for Azure:
 
 In both cases a storage account will be deploy and in this storage account there is a BLOB container called `fhirimport`, patient bundles generated with [Synthea](https://github.com/synthetichealth/synthea) can dumped in this storage container and they will be ingested into the FHIR server. The bulk ingestion is performed by an Azure Function.
 
-The environments also optionally include an [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) instance, which has export pipelines configured for selected resources. The ADF export pipeline is **experimental** and not deployed by default. To deploy the ADF pipeline, add the `-DeployAdf $true` parameter to the script below.
+The environments can also optionally be configured to support [`$export`](https://hl7.org/Fhir/uv/bulkdata/export/index.html). To enable `$export`, add the `-EnableExport $true` parameter to the script below. The `$export` operation will produce a new line delimited json (ndjson) for each resource type. These ndjson files are easily consumed with something like [Databricks](https://azure.microsoft.com/en-us/services/databricks/) (Apache-Spark). Please see the [analytics](analytics/) folder for some details and example queries. Note that the Databricks environment is not deployed automatically with the sandbox and must be set up separately.
 
-You can decide which resources to export using the `adfExportResourceTypes` template parameter. The pipelines have to be activated manually and will produce a new line delimited json (ndjson) for each resource type. These ndjson files are easily consumed with something like [Databricks](https://azure.microsoft.com/en-us/services/databricks/) (Apache-Spark). Please see the [analytics](analytics/) folder for some details and example queries. Note that the Databricks environment is not deployed automatically with the sandbox and must be set up separately.
+> Note: To enable `$export` you must have subscription rights that allow you to set data plane access roles for storage accounts, e.g. you must be a subscription owner.
 
 # Prerequisites
 
@@ -60,10 +60,10 @@ or the managed Azure API for FHIR:
 .\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true
 ```
 
-and to include the ADF pipeline:
+and to enable `$export`:
 
 ```PowerShell
-.\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true -DeployAdf $true
+.\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $true -EnableExport $true
 ```
 
 To delete the senario:

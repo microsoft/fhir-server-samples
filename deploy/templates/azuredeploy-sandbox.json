@@ -126,13 +126,6 @@
                 "description": "URL for SMART on FHIR app template"
             }
         },
-        "adfTemplateUrl": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "URL for Azure Data Factory template"
-            }
-        },
         "fhirDashboardRepositoryUrl": {
             "type": "string",
             "defaultValue": "https://github.com/Microsoft/fhir-server-samples",
@@ -168,26 +161,6 @@
                 "description": "Access policies for Azure API for FHIR PaaS service"
             }
         },
-        "deployAdf": {
-            "type": "bool",
-            "defaultValue": false,
-            "metadata": {
-                "description": "Flag to determine if Azure Data Factory should be deployed"
-            }
-        },
-        "adfExportResourceTypes": {
-            "type": "array",
-            "defaultValue": [
-                "Patient",
-                "Observation",
-                "Encounter",
-                "Practitioner",
-                "MedicationRequest"
-            ],
-            "metadata": {
-                "description": "List of Resources to export"
-            }
-        },
         "solutionType": {
             "type": "string",
             "defaultValue": "FhirServerSamples",
@@ -197,7 +170,7 @@
         },
         "enableExport": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "metadata": {
                 "description": "Determines whether export will be enabled for this fhir instance. If true, a storage account will be created as part of the deployment. You will need owner or user-administrator permissions for this."
             }
@@ -220,8 +193,6 @@
         "medicationsName": "[concat(variables('environmentName'),'meds')]",
         "baseUri": "[deployment().properties.templateLink.uri]",
         "smartAppTemplateUrl": "[if(empty(parameters('smartAppTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-smart-app.json'), parameters('smartAppTemplateUrl'))]",
-        "adfTemplateUrl": "[if(empty(parameters('adfTemplateUrl')), uri(variables('baseUri'), 'azuredeploy-adf.json'), parameters('adfTemplateUrl'))]",
-        "adfName": "[concat(variables('environmentName'), substring(uniqueString(resourceGroup().id),0,8))]",
         "allowedOrigins": [
             "*"
         ],
@@ -252,6 +223,9 @@
             },
             "fhirVersion": {
                 "value": "[parameters('fhirVersion')]"
+            },
+            "enableExport": {
+                "value": "[parameters('enableExport')]"
             }
         },
         "ossSqlTemplateParameters": {
@@ -260,7 +234,8 @@
             }
         },
         "ossTemplateParameters": "[if(contains(parameters('fhirServerTemplateUrl'),'sql'),union(variables('ossBaseTemplateParameters'),variables('ossSqlTemplateParameters')),variables('ossBaseTemplateParameters'))]",
-        "exportStorageAccountName": "[if(parameters('enableExport'), replace(concat(toLower(parameters('environmentName')), 'export'),'-',''),'')]"
+        "exportStorageAccountName": "[if(parameters('enableExport'), replace(concat(toLower(parameters('environmentName')), 'export'),'-',''),'')]",
+        "storageBlobDataContributerRoleId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]"
     },
     "resources": [
         {
@@ -295,6 +270,21 @@
             "tags": {}
         },
         {
+            "type": "Microsoft.Storage/storageAccounts/providers/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "[concat(variables('exportStorageAccountName'), '/Microsoft.Authorization/', guid(uniqueString(variables('exportStorageAccountName'), parameters('fhirVersion'), variables('fhirServiceName'))))]",
+            "condition": "[and(parameters('usePaaS'),parameters('enableExport'))]",
+            "dependsOn": [
+                "[variables('exportStorageAccountName')]",
+                "[variables('fhirServiceName')]"
+            ],
+            "properties": {
+                "roleDefinitionId": "[variables('storageBlobDataContributerRoleId')]",
+                "principalId": "[reference(concat('Microsoft.HealthcareApis/services/', variables('fhirServiceName')), '2019-09-16', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+            }
+        },
+        {
             "type": "Microsoft.HealthcareApis/services",
             "kind": "[variables('fhirServiceKind')]",
             "name": "[variables('fhirServiceName')]",
@@ -324,42 +314,6 @@
                 "exportConfiguration": {
                     "storageAccountName": "[variables('exportStorageAccountName')]"
                 }
-            }
-        },
-        {
-            "name": "[concat(variables('adfName'),'-deploy')]",
-            "type": "Microsoft.Resources/deployments",
-            "condition": "[parameters('deployAdf')]",
-            "apiVersion": "2019-08-01",
-            "properties": {
-                "templateLink": {
-                    "uri": "[variables('adfTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "adfName": {
-                        "value": "[variables('adfName')]"
-                    },
-                    "fhirServerUrl": {
-                        "value": "[variables('fhirServiceUrl')]"
-                    },
-                    "aadAuthority": {
-                        "value": "[parameters('aadAuthority')]"
-                    },
-                    "aadAudience": {
-                        "value": "[variables('aadFhirServerAudience')]"
-                    },
-                    "aadClientId": {
-                        "value": "[parameters('aadServiceClientId')]"
-                    },
-                    "aadClientSecret": {
-                        "value": "[parameters('aadServiceClientSecret')]"
-                    },
-                    "resourceTypes": {
-                        "value": "[parameters('adfExportResourceTypes')]"
-                    }
-                },
-                "mode": "incremental"
             }
         },
         {
