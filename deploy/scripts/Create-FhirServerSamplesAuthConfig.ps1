@@ -216,25 +216,6 @@ $secretConfidentialClientId = ConvertTo-SecureString $confidentialClient.AppId -
 Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-id" -SecretValue $secretConfidentialClientId| Out-Null
 Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$confidentialClientAppName-secret" -SecretValue $secretSecureString | Out-Null
 
-# Create service client
-$serviceClientAppName = "${EnvironmentName}-service-client"
-$serviceClient = Get-AzureAdApplication -Filter "DisplayName eq '$serviceClientAppName'"
-if (!$serviceClient) {
-    $serviceClient = New-FhirServerClientApplicationRegistration -ApiAppId $application.AppId -DisplayName $serviceClientAppName
-    $secretSecureString = ConvertTo-SecureString $serviceClient.AppSecret -AsPlainText -Force
-} else {
-    $existingPassword = Get-AzureADApplicationPasswordCredential -ObjectId $serviceClient.ObjectId | Remove-AzureADApplicationPasswordCredential -ObjectId $serviceClient.ObjectId
-    $newPassword = New-AzureADApplicationPasswordCredential -ObjectId $serviceClient.ObjectId
-    $secretSecureString = ConvertTo-SecureString $newPassword.Value -AsPlainText -Force
-}
-
-Set-FhirServerClientAppRoleAssignments -AppId $serviceClient.AppId -ApiAppId $application.AppId -AppRoles "globalAdmin"
-
-$secretServiceClientId = ConvertTo-SecureString $serviceClient.AppId -AsPlainText -Force
-Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-id" -SecretValue $secretServiceClientId| Out-Null
-Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name "$serviceClientAppName-secret" -SecretValue $secretSecureString | Out-Null
-
-
 # Create public (SMART on FHIR) client
 $publicClientAppName = "${EnvironmentName}-public-client"
 $publicClient = Get-AzureAdApplication -Filter "DisplayName eq '$publicClientAppName'"
