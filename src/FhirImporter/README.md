@@ -1,4 +1,6 @@
-# Azure FHIR Importer Function
+# Importing data into Azure FHIR
+
+## FHIR Importer Function
 
 The Azure function app will monitor a `fhirimport` container in the attached storage account and ingest patient bundles into the FHIR service.
 
@@ -66,3 +68,10 @@ where `aci-template.parameters.json` is a parameter file with the following cont
 }
 ```
 
+## FHIR Importer Script
+
+For ad-hoc data imports from the local file system to a [Azure API for FHIR](https://docs.microsoft.com/azure/healthcare-apis), the `FhirImporter.ps1` script can be used:
+
+```
+.\FhirImporter.ps1 -FhirServerUrl https://<myaccountname>.azurehealthcareapis.com -BundlesDirectory <path to data files>
+```
