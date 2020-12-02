@@ -18,11 +18,20 @@ The environments can also optionally be configured to support [`$export`](https:
 
 # Prerequisites
 
-Before deploying the samples scenario make sure that you have `Az` and `AzureAd` powershell modules installed:
+Before deploying the samples scenario, make sure you have `Az` and `AzureAd` powershell modules installed:
 
 ```PowerShell
 Install-Module Az
 Install-Module AzureAd
+```
+
+The new `Az` module requires **PowerShell version 5.1 or above** installed on your computer. So if you have PowerShell version below 5.1, you need to update it. To check your PowerShell version, you can run:
+```PowerShell
+$PSVersionTable.PSVersion
+```
+Currently, there is a **bug with PowerShell Az Module version 4.6.1** confirmed with Azure ARM team. For now, **please avoid using version 4.6.1**. Version 4.5 and versions 4.7.0 or above should work fine. To check your Az module version, you can run:
+```PowerShell
+Get-InstalledModule -Name Az
 ```
 
 # Deployment
@@ -48,7 +57,7 @@ Connect-AzureAd -TenantDomain <AAD TenantDomain>
 
 **NOTE** The connection to Azure AD can be made using a different tenant domain than the one tied to your Azure subscription. If you don't have privileges to create app registrations, users, etc. in your Azure AD tenant, you can [create a new one](https://docs.microsoft.com/azure/active-directory/develop/quickstart-create-new-tenant), which will just be used for demo identities, etc.
 
-Then deploy the scenario with the Open Source FHIR Server for Azure:
+Then, deploy the scenario with the Open Source FHIR Server for Azure:
 
 ```PowerShell
 .\Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS $false
@@ -70,6 +79,95 @@ To delete the senario:
 
 ```PowerShell
 .\Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME>
+```
+
+**NOTE** If you are using PowerShell Core on other platforms (macOS or Linux), please make sure to specify password in the command. You can do this by:
+
+```PowerShell
+./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName <ENVIRONMENTNAME> -UsePaaS <TRUE/FALSE> -AdminPassword $(ConvertTo-SecureString -AsPlainText -Force "<YOURPASSWORD>")
+```
+
+If the deployment is successful, you would see information like below being written on your terminal or CloudShell as the scripts run:
+```PowerShell
+Current context is user: xxxx
+FhirServer PS module is loaded
+Current context is user: xxxx
+Adding permission to keyvault for xxxx
+Ensuring API application exists
+Checking if UserPrincipalName exists
+User not, will create.
+
+DeploymentName          : xxxx
+ResourceGroupName       : xxxx
+ProvisioningState       : Succeeded
+Timestamp               : 11/24/2020 10:30:18 PM
+Mode                    : Incremental
+TemplateLink            : 
+                          Uri            : https://raw.githubusercontent.com/Microsoft/fhir-server-samples/master/deploy/templates/a
+                          zuredeploy-sandbox.json
+                          ContentVersion : 1.0.0.0
+                          
+Parameters              : 
+                          Name                             Type                       Value     
+                          ===============================  =========================  ==========
+                          environmentName                  String                     xxxx
+                          appServicePlanSku                String                     xxxx       
+                          aadAuthority                     String                     
+                          xxxx
+                          aadFhirServerAudience            String                               
+                          aadDashboardClientId             String                     xxxx
+                          aadDashboardClientSecret         String                     xxxx
+                          aadServiceClientId               String                     xxxx
+                          aadServiceClientSecret           String                     xxxx
+                          smartAppClientId                 String                     xxxx
+                          fhirServerTemplateUrl            String                     
+                          https://raw.githubusercontent.com/microsoft/fhir-server/master/samples/templates/default-azuredeploy.json
+                          sqlAdminPassword                 SecureString                         
+                          fhirDashboardJSTemplateUrl       String                     https://raw.githubusercontent.com/Microsoft/fh
+                          ir-server-samples/master/deploy/templates/azuredeploy-fhirdashboard-js.json
+                          fhirApiLocation                  String                     westus2   
+                          fhirVersion                      String                     R4        
+                          fhirImporterTemplateUrl          String                     https://raw.githubusercontent.com/Microsoft/fh
+                          ir-server-samples/master/deploy/templates/azuredeploy-importer.json
+                          smartAppTemplateUrl              String                               
+                          fhirDashboardRepositoryUrl       String                     
+                          https://github.com/Microsoft/fhir-server-samples
+                          fhirDashboardRepositoryBranch    String                     master    
+                          deployDashboardSourceCode        Bool                       True      
+                          usePaaS                          Bool                       True      
+                          accessPolicies                   Array                      [
+                            {
+                              "objectId": "xxxx"
+                            },
+                            {
+                              "objectId": "xxxx"
+                            },
+                            {
+                              "objectId": "xxxx"
+                            }
+                          ]
+                          solutionType                     String                     FhirServerSamples
+                          enableExport                     Bool                       False     
+                          
+Outputs                 : 
+DeploymentDebugLogLevel : 
+
+Warming up site...
+
+Key   : fhirServerUrl
+Value : https://xxxx.azurehealthcareapis.com
+Name  : fhirServerUrl
+
+
+Key   : dashboardUserUpn
+Value : xxxx
+Name  : dashboardUserUpn
+
+
+Key   : dashboardUserPassword
+Value : xxxx
+Name  : dashboardUserPassword
+
 ```
 
 # Contributing
