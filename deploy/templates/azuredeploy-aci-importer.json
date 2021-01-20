@@ -161,9 +161,6 @@
                 "FhirServerSolution": "[parameters('solutionType')]"
             },
             "location": "[resourceGroup().location]",
-            "tags": {
-                "FhirServerSolution": "[parameters('solutionType')]"
-            },
             "dependsOn": [
                 "[resourceId('Microsoft.insights/components', variables('applicationInsightsName'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
