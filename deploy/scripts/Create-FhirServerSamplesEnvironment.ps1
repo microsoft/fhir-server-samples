@@ -54,7 +54,28 @@ param
     [parameter(Mandatory = $false)]
     [SecureString]$AdminPassword
 
-)
+
+function SecretValueText
+{
+    param
+    (
+        [SecureString] $secret
+    )
+
+    $secretText = '';
+    $secretPointer = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
+
+    try
+    {
+        $secretText = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($secretPointer)
+    }
+    finally
+    {
+        [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($secretPointer)
+    }
+
+    return $secretText;
+}
 
 Set-StrictMode -Version Latest
 
@@ -151,15 +172,31 @@ if ($UsePaaS) {
     $fhirServerUrl = "https://${EnvironmentName}srvr.azurewebsites.net"
 }
 
-$confidentialClientId = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-id").SecretValueText
-$confidentialClientSecret = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-secret").SecretValueText
-$serviceClientId = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-id").SecretValueText
-$serviceClientSecret = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-secret").SecretValueText
+$confidentialClientIdKV = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-id")
+$confidentialClientId = SecretValueText -secret $confidentialClientIdKV.SecretValue
+
+$confidentialClientSecretKV = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-confidential-client-secret")
+$confidentialClientSecret = SecretValueText -secret $confidentialClientSecretKV.SecretValue
+
+$serviceClientIdKV = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-id")
+$serviceClientId = SecretValueText -secret $serviceClientIdKV.SecretValue
+
+$serviceClientSecretKV = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-service-client-secret")
+$serviceClientSecret = SecretValueText -secret $serviceClientSecretKV.SecretValue
+
 $serviceClientObjectId = (Get-AzureADServicePrincipal -Filter "AppId eq '$serviceClientId'").ObjectId
-$dashboardUserUpn  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-upn").SecretValueText
+
+$dashboardUserUpnKV  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-upn")
+$dashboardUserUpn = SecretValueText -secret $dashboardUserUpnKV.SecretValue
+
 $dashboardUserOid = (Get-AzureADUser -Filter "UserPrincipalName eq '$dashboardUserUpn'").ObjectId
-$dashboardUserPassword  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password").SecretValueText
-$publicClientId = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-public-client-id").SecretValueText
+
+$dashboardUserPasswordKV  = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-admin-password")
+$dashboardUserPassword = SecretValueText -secret $dashboardUserPasswordKV.SecretValue
+
+$publicClientIdKV = (Get-AzKeyVaultSecret -VaultName "${EnvironmentName}-ts" -Name "${EnvironmentName}-public-client-id")
+$publicClientId = SecretValueText -secret $publicClientIdKV.SecretValue
+
 
 $accessPolicies = @()
 $accessPolicies += @{ "objectId" = $currentObjectId.ToString() }
