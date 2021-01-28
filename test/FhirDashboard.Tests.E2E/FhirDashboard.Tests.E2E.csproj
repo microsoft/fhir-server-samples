@@ -31,7 +31,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="2.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-    <PackageReference Include="Selenium.Chrome.WebDriver" Version="2.43.0" />
+    <PackageReference Include="Selenium.Chrome.WebDriver" Version="85.0.0" />
     <PackageReference Include="Selenium.WebDriver" Version="3.141.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.3.0" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
