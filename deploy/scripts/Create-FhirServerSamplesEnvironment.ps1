@@ -54,6 +54,7 @@ param
     [parameter(Mandatory = $false)]
     [SecureString]$AdminPassword
 
+)
 
 function SecretValueText
 {
