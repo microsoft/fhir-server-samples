@@ -19,6 +19,5 @@
     <!-- Use back slash \ to indicate folder path e.g. C:\Temp\Git\ -->
     <ExcludeFolder>.gitignore</ExcludeFolder>
     <ExcludeFolder>GeoPol.xml</ExcludeFolder>
-    <ExcludeFolder>deploy\scripts\fhir-server</ExcludeFolder>
   </Component>
 </GeoPol_Folders>
