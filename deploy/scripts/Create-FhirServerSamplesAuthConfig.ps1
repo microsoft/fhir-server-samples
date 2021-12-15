@@ -131,17 +131,19 @@ Write-Host "Ensuring API application exists"
 $fhirServiceName = "${EnvironmentName}srvr"
 if ($UsePaas) {
     $fhirServiceUrl = "https://${EnvironmentName}.azurehealthcareapis.com"
+    $fhirAADUrl = $fhirServiceUrl
 } else {
-    $fhirServiceUrl = "https://${fhirServiceName}.$($tenantInfo.TenantDomain)"    
+    $fhirAADUrl = "https://${fhirServiceName}.$($tenantInfo.TenantDomain)"    
+    $fhirServiceUrl = "https://${fhirServiceName}.${WebAppSuffix}"
 }
 
-$application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirServiceUrl')"
+$application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirAADUrl')"
 
 if (!$application) {
-    $newApplication = New-FhirServerApiApplicationRegistration -FhirServiceAudience $fhirServiceUrl -AppRoles "globalAdmin"
+    $newApplication = New-FhirServerApiApplicationRegistration -FhirServiceAudience $fhirAADUrl -AppRoles "globalAdmin"
     
     # Change to use applicationId returned
-    $application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirServiceUrl')"
+    $application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirAADUrl')"
 }
 
 $UserNamePrefix = "${EnvironmentName}-"
