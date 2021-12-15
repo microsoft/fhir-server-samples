@@ -61,6 +61,14 @@ stages:
           cd $(System.DefaultWorkingDirectory)/deploy/scripts
 
           # Clean up old one if it exists before deploying new
-          ./Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName)
+          try 
+          {
+              ./Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName)
+              Write-Host 'Deleted old environment'
+          }
+          catch 
+          {
+              Write-Host 'No old environment to delete'
+          }
 
           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName) -UsePaaS $false -EnableExport $true
