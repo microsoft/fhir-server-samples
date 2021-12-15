@@ -58,7 +58,9 @@ stages:
           
           Connect-AzureAD -TenantId $tenantId -AadAccessToken $response.access_token -AccountId $username
           
-          # Clean up old one if it exists before deploying new
-          $(System.DefaultWorkingDirectory)/deploy/scripts/Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName)
+          cd $(System.DefaultWorkingDirectory)/deploy/scripts
 
-          $(System.DefaultWorkingDirectory)/deploy/scripts/Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName) -UsePaaS $false -EnableExport $true
+          # Clean up old one if it exists before deploying new
+          ./Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName)
+
+          ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName) -UsePaaS $false -EnableExport $true
