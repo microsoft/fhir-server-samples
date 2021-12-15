@@ -132,7 +132,7 @@ $fhirServiceName = "${EnvironmentName}srvr"
 if ($UsePaas) {
     $fhirServiceUrl = "https://${EnvironmentName}.azurehealthcareapis.com"
 } else {
-    $fhirServiceUrl = "https://${fhirServiceName}.${WebAppSuffix}"    
+    $fhirServiceUrl = "https://${fhirServiceName}.$($tenantInfo.TenantDomain)"    
 }
 
 $application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirServiceUrl')"

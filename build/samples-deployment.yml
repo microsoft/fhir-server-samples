@@ -1,0 +1,65 @@
+# Description
+# Tests deployment, functionality, and teardown of the FHIR server samples repo
+
+trigger: none
+
+variables:
+  EnvironmentName: 'resolute-fhir-samples-test'
+  ConnectedServiceName: 'Microsoft Health Open Source Subscription'
+
+stages:
+- stage: FhirSamples
+  displayName: 'FHIR Server Samples'
+  jobs:
+  - job: Deploy
+    pool:
+      name: '$(DefaultLinuxPool)'
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureKeyVault@1
+      displayName: 'Azure Key Vault: resolute-oss-tenant-info'
+      inputs:
+        azureSubscription: $(ConnectedServiceName)
+        KeyVaultName: 'resolute-oss-tenant-info'
+
+    - task: AzurePowerShell@4
+      displayName: 'Setup samples environment'
+      inputs:
+        azureSubscription: $(ConnectedServiceName)
+        azurePowerShellVersion: latestVersion
+        ScriptType: inlineScript
+        Inline: |
+          Install-Module -Name AzureAD -Force -Verbose -Scope CurrentUser
+          $module = Get-Module -Name AzureAD
+
+          $tenantId = "$(tenant-id)"
+          # Get admin token
+          $username = "$(tenant-admin-user-name)"
+          $password_raw = '$(tenant-admin-user-password)'
+          $password =  ConvertTo-SecureString -AsPlainText $password_raw -Force
+          $adminCredential = New-Object PSCredential $username,$password
+          $adTokenUrl = "https://login.microsoftonline.com/$tenantId/oauth2/token"
+          $resource = "https://graph.windows.net/"
+          $body = @{
+              grant_type = "password"
+              username   = $username
+              password   = $password_raw
+              resource   = $resource 
+              client_id  = "1950a258-227b-4e31-a9cf-717495945fc2" # Microsoft Azure PowerShell
+          }
+          
+          try 
+          {
+              $response = Invoke-RestMethod -Method 'Post' -Uri $adTokenUrl -ContentType "application/x-www-form-urlencoded" -Body $body
+          }
+          catch 
+          {
+              Write-Error $_.ErrorDetails
+          }
+          
+          Connect-AzureAD -TenantId $tenantId -AadAccessToken $response.access_token -AccountId $username
+          
+          # Clean up old one if it exists before deploying new
+          $(System.DefaultWorkingDirectory)/deploy/scripts/Delete-FhirServerSamplesEnvironment.ps1 -EnvironmentName $EnvironmentName
+
+          $(System.DefaultWorkingDirectory)/deploy/scripts/Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $EnvironmentName -UsePaaS $false -EnableExport $true
