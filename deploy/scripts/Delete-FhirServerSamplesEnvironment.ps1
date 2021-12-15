@@ -8,6 +8,9 @@ param
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$EnvironmentName
+
+    [Parameter(Mandatory = $false)]
+    [string]$EnvironmentLocation = "westus",
 )
 
 Set-StrictMode -Version Latest
@@ -29,8 +32,13 @@ catch {
 }
 
 # Set up Auth Configuration and Resource Group
-./Delete-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $EnvironmentName 
+./Delete-FhirServerSamplesAuthConfig.ps1 -EnvironmentName $EnvironmentName -EnvironmentLocation $EnvironmentLocation
 
 # Wipe out the environment
 Get-AzResourceGroup -Name "${EnvironmentName}-sof" | Remove-AzResourceGroup -Verbose -Force
 Get-AzResourceGroup -Name $EnvironmentName | Remove-AzResourceGroup -Verbose -Force
+
+$keyVaultName = "$EnvironmentName-ts"
+Remove-AzKeyVault -VaultName $keyVaultName -InRemovedState -Location $EnvironmentLocation
+
+
