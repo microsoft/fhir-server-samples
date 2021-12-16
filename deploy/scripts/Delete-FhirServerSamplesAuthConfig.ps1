@@ -48,6 +48,7 @@ if (Get-Module -Name FhirServer) {
 
 $fhirServiceName = "${EnvironmentName}srvr"
 $fhirServiceUrl = "https://${fhirServiceName}.${WebAppSuffix}"
+$fhirAADUrl = "https://${fhirServiceName}.$($tenantInfo.TenantDomain)"  
 $PaasUrl = "https://${EnvironmentName}.azurehealthcareapis.com"
 
 $application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$PaasUrl')"
@@ -56,7 +57,7 @@ if ($application) {
     Remove-FhirServerApplicationRegistration -AppId $application.AppId
 }
 
-$application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirServiceUrl')"
+$application = Get-AzureAdApplication -Filter "identifierUris/any(uri:uri eq '$fhirAADUrl')"
 if ($application) {
     Remove-FhirServerApplicationRegistration -AppId $application.AppId
 }

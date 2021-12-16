@@ -38,7 +38,8 @@ catch {
 Get-AzResourceGroup -Name "${EnvironmentName}-sof" | Remove-AzResourceGroup -Verbose -Force
 Get-AzResourceGroup -Name $EnvironmentName | Remove-AzResourceGroup -Verbose -Force
 
-$keyVaultName = "$EnvironmentName-ts"
+$keyVaultName = "${EnvironmentName}-ts"
 Remove-AzKeyVault -VaultName $keyVaultName -InRemovedState -Location $EnvironmentLocation
 
-
+$fhirServerKeyVaultName = "${EnvironmentName}srvr"
+Remove-AzKeyVault -VaultName $keyVaultName -InRemovedState -Location $EnvironmentLocation
