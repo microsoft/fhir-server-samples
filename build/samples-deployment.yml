@@ -69,6 +69,7 @@ stages:
           catch 
           {
               Write-Host 'No old environment to delete'
+              Write-Host $_.ErrorDetails
           }
 
           ./Create-FhirServerSamplesEnvironment.ps1 -EnvironmentName $(EnvironmentName) -UsePaaS $false -EnableExport $true
