@@ -37,7 +37,7 @@ stages:
                           Connect-AzureAD -TenantId "$(tenant-id)" -Credential $adminCreds
                           $tenantInfo = Get-AzureADCurrentSessionInfo -ErrorAction Stop
                            
-                          $environmentName = $(environmentName)
+                          $environmentName = "$(environmentName)"
                            
                           if ($env:BUILD_SOURCEBRANCHNAME -eq "merge")
                           {
