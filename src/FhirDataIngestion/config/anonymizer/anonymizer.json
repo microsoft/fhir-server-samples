@@ -1,0 +1,49 @@
+{
+    "fhirVersion": "R4",
+    "processingErrors": "raise",
+    "fhirPathRules": [
+        {"path": "nodesByType('Extension')", "method": "keep"},
+
+        {"path": "Claim.identifier", "method": "cryptoHash"},
+        {"path": "Claim.status", "method": "keep"},
+        {"path": "Claim.type", "method": "keep"},
+        {"path": "Claim.use", "method": "keep"},
+        {"path": "Claim.created", 
+            "method": "generalize",
+            "cases":{
+                "$this": "$this.toString().replaceMatches('(?<year>[0-9]{4})-(?<month>[0-9]{2})-(?<day>[0-9]{2})', '${year}-${month}')"
+            },
+            "otherValues":"redact"
+        },
+        {"path": "Claim.priority", "method": "keep"},
+        {"path": "Claim.payee.type", "method": "keep"},
+
+        {"path": "Patient.identifier", "method": "cryptoHash"},
+        {"path": "Patient.address", "method": "redact"},
+
+        {"path": "Practitioner.identifier", "method": "cryptoHash"},
+        {"path": "Practitioner.address", "method": "redact"},
+
+        {"path": "Organization.identifier", "method": "keep"},
+        {"path": "Organization.address", "method": "redact"},
+
+        {"path": "nodesByType('Address').country", "method": "keep"},
+        {"path": "nodesByType('Address').state", "method": "keep"},
+        
+        {"path": "nodesByType('HumanName').given", "method": "cryptoHash"},
+        {"path": "nodesByType('HumanName').family", "method": "cryptoHash"},
+        
+        {"path": "nodesByType('date')", "method": "dateshift"},
+        {"path": "nodesByType('birthDate')", "method": "dateshift"},
+        {"path": "nodesByType('dateTime')", "method": "dateshift"},
+        {"path": "nodesByType('instant')", "method": "dateshift"}
+    ],
+    "parameters": {
+      "dateShiftKey": "",
+      "dateShiftScope": "resource",
+      "cryptoHashKey": "",
+      "encryptKey": "",
+      "enablePartialAgesForRedact": true,
+      "enablePartialDatesForRedact": true
+    }
+  }

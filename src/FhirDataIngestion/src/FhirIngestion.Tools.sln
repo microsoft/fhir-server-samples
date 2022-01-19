@@ -1,0 +1,88 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.App", "FhirIngestion.Tools.App\FhirIngestion.Tools.App.csproj", "{4638761D-FC71-47B3-A922-B8340B0A984D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Converter", "FhirIngestion.Tools.Converter\FhirIngestion.Tools.Converter.csproj", "{A9F72CFE-6C45-4E57-A17D-14B1B4A700B1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Anonymizer", "FhirIngestion.Tools.Anonymizer\FhirIngestion.Tools.Anonymizer.csproj", "{C9686A86-A3C8-4E1E-AE29-30BB1A2A2222}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Publisher", "FhirIngestion.Tools.Publisher\FhirIngestion.Tools.Publisher.csproj", "{4DC3C673-37FD-4243-9318-8E249E0AB1D3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Converter.Tests", "Tests\FhirIngestion.Tools.Converter.Tests\FhirIngestion.Tools.Converter.Tests.csproj", "{FB2FA52D-EAE2-4AA4-9BC2-53E1F51C3DB8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Anonymizer.Tests", "Tests\FhirIngestion.Tools.Anonymizer.Tests\FhirIngestion.Tools.Anonymizer.Tests.csproj", "{3396C61A-7D22-4106-B7DB-4585E2A5E330}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Publisher.Tests", "Tests\FhirIngestion.Tools.Publisher.Tests\FhirIngestion.Tools.Publisher.Tests.csproj", "{7FDD09A4-CD9B-4EAD-9C6A-9778BA0E0162}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C0EF8DB5-62DA-465A-9E00-C2FD5D1051F3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Common", "FhirIngestion.Tools.Common\FhirIngestion.Tools.Common.csproj", "{5A2F2AB2-2746-47F0-BCDB-60FAD5BBA0A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.Common.Tests", "Tests\FhirIngestion.Tools.Common.Tests\FhirIngestion.Tools.Common.Tests.csproj", "{40C73529-59E9-451D-8784-2E54CD6E20B9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FhirIngestion.Tools.IntegrationTests", "Tests\FhirIngestion.Tools.IntegrationTests\FhirIngestion.Tools.IntegrationTests.csproj", "{DBAFC2DB-298C-45B0-B421-18F744AEB942}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4638761D-FC71-47B3-A922-B8340B0A984D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4638761D-FC71-47B3-A922-B8340B0A984D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4638761D-FC71-47B3-A922-B8340B0A984D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4638761D-FC71-47B3-A922-B8340B0A984D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9F72CFE-6C45-4E57-A17D-14B1B4A700B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9F72CFE-6C45-4E57-A17D-14B1B4A700B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9F72CFE-6C45-4E57-A17D-14B1B4A700B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9F72CFE-6C45-4E57-A17D-14B1B4A700B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9686A86-A3C8-4E1E-AE29-30BB1A2A2222}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9686A86-A3C8-4E1E-AE29-30BB1A2A2222}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9686A86-A3C8-4E1E-AE29-30BB1A2A2222}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9686A86-A3C8-4E1E-AE29-30BB1A2A2222}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DC3C673-37FD-4243-9318-8E249E0AB1D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DC3C673-37FD-4243-9318-8E249E0AB1D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DC3C673-37FD-4243-9318-8E249E0AB1D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DC3C673-37FD-4243-9318-8E249E0AB1D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB2FA52D-EAE2-4AA4-9BC2-53E1F51C3DB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB2FA52D-EAE2-4AA4-9BC2-53E1F51C3DB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB2FA52D-EAE2-4AA4-9BC2-53E1F51C3DB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB2FA52D-EAE2-4AA4-9BC2-53E1F51C3DB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3396C61A-7D22-4106-B7DB-4585E2A5E330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3396C61A-7D22-4106-B7DB-4585E2A5E330}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3396C61A-7D22-4106-B7DB-4585E2A5E330}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3396C61A-7D22-4106-B7DB-4585E2A5E330}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FDD09A4-CD9B-4EAD-9C6A-9778BA0E0162}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FDD09A4-CD9B-4EAD-9C6A-9778BA0E0162}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FDD09A4-CD9B-4EAD-9C6A-9778BA0E0162}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FDD09A4-CD9B-4EAD-9C6A-9778BA0E0162}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A2F2AB2-2746-47F0-BCDB-60FAD5BBA0A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A2F2AB2-2746-47F0-BCDB-60FAD5BBA0A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A2F2AB2-2746-47F0-BCDB-60FAD5BBA0A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A2F2AB2-2746-47F0-BCDB-60FAD5BBA0A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40C73529-59E9-451D-8784-2E54CD6E20B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40C73529-59E9-451D-8784-2E54CD6E20B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40C73529-59E9-451D-8784-2E54CD6E20B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40C73529-59E9-451D-8784-2E54CD6E20B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBAFC2DB-298C-45B0-B421-18F744AEB942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBAFC2DB-298C-45B0-B421-18F744AEB942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBAFC2DB-298C-45B0-B421-18F744AEB942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBAFC2DB-298C-45B0-B421-18F744AEB942}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FB2FA52D-EAE2-4AA4-9BC2-53E1F51C3DB8} = {C0EF8DB5-62DA-465A-9E00-C2FD5D1051F3}
+		{3396C61A-7D22-4106-B7DB-4585E2A5E330} = {C0EF8DB5-62DA-465A-9E00-C2FD5D1051F3}
+		{7FDD09A4-CD9B-4EAD-9C6A-9778BA0E0162} = {C0EF8DB5-62DA-465A-9E00-C2FD5D1051F3}
+		{40C73529-59E9-451D-8784-2E54CD6E20B9} = {C0EF8DB5-62DA-465A-9E00-C2FD5D1051F3}
+		{DBAFC2DB-298C-45B0-B421-18F744AEB942} = {C0EF8DB5-62DA-465A-9E00-C2FD5D1051F3}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {65FE14F4-C26A-45AB-AA8E-BB4F4DA81AD6}
+	EndGlobalSection
+EndGlobal

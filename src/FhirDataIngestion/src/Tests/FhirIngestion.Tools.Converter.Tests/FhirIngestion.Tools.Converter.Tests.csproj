@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="TestFiles\InvalidDataset\Table1.csv" />
+    <None Remove="TestFiles\InvalidDataset\Table1.parquet" />
+    <None Remove="TestFiles\InvalidTemplates\InvalidTemplate1.liquid" />
+    <None Remove="TestFiles\Table1.parquet" />
+    <None Remove="TestFiles\Table2.parquet" />
+    <None Remove="TestFiles\Table3.csv" />
+    <None Remove="TestFiles\Table4.csv" />
+    <None Remove="TestFiles\Template1.liquid" />
+    <None Remove="TestFiles\Template2.liquid" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="TestFiles\InvalidDataset\Table1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\InvalidDataset\Table1.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\InvalidTemplates\InvalidTemplate1.liquid">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\Table1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\Table2.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\Table3.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\Table4.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\ValidTemplates\Template1.liquid">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\ValidTemplates\Template2.liquid">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="3.1.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\FhirIngestion.Tools.Common\FhirIngestion.Tools.Common.csproj" />
+    <ProjectReference Include="..\..\FhirIngestion.Tools.Converter\FhirIngestion.Tools.Converter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Bogus" Version="33.1.1" />
+    <PackageReference Update="coverlet.msbuild" Version="3.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Update="FluentAssertions" Version="6.2.0" />
+    <PackageReference Update="Moq" Version="4.16.1" />
+  </ItemGroup>
+
+</Project>

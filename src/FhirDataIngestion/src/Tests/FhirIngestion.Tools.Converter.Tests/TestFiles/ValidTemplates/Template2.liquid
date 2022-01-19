@@ -1,0 +1,7 @@
+{% for table in model.Tables -%}
+Table {{ table.Name }}:
+Fields: {% for field in table.FieldNames -%}{{- field -}}, {% endfor %}
+{% for record in table.Records -%}
+{% for field in record.Fields -%}{{ field.Value -}}, {% endfor %}
+{% endfor -%}
+{% endfor -%}

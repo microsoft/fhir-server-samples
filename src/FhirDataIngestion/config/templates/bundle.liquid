@@ -1,0 +1,35 @@
+{%- comment -%}Select the first claim{%- endcomment -%}
+{%- for claim in model.claims.Records -%}
+    {%- assign enterer = model.practitioners.Records | where: "id", claim.entererId | first -%}
+    {%- assign patient = model.patients.Records | where: "id", claim.patientId | first -%}
+    {%- assign entererRole = model.practitionerRoles.Records | where: "PractitionerId", enterer.id | first -%}
+    {%- assign insurer = model.organizations.Records | where: "id", claim.insurerId | first -%}
+    {%- assign provider = model.organizations.Records | where: "id", claim.providerId | first -%}
+
+    {%- comment -%} FHIR Server identifier endpoint{%- endcomment -%}
+    {% assign identiferSystemUri = "https://fhir-data-converter.azurehealthcareapis.com" -%}
+
+    {%- comment -%} metadata for fhir templates {%- endcomment -%}
+    {% assign templateDate = "2021-12-01" | date: "%Y-%m-%d" -%}
+    {% assign templateVersion = "1.0.0" -%}
+    {% assign templateTargetMarket = "France" -%}
+
+    {%- comment -%} Creating Bundles with binding resource type components {%- endcomment -%}
+    {%- capture claimOutput -%}
+    {
+        "resourceType": "Bundle",
+        "type": "batch",
+        "entry": [
+            {% include 'components/patient' %}
+            {% assign delimiter = "," %}{{ delimiter }}
+            {% include 'components/claim' %}
+            {{ delimiter }}
+            {% include 'components/organization-insurer' %}
+            {{ delimiter }}
+            {% include 'components/organization-provider' %}
+            {{ delimiter }}
+            {% include 'components/practitioner' %}
+    ]
+    }
+    {% endcapture -%}{{ claimOutput | remove: "  " | strip_newlines }}
+{% endfor -%}

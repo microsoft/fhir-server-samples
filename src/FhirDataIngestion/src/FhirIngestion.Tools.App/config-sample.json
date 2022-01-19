@@ -1,0 +1,28 @@
+﻿{
+    "verboseLogs": true,
+    "inputDir": "./input",
+    "outputDir": "./output",
+    "applicationInsightsInstrumentationKey": "",
+    "stages": {
+        "converter": {
+            "templatesDir": "",
+            "outputDir": "./converted"
+        },
+        "anonymizer": {
+            "toolPath": "../Microsoft.Health.Fhir.Anonymizer.R4.CommandLineTool",
+            "toolConfigPath": "../Microsoft.Health.Fhir.Anonymizer.R4.CommandLineTool/anonymizer.json",
+            "outputDir": "./anonymized"
+        },
+        "publisher": {
+            "aadClientId": "",
+            "aadClientSecret": "",
+            "aadResource": "",
+            "aadTenantId": "",
+            "fhirServerApiUri": "",
+            "maxDegreeOfParallelism": 8,
+            "maxRetryCount": 3,
+            "metricsRefreshInterval": 3,
+            "outputResponseBundlesDir": "./published"
+        }
+    }
+}

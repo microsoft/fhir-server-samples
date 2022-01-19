@@ -1,0 +1,6 @@
+{%- case claimStatus -%}
+    {%- when "closed" -%}draft
+    {%- when "open" -%}active
+    {%- when "debating" -%}active
+    {%- else -%}entered-in-error
+{%- endcase -%}

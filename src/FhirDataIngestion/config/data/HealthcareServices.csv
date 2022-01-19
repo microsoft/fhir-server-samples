@@ -1,0 +1,5 @@
+﻿id,active,OrganizationId,category,type,specialty,location
+3000,yes,2000,Medical,Mental Health Care,Burn-out,London South
+3001,yes,2001,Surgical,Chirurgy,Intestants,London North
+3002,yes,2002,Dental,Dental Care,Braces,London East
+3003,no,2003,Medical,Preventice Care,Lifestyle,London West

@@ -1,0 +1,55 @@
+{
+    "resource": {
+        "resourceType": "Patient",
+        "id": "{{ patient.id }}",
+        "extension": [
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateVersion",
+                "valueString": "{{ templateVersion }}"
+            },
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateDate",
+                "valueString": "{{ templateDate }}"
+            },
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateTargetMarket",
+                "valueString": "{{ templateTargetMarket }}"
+            }
+        ],
+        "identifier": {
+            "system": "{{identiferSystemUri}}/patient",
+            "value": "{{ patient.id }}"
+        },
+        "meta": {
+            "profile": [
+                "{{identiferSystemUri}}/StructureDefinition/FHIRPatientProfile"
+            ]
+        },
+        "name": [
+            {
+                "use": "official",
+                "given": [
+                    "{{ patient.firstName }}"
+                ],
+                "family": "{{ patient.lastName }}"
+            }
+        ],
+        "telecom": [
+            {
+                "system": "phone",
+                "value": "{{ patient.phone }}"
+            }
+        ],
+        "gender": "other",
+        "birthDate": "{{ "now" | date: "%Y-%m-%d" }}",
+        "address": [
+            {
+                "country": "N/A"
+            }
+        ]
+    },
+    "request": {
+        "method": "PUT",
+        "url": "Patient/{{ patient.id }}"
+    }
+}

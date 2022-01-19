@@ -1,0 +1,86 @@
+name: CI Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+    - "v*.*.*"
+
+jobs:
+  build:
+    env:
+      dotnetSolution: 'src/FhirIngestion.Tools.sln'
+      toolProject: 'src/FhirIngestion.Tools.App/FhirIngestion.Tools.App.csproj'
+      anonymizerProject: 'anonymizer/FHIR/src/Microsoft.Health.Fhir.Anonymizer.R4.CommandLineTool/Microsoft.Health.Fhir.Anonymizer.R4.CommandLineTool.csproj'
+      anonymizerVersion: 'v3.0.0'
+ 
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        #os: [ubuntu-latest]
+        include:
+        - os: ubuntu-latest
+          LABEL: linux
+          TARGET: linux-x64
+          SELFCONTAINED: true
+
+        - os: windows-latest
+          LABEL: windows
+          TARGET: win-x64
+          SELFCONTAINED: false
+
+    steps:
+    - uses: actions/checkout@v2
+ 
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v1
+      with:
+          dotnet-version:  5.0.x 
+
+    - name: Restore
+      run: dotnet restore $dotnetSolution
+ 
+    - name: Build
+      run: dotnet build $dotnetSolution --configuration Release --no-restore
+ 
+    - name: Test
+      run: dotnet test $dotnetSolution --no-restore --logger trx --collect:"XPlat Code Coverage"
+
+    - name: Publish
+      run: dotnet publish $toolProject --output _stagingartifacts --configuration Release -p:PublishSingleFile=true -p:UseAppHost=true -r ${{matrix.TARGET}} --self-contained ${{matrix.SELFCONTAINED}}  -p:DebugType=None -p:DebugSymbols=false
+          
+    - name: Clone Anonymizer tool repo
+      run: git clone https://github.com/microsoft/Tools-for-Health-Data-Anonymization.git anonymizer --branch $anonymizerVersion --depth 1
+
+    - name: Restore Anonymizer Tool
+      run: dotnet restore $anonymizerProject
+ 
+    - name: Build Anonymizer Tool
+      run: dotnet build $anonymizerProject --configuration Release --no-restore
+ 
+    - name: Publish Anonymizer Tool
+      run: dotnet publish $anonymizerProject --output _stagingartifacts/Microsoft.Health.Fhir.Anonymizer.R4.CommandLineTool --configuration Release -p:PublishSingleFile=true -p:UseAppHost=true -r ${{matrix.TARGET}} --self-contained ${{matrix.SELFCONTAINED}}  -p:DebugType=None -p:DebugSymbols=false
+
+    - name: Prepare Release
+      run: |
+        rm _stagingartifacts/*.xml
+        cp config/anonymizer/anonymizer.json _stagingartifacts/Microsoft.Health.Fhir.Anonymizer.R4.CommandLineTool/
+        # zip -r FhirIngestionTools-${{matrix.TARGET}}.zip _stagingartifacts/
+        
+    - name: Zip Release
+      uses: TheDoctor0/zip-release@0.6.1
+      with:
+        type: 'zip'
+        filename: 'FhirIngestionTools-${{matrix.TARGET}}.zip'
+        directory: '_stagingartifacts'
+        exclusions: '*.xml'
+        
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: _stagingartifacts/FhirIngestionTools-${{matrix.TARGET}}.zip

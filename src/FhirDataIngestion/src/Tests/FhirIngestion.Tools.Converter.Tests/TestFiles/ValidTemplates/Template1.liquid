@@ -1,0 +1,14 @@
+{{ model.Tables["table1"].Name }}
+{{ model.Tables.NonExistingField_isOK }}
+{{ model["table2"].Name }}
+{{ model[0].Name }}
+{{ model.Table1.Name }}
+{{ model.Table1.NonExistingField_isOK }}
+{{ model.Tables["table2"].Records[2].Fields["name"] }}
+{{ model.Tables["table2"].Records[2].Fields.Name }}
+{{ model.Tables["table2"].Records[2]["name"] }}
+{{ model.Tables["table2"].Records[2][1] }}
+{{ model["table2"][2]["name"] }}
+{{ model["table2"][2].Name }}
+{{ model.Table2[2].Name }}
+

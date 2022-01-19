@@ -1,0 +1,5 @@
+﻿id,active,OrganizationId,network
+4000,yes,2000,Contoso
+4001,yes,2001,Contoso
+4002,yes,2002,Other
+4003,no,2003,Contoso

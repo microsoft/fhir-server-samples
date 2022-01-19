@@ -1,0 +1,42 @@
+{
+  "resource": {
+    "resourceType": "Practitioner",
+    "id": "{{ enterer.id }}",
+    "extension": [
+        {
+            "url": "{{identiferSystemUri}}/StructureDefinition/templateVersion",
+            "valueString": "{{ templateVersion }}"
+        },
+        {
+            "url": "{{identiferSystemUri}}/StructureDefinition/templateDate",
+            "valueString": "{{ templateDate }}"
+        },
+        {
+            "url": "{{identiferSystemUri}}/StructureDefinition/templateTargetMarket",
+            "valueString": "{{ templateTargetMarket }}"
+        }
+    ],
+    "identifier": [
+        {
+          "system": "{{ identiferSystemUri }}/practitioner",
+          "value": "{{ enterer.identifier }}"
+        }
+      ],
+    "name": [
+          {
+              "use": "official",
+              "given": [ "{{ enterer.name }}" ],
+              "family": "{{ enterer.name }}"
+          }
+      ],
+      "address": [
+      {
+          "line": "{{ provider.Address }} "
+      }
+    ]
+  },
+  "request": {
+    "method": "PUT",
+    "url": "Practitioner/{{ enterer.id }}"
+  }
+}

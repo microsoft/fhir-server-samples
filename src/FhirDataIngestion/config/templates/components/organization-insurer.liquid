@@ -1,0 +1,36 @@
+{
+    "resource": {
+        "resourceType": "Organization",
+        "id": "{{ insurer.id }}",
+        "extension": [
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateVersion",
+                "valueString": "{{ templateVersion }}"
+            },
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateDate",
+                "valueString": "{{ templateDate }}"
+            },
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateTargetMarket",
+                "valueString": "{{ templateTargetMarket }}"
+            }
+        ],
+        "identifier": [
+        {
+            "system": "{{ identiferSystemUri }}/organization",
+            "value": "{{ insurer.identifier }}"
+        }],
+    "name": "{{ insurer.name }}",
+    "alias": "{{ insurer.name }}",
+      "address": [
+          {
+              "line": "{{ insurer.Address }} "
+          }
+      ]
+    },
+    "request": {
+        "method": "PUT",
+        "url": "Organization/{{ insurer.id }}"
+    }
+}

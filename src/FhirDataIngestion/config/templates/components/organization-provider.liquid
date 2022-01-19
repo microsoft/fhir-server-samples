@@ -1,0 +1,36 @@
+{
+    "resource": {
+        "resourceType": "Organization",
+        "id": "{{ provider.id }}",
+        "extension": [
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateVersion",
+                "valueString": "{{ templateVersion }}"
+            },
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateDate",
+                "valueString": "{{ templateDate }}"
+            },
+            {
+                "url": "{{identiferSystemUri}}/StructureDefinition/templateTargetMarket",
+                "valueString": "{{ templateTargetMarket }}"
+            }
+        ],
+        "identifier": [
+        {
+            "system": "{{ identiferSystemUri }}/organization",
+            "value": "{{ provider.identifier }}"
+        }],
+    "name": "{{ provider.name }}",
+    "alias": "{{ provider.name }}",
+      "address": [
+          {
+              "line": "{{ provider.Address }} "
+          }
+      ]
+    },
+    "request": {
+        "method": "PUT",
+        "url": "Organization/{{ provider.id }}"
+    }
+}

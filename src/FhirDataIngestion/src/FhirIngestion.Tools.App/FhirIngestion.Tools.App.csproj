@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FhirIngestion.Tools.Anonymizer\FhirIngestion.Tools.Anonymizer.csproj" />
+    <ProjectReference Include="..\FhirIngestion.Tools.Common\FhirIngestion.Tools.Common.csproj" />
+    <ProjectReference Include="..\FhirIngestion.Tools.Converter\FhirIngestion.Tools.Converter.csproj" />
+    <ProjectReference Include="..\FhirIngestion.Tools.Publisher\FhirIngestion.Tools.Publisher.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config-sample.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,126 @@
+{
+  "resource": {
+      "resourceType": "Claim",
+      "id": "{{ claim.id }}",
+      "extension": [
+        {
+            "url": "{{identiferSystemUri}}/StructureDefinition/templateVersion",
+            "valueString": "{{ templateVersion }}"
+        },
+        {
+            "url": "{{identiferSystemUri}}/StructureDefinition/templateDate",
+            "valueString": "{{ templateDate }}"
+        },
+        {
+            "url": "{{identiferSystemUri}}/StructureDefinition/templateTargetMarket",
+            "valueString": "{{ templateTargetMarket }}"
+        }
+      ],
+      "identifier": [
+          {
+              "system": "{{identiferSystemUri}}/claim",
+              "value": "{{ claim.identifier }}"
+          }
+      ],
+      "status": "{% include 'data-converters/claimstatus', claimStatus: claim.status -%}",
+      "type": {
+          "coding": [
+              {
+                  "system": "http://terminology.hl7.org/CodeSystem/claim-type",
+                  "code": "oral"
+              }
+          ]
+      },
+      "use": "claim",
+      "created": "2021-12-10",
+      "patient": {
+          "reference": "Patient/{{ claim.patientId }}"
+      },
+      "enterer": {
+          "reference": "Practitioner/{{ claim.entererId }}"
+      },
+      "insurer": {
+          "reference": "Organization/{{ claim.insurerId }}"
+      },
+      "provider": {
+          "reference": "Organization/{{ claim.providerId }}"
+      },
+      "priority": {
+          "coding": [
+              {
+                  "code": "normal"
+              }
+          ]
+      },
+      "payee": {
+          "type": {
+              "coding": [
+                  {
+                      "code": "subscriber"
+                  }
+              ]
+          }
+      },
+      "careTeam": [
+          {
+              "sequence": 1,
+              "provider": {
+                  "reference": "Practitioner/{{ claim.entererId }}"
+              }
+          }
+      ],
+      "diagnosis": [
+          {
+              "sequence": 1,
+              "diagnosisCodeableConcept": {
+                  "coding": [
+                      {
+                          "code": "60022"
+                      }
+                  ]
+              }
+          }
+      ],
+      "insurance": [
+          {
+              "sequence": 1,
+              "focal": true,
+              "identifier": {
+                  "system": "{{identiferSystemUri}}/claim",
+                  "value": "12345"
+              },
+              "coverage": {
+                  "reference": "Coverage/9876B1"
+              }
+          }
+      ],
+      "item": [
+          {
+              "sequence": 1,
+              "careTeamSequence": [
+                  1
+              ],
+              "productOrService": {
+                  "coding": [
+                      {
+                          "code": "11875059479265419"
+                      }
+                  ]
+              },
+              "servicedDate": "1982-01-18",
+              "unitPrice": {
+                  "value": {{claim.total}},
+                  "currency": "EUR"
+              },
+              "net": {
+                  "value": {{claim.total}},
+                  "currency": "EUR"
+              }
+          }
+      ]
+  },
+  "request": {
+      "method": "PUT",
+      "url": "Claim/{{ claim.id }}"
+  }
+}

@@ -1,0 +1,5 @@
+﻿id,active,PractitionerId,specialty
+6000,yes,5000,Microbiology
+6001,yes,5001,Physician
+6002,no,5002,Neurology
+6003,yes,5003,Anatomy
