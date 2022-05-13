@@ -1,3 +1,6 @@
+> ⚠️ Thank you for your interest in our repository. **As of May 13, 2022, this repository has been archived, and is no longer maintained or updated.**
+
+
 # FHIR Server Samples
 
 This respository contains example applications and scenarios that show use of the [FHIR Server for Azure](https://github.com/Microsoft/fhir-server) and the [Azure API for FHIR](https://docs.microsoft.com/azure/healthcare-apis).
